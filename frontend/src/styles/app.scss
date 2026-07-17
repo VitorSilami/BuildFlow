@@ -1,0 +1,13 @@
+// Mazer design tokens (colors, spacing, typography overrides for Bootstrap)
+@import "./variables";
+
+// Bootstrap + Bootstrap Icons (icon font is required by Mazer's own component
+// scss even though the app itself renders icons via lucide-react)
+@import "bootstrap/scss/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons";
+
+// Fonts (Nunito, self-hosted, see _fonts.scss)
+@import "./fonts";
+
+// Mazer component/page overrides (sidebar, navbar, cards, tables, auth pages, etc.)
+@import "./mazer";
