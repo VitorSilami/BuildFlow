@@ -1,0 +1,30 @@
+# Segredos locais — nunca commitar
+.env
+.env.*
+!.env.example
+
+# Backend (Python/Django)
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/staticfiles/
+backend/buildflow/media/
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+
+# Frontend (Node/Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/playwright-report/
+frontend/test-results/
+
+# Editores
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+.DS_Store

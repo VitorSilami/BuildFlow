@@ -1,0 +1,153 @@
+import { expect, test } from '@playwright/test'
+
+const SESSION_URL = '**/_allauth/browser/v1/auth/session'
+const CONFIG_URL = '**/api/v1/projetos/*/configuracao-rdo/'
+const RDO_CREATE_URL = '**/api/v1/projetos/*/registros-diarios/'
+const RDO_DETAIL_URL = '**/api/v1/registros-diarios/rdo-1/'
+const FOTO_URL = '**/api/v1/registros-diarios/*/fotos/'
+
+const USUARIO = {
+  id: '1',
+  email: 'gerente@empresaA.example.com',
+  nome: 'Gerente Empresa A',
+  perfil: 'gerente',
+  empresa: 'uuid-empresa-a',
+  empresa_nome: 'Empresa A',
+}
+
+const CONFIGURACAO = {
+  disciplinas: [
+    { id: 'disc-1', nome: 'Terraplenagem', servicos: [{ id: 'serv-1', nome: 'Corte', unidade: 1 }] },
+  ],
+  unidades: [{ id: 1, sigla: 'm³', descricao: 'metro cúbico' }],
+  equipes: [
+    {
+      id: 'equipe-1',
+      nome: 'Equipe A',
+      pessoas: [{ id: 'pessoa-1', nome: 'João', funcao: 'Ajudante' }],
+      maquinas: [{ id: 'maquina-1', codigo: 'ESC-01', nome: 'Escavadeira' }],
+    },
+  ],
+  motivos_parada: [{ id: 1, descricao: 'Chuva' }],
+  fiscais: [{ id: 1, nome: 'Gerente Empresa A', email: 'gerente@empresaA.example.com' }],
+}
+
+const RDO_CRIADO = {
+  id: 'rdo-1',
+  data_referencia: '2026-07-17',
+  turno: 'diurno',
+  clima: 'sol',
+  producoes: [
+    { rodovia: 'BR-365', km_inicial: '10.000', km_final: '10.500', quantidade: '500' },
+  ],
+  presencas: [{ nome_avulso: 'João Ajudante', funcao: 'Ajudante', status: 'presente' }],
+  maquinas: [
+    { identificacao_avulsa: 'Escavadeira 01', horas_produtivas: '6', horas_paradas: '0' },
+  ],
+  ocorrencias: [],
+  fotos: [],
+}
+
+test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+  await page.route(CONFIG_URL, (route) => route.fulfill({ json: CONFIGURACAO }))
+  await page.route(RDO_CREATE_URL, (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    return route.fulfill({ status: 201, json: RDO_CRIADO })
+  })
+  await page.route(RDO_DETAIL_URL, (route) => route.fulfill({ json: RDO_CRIADO }))
+  await page.route(FOTO_URL, (route) =>
+    route.fulfill({ status: 201, json: { id: 'foto-1', arquivo: '/media/foto.png', km: '10.250', created_at: '2026-07-17T00:00:00Z' } }),
+  )
+
+  await page.goto('/projetos/projeto-1/registros-diarios/novo')
+
+  await page.getByLabel('Data').fill('2026-07-17')
+  await page.getByLabel('Equipe', { exact: true }).selectOption('equipe-1')
+  await page.getByLabel('Fiscal').selectOption('1')
+
+  await page.getByLabel('Rodovia').fill('BR-365')
+  await page.getByLabel('Disciplina').selectOption('disc-1')
+  await page.getByLabel('Serviço').selectOption('serv-1')
+  await page.getByLabel('Km inicial').fill('10.000')
+  await page.getByLabel('Km final').fill('10.500')
+  await page.getByLabel('Quantidade').fill('500')
+  await page.getByLabel('Unidade').selectOption('1')
+
+  await page.getByLabel('Nome (avulso)').fill('João Ajudante')
+  await page.getByLabel('Função').fill('Ajudante')
+
+  await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
+  await page.getByLabel('Horas produtivas').fill('6')
+
+  await page.getByRole('button', { name: 'Salvar registro diário' }).click()
+
+  // Apos salvar, navega para a tela de detalhe do RDO (nao fica so numa
+  // mensagem solta — o registro fica de fato visivel/consultavel).
+  await expect(page).toHaveURL(/\/registros-diarios\/rdo-1$/)
+  await expect(page.getByRole('heading', { name: /Registro diário/ })).toBeVisible()
+
+  const fileInput = page.locator('#foto-arquivo')
+  await fileInput.setInputFiles({
+    name: 'foto.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+      '89504e470d0a1a0a0000000d4948445200000001000000010806000000' +
+        '1f15c4890000000a4944415478da630001000005000105e2ff' +
+        '000000004945454e44ae426082',
+      'hex',
+    ),
+  })
+  await page.getByRole('button', { name: 'Anexar foto' }).click()
+})
+
+test('trocar de nome avulso para pessoa cadastrada limpa o campo avulso', async ({ page }) => {
+  // Regressao: digitar um nome avulso e depois escolher uma pessoa cadastrada
+  // deixava os dois campos preenchidos, violando a regra XOR (bug real
+  // encontrado em teste manual, 2026-07-17).
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+  await page.route(CONFIG_URL, (route) => route.fulfill({ json: CONFIGURACAO }))
+  await page.route(RDO_DETAIL_URL, (route) => route.fulfill({ json: RDO_CRIADO }))
+
+  let payloadRecebido: Record<string, unknown> | null = null
+  await page.route(RDO_CREATE_URL, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    payloadRecebido = route.request().postDataJSON()
+    return route.fulfill({ status: 201, json: RDO_CRIADO })
+  })
+
+  await page.goto('/projetos/projeto-1/registros-diarios/novo')
+
+  await page.getByLabel('Data').fill('2026-07-17')
+  await page.getByLabel('Equipe', { exact: true }).selectOption('equipe-1')
+  await page.getByLabel('Fiscal').selectOption('1')
+
+  await page.getByLabel('Rodovia').fill('BR-365')
+  await page.getByLabel('Disciplina').selectOption('disc-1')
+  await page.getByLabel('Serviço').selectOption('serv-1')
+  await page.getByLabel('Km inicial').fill('10.000')
+  await page.getByLabel('Km final').fill('10.500')
+  await page.getByLabel('Quantidade').fill('500')
+  await page.getByLabel('Unidade').selectOption('1')
+
+  // Digita um nome avulso primeiro...
+  await page.getByLabel('Nome (avulso)').fill('Nome Digitado Errado')
+  // ...depois muda de ideia e escolhe a pessoa cadastrada.
+  await page.getByLabel('Pessoa cadastrada').selectOption('pessoa-1')
+  await page.getByLabel('Função').fill('Ajudante')
+
+  await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
+  await page.getByLabel('Horas produtivas').fill('6')
+
+  await page.getByRole('button', { name: 'Salvar registro diário' }).click()
+
+  await expect(page).toHaveURL(/\/registros-diarios\/rdo-1$/)
+  const presencas = (payloadRecebido as { presencas: { pessoa?: string; nome_avulso?: string }[] })
+    .presencas
+  expect(presencas[0].pessoa).toBe('pessoa-1')
+  expect(presencas[0].nome_avulso).toBeFalsy()
+})

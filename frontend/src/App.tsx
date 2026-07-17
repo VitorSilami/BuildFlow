@@ -1,0 +1,41 @@
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AuthProvider } from './features/auth/AuthContext'
+import { ConfiguracaoPage } from './pages/ConfiguracaoPage'
+import { LoginPage } from './pages/LoginPage'
+import { ProjetosListPage } from './pages/ProjetosListPage'
+import { RdoPage } from './pages/RdoPage'
+import { RegistroDiarioDetailPage } from './pages/RegistroDiarioDetailPage'
+import { RegistrosDiariosListPage } from './pages/RegistrosDiariosListPage'
+import { ProtectedRoute, PublicOnlyRoute } from './routes/ProtectedRoute'
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <LoginPage />
+              </PublicOnlyRoute>
+            }
+          />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/projetos" element={<ProjetosListPage />} />
+            <Route path="/projetos/:projetoId/registros-diarios" element={<RegistrosDiariosListPage />} />
+            <Route path="/projetos/:projetoId/registros-diarios/novo" element={<RdoPage />} />
+            <Route
+              path="/projetos/:projetoId/registros-diarios/:registroId"
+              element={<RegistroDiarioDetailPage />}
+            />
+            <Route path="/projetos/:projetoId/configuracoes" element={<ConfiguracaoPage />} />
+          </Route>
+          <Route path="/" element={<Navigate to="/projetos" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  )
+}
+
+export default App

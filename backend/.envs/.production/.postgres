@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=buildflow
+POSTGRES_USER=qwYuyfLTDscxtltLEccOEgCZFPABfyXv
+POSTGRES_PASSWORD=phoR03hkbWR87pwICqpNwwDD0yML8MSoxYowoAemdCWAxDvVKIAVuincmaBWJ8mV
