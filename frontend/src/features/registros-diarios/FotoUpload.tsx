@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent } from 'react'
+import { Alert, FormField } from '../../components/ui'
 import { useEnviarFoto } from './registrosDiariosApi'
 
 interface FotoUploadProps {
@@ -33,19 +34,21 @@ export function FotoUpload({ registroId }: FotoUploadProps) {
 
   return (
     <div aria-label="Anexar foto">
-      <label htmlFor="foto-arquivo">Foto</label>
-      <input id="foto-arquivo" type="file" accept="image/*" onChange={handleFileChange} />
+      <FormField id="foto-arquivo" label="Foto">
+        <input id="foto-arquivo" type="file" accept="image/*" className="form-control" onChange={handleFileChange} />
+      </FormField>
 
-      {preview && <img src={preview} alt="Pré-visualização da foto" width={120} />}
+      {preview && <img src={preview} alt="Pré-visualização da foto" width={120} className="rounded mb-3" />}
 
-      <label htmlFor="foto-km">Km (opcional)</label>
-      <input id="foto-km" value={km} onChange={(event) => setKm(event.target.value)} />
+      <FormField id="foto-km" label="Km (opcional)">
+        <input id="foto-km" className="form-control" value={km} onChange={(event) => setKm(event.target.value)} />
+      </FormField>
 
-      <button type="button" onClick={handleEnviar} disabled={!arquivo || enviarFoto.isPending}>
+      <button type="button" className="btn btn-primary" onClick={handleEnviar} disabled={!arquivo || enviarFoto.isPending}>
         {enviarFoto.isPending ? 'Enviando…' : 'Anexar foto'}
       </button>
 
-      {enviarFoto.isError && <p role="alert">Não foi possível enviar a foto.</p>}
+      {enviarFoto.isError && <Alert>Não foi possível enviar a foto.</Alert>}
     </div>
   )
 }
