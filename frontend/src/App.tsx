@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './features/auth/AuthContext'
+import { DashboardLayout } from './layouts/DashboardLayout'
 import { ConfiguracaoPage } from './pages/ConfiguracaoPage'
 import { LoginPage } from './pages/LoginPage'
 import { ProjetosListPage } from './pages/ProjetosListPage'
@@ -22,14 +23,16 @@ function App() {
             }
           />
           <Route element={<ProtectedRoute />}>
-            <Route path="/projetos" element={<ProjetosListPage />} />
-            <Route path="/projetos/:projetoId/registros-diarios" element={<RegistrosDiariosListPage />} />
-            <Route path="/projetos/:projetoId/registros-diarios/novo" element={<RdoPage />} />
-            <Route
-              path="/projetos/:projetoId/registros-diarios/:registroId"
-              element={<RegistroDiarioDetailPage />}
-            />
-            <Route path="/projetos/:projetoId/configuracoes" element={<ConfiguracaoPage />} />
+            <Route element={<DashboardLayout />}>
+              <Route path="/projetos" element={<ProjetosListPage />} />
+              <Route path="/projetos/:projetoId/registros-diarios" element={<RegistrosDiariosListPage />} />
+              <Route path="/projetos/:projetoId/registros-diarios/novo" element={<RdoPage />} />
+              <Route
+                path="/projetos/:projetoId/registros-diarios/:registroId"
+                element={<RegistroDiarioDetailPage />}
+              />
+              <Route path="/projetos/:projetoId/configuracoes" element={<ConfiguracaoPage />} />
+            </Route>
           </Route>
           <Route path="/" element={<Navigate to="/projetos" replace />} />
         </Routes>
