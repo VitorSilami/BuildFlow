@@ -275,6 +275,21 @@ confirmar isolamento cross-tenant.
 
 **Checkpoint**: Histórias 1–4 funcionam de forma independente e combinada.
 
+**Refatoração do frontend com design system Mazer (2026-07-17)**: o frontend não tinha nenhuma camada de
+layout nem biblioteca de componentes — cada página montava seu próprio HTML/CSS inline. Adotado o design
+system [Mazer](https://github.com/zuramai/mazer) (Bootstrap 5 + SCSS, tema claro/escuro) via
+`frontend/src/styles/`, com nova camada `frontend/src/layouts/` (Sidebar/Topbar/Footer/DashboardLayout/
+AuthLayout) e `frontend/src/components/ui/` (Card/Alert/PageHeader/FormField/Spinner). Todas as páginas
+(Login, Projetos, Registros Diários, RDO, Configurações) foram reescritas para usar essas camadas, sem
+nenhuma mudança de lógica de negócio, hooks, API ou rotas. Spec e plano em
+`docs/superpowers/specs/2026-07-17-frontend-mazer-refactor-design.md` e
+`docs/superpowers/plans/2026-07-17-frontend-mazer-refactor.md`. Bug real encontrado durante a execução: o
+`vitest.config.ts` não excluía `tests/e2e/**`, então `npm run test` capturava os specs do Playwright e
+falhava com "Playwright Test did not expect test() to be called here" — bug pré-existente desde antes
+desta refatoração, corrigido junto (`exclude`/`passWithNoTests` em `vitest.config.ts`).
+
+**Verificado após a refatoração**: 10/10 E2E, `tsc -b --noEmit`/`oxlint`/`npm run build` limpos.
+
 ---
 
 ## Phase 7: User Story 5 - Configurações do projeto (Priority: P3)

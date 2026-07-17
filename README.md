@@ -10,7 +10,9 @@ Documentação completa da feature MVP em [`specs/001-mvp-gestao-diaria/`](specs
 
 - **Backend**: Django 6, Django REST Framework, PostgreSQL, `django-allauth` (headless, login Google),
   `drf-spectacular` (OpenAPI). Gerenciado com [`uv`](https://docs.astral.sh/uv/).
-- **Frontend**: React 18 + TypeScript, Vite, TanStack Query, Zod, React Router.
+- **Frontend**: React 18 + TypeScript, Vite, TanStack Query, Zod, React Router. UI com Bootstrap 5 e o
+  design system [Mazer](https://github.com/zuramai/mazer) (SCSS, tema claro/escuro), layouts e
+  componentes isolados em `frontend/src/layouts/` e `frontend/src/components/ui/`.
 
 ## Pré-requisitos
 
