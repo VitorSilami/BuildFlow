@@ -66,7 +66,14 @@ export function RdoPage() {
 
   if (configuracao.isLoading) return <Spinner label="Carregando…" />
   if (configuracao.isError || !configuracao.data) {
-    return <Alert>Não foi possível carregar os cadastros do projeto.</Alert>
+    return (
+      <Alert>
+        <p className="mb-2">Não foi possível carregar os cadastros do projeto.</p>
+        <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => void configuracao.refetch()}>
+          Tentar novamente
+        </button>
+      </Alert>
+    )
   }
 
   const {

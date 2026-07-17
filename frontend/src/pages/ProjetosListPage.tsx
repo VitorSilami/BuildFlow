@@ -10,7 +10,7 @@ export function ProjetosListPage() {
   const [showForm, setShowForm] = useState(false)
 
   return (
-    <main>
+    <main aria-label="Projetos">
       <PageHeader
         title="Projetos"
         breadcrumbs={[{ label: 'Projetos' }]}

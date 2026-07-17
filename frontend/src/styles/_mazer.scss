@@ -82,6 +82,27 @@
 // - 2.12. sidebar
 @import "./components/sidebar";
 
+// Dark mode override for the sidebar — Mazer's sidebar colors are compile-time SCSS
+// variables (see themes/dark/_variables-dark.scss), not Bootstrap CSS custom properties,
+// so they don't react to [data-bs-theme] like the rest of Bootstrap does.
+html[data-bs-theme="dark"] {
+  .sidebar-wrapper {
+    background-color: #1e1e2d;
+
+    .menu .sidebar-title {
+      color: #9899ac;
+    }
+
+    .menu .sidebar-link {
+      color: #9899ac;
+
+      &:hover {
+        background-color: #282839;
+      }
+    }
+  }
+}
+
 // - 2.13. navs
 @import "./components/navs";
 
