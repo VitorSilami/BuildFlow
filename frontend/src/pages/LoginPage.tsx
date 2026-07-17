@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import heroRoad from '../assets/hero-road.jpg'
 import { Alert, Spinner } from '../components/ui'
 import { useAuth } from '../features/auth/AuthContext'
+import '@fontsource/inter/400.css'
+import '@fontsource/inter/500.css'
+import '@fontsource/inter/600.css'
+import '@fontsource/inter/700.css'
+import '@fontsource/space-grotesk/500.css'
+import '@fontsource/space-grotesk/600.css'
+import '@fontsource/space-grotesk/700.css'
+import '@fontsource/jetbrains-mono/400.css'
+import '@fontsource/jetbrains-mono/500.css'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
 const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client'
@@ -190,7 +199,7 @@ function HeroMock() {
   ]
 
   return (
-    <div className="login-hero__mock">
+    <div className="login-hero__mock" aria-hidden="true">
       <div className="login-hero__mock-header">
         <span>
           <span className="login-dot" /> RDO · BR-365 · Lote 02 · 18/Mai
@@ -350,7 +359,7 @@ function Isolation() {
           </ul>
         </div>
 
-        <div className="login-tenant-panel">
+        <div className="login-tenant-panel" aria-hidden="true">
           {rows.map((row) => (
             <div
               key={row.name}
