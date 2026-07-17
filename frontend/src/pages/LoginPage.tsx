@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
+import { Alert, Spinner } from '../components/ui'
+import { AuthLayout } from '../layouts/AuthLayout'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
 const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client'
@@ -69,21 +71,23 @@ export function LoginPage() {
   }, [loginWithGoogle, navigate])
 
   return (
-    <main className="login-page">
-      <h1>BuildFlow</h1>
-      <p>Gestão diária de obras — acesse com a conta Google da sua empresa.</p>
+    <AuthLayout>
+      <h1 className="auth-title fw-bold">BuildFlow</h1>
+      <p className="auth-subtitle mb-4 text-muted">
+        Gestão diária de obras — acesse com a conta Google da sua empresa.
+      </p>
 
-      {status === 'loading' && <p role="status">Carregando…</p>}
+      {status === 'loading' && <Spinner label="Carregando…" />}
 
       <div ref={buttonRef} aria-live="polite" />
 
-      {status === 'authenticating' && <p role="status">Entrando…</p>}
+      {status === 'authenticating' && <Spinner label="Entrando…" />}
 
       {(loginError || scriptError) && (
-        <p role="alert" className="login-page__error">
-          {loginError ?? scriptError}
-        </p>
+        <div className="mt-3">
+          <Alert>{loginError ?? scriptError}</Alert>
+        </div>
       )}
-    </main>
+    </AuthLayout>
   )
 }
