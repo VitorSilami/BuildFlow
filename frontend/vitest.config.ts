@@ -9,6 +9,8 @@ export default mergeConfig(
       globals: true,
       setupFiles: ['./src/setupTests.ts'],
       css: true,
+      exclude: ['node_modules/**', 'tests/e2e/**'],
+      passWithNoTests: true,
     },
   }),
 )
