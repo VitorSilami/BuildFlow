@@ -133,5 +133,8 @@ html[data-bs-theme="dark"] {
 // - 4.1 Auth
 @import "./pages/auth";
 
+// Login page (clone of github.com/VitorSilami/diario-em-obras landing page)
+@import "./pages/login";
+
 // - 5.0 Utilities
 @import "./utilities"
