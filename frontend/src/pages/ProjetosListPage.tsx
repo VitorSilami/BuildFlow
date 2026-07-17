@@ -1,59 +1,62 @@
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../features/auth/AuthContext'
+import { Alert, Card, PageHeader, Spinner } from '../components/ui'
 import { ProjetoForm } from '../features/projetos/ProjetoForm'
 import { useProjetos } from '../features/projetos/projetosApi'
 
 export function ProjetosListPage() {
-  const { user, logout } = useAuth()
   const { data, isLoading, isError, refetch } = useProjetos()
   const [showForm, setShowForm] = useState(false)
 
   return (
     <main>
-      <header>
-        <h1>Projetos</h1>
-        <p>
-          {user?.empresa_nome} — {user?.nome} ({user?.perfil})
-        </p>
-        <button type="button" onClick={() => void logout()}>
-          Sair
-        </button>
-      </header>
+      <PageHeader
+        title="Projetos"
+        breadcrumbs={[{ label: 'Projetos' }]}
+        actions={
+          <button type="button" className="btn btn-primary d-flex align-items-center gap-2" onClick={() => setShowForm((current) => !current)}>
+            <Plus size={16} aria-hidden="true" />
+            {showForm ? 'Cancelar' : 'Novo Projeto'}
+          </button>
+        }
+      />
 
-      <button type="button" onClick={() => setShowForm((current) => !current)}>
-        {showForm ? 'Cancelar' : 'Novo Projeto'}
-      </button>
+      {showForm && (
+        <Card title="Criar novo projeto">
+          <ProjetoForm onCreated={() => setShowForm(false)} />
+        </Card>
+      )}
 
-      {showForm && <ProjetoForm onCreated={() => setShowForm(false)} />}
-
-      {isLoading && <p role="status">Carregando projetos…</p>}
+      {isLoading && <Spinner label="Carregando projetos…" />}
 
       {isError && (
-        <div role="alert">
-          <p>Não foi possível carregar os projetos.</p>
-          <button type="button" onClick={() => void refetch()}>
+        <Alert>
+          <p className="mb-2">Não foi possível carregar os projetos.</p>
+          <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => void refetch()}>
             Tentar novamente
           </button>
-        </div>
+        </Alert>
       )}
 
       {!isLoading && !isError && data?.results.length === 0 && (
-        <p>Nenhum projeto ainda. Crie o primeiro projeto para começar.</p>
+        <p className="text-muted">Nenhum projeto ainda. Crie o primeiro projeto para começar.</p>
       )}
 
       {!isLoading && !isError && data && data.results.length > 0 && (
-        <ul aria-label="Lista de projetos">
+        <div className="row" aria-label="Lista de projetos">
           {data.results.map((projeto) => (
-            <li key={projeto.id}>
-              <strong>{projeto.nome}</strong>
-              {projeto.descricao && <p>{projeto.descricao}</p>}
-              <Link to={`/projetos/${projeto.id}/registros-diarios`}>Registros diários</Link>
-              {' · '}
-              <Link to={`/projetos/${projeto.id}/configuracoes`}>Configurações</Link>
-            </li>
+            <div className="col-12 col-md-6 col-lg-4" key={projeto.id}>
+              <Card title={projeto.nome}>
+                {projeto.descricao && <p>{projeto.descricao}</p>}
+                <div className="d-flex gap-3">
+                  <Link to={`/projetos/${projeto.id}/registros-diarios`}>Registros diários</Link>
+                  <Link to={`/projetos/${projeto.id}/configuracoes`}>Configurações</Link>
+                </div>
+              </Card>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </main>
   )
