@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from django.db.models import Sum
 
 from buildflow.configuracoes.models import MetaMensal
 from buildflow.registros_diarios.models import ProducaoDiaria
 
-from .models import Projeto
+if TYPE_CHECKING:
+    from .models import Projeto
 
 
 def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:

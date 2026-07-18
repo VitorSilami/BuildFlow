@@ -136,7 +136,11 @@ def test_duas_disciplinas_pesos_diferentes_media_ponderada():
     unidade = Unidade.objects.create(sigla="m³", descricao="metro cúbico")
 
     disc_a = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
-    serv_a = CatalogoServico.objects.create(disciplina=disc_a, nome="Corte", unidade=unidade)
+    serv_a = CatalogoServico.objects.create(
+        disciplina=disc_a,
+        nome="Corte",
+        unidade=unidade,
+    )
     MetaMensal.objects.create(
         projeto=projeto,
         disciplina=disc_a,
@@ -146,7 +150,11 @@ def test_duas_disciplinas_pesos_diferentes_media_ponderada():
     )
 
     disc_b = Disciplina.objects.create(projeto=projeto, nome="Pavimentação")
-    serv_b = CatalogoServico.objects.create(disciplina=disc_b, nome="Base", unidade=unidade)
+    serv_b = CatalogoServico.objects.create(
+        disciplina=disc_b,
+        nome="Base",
+        unidade=unidade,
+    )
     MetaMensal.objects.create(
         projeto=projeto,
         disciplina=disc_b,
