@@ -32,7 +32,11 @@ class Projeto(models.Model):
     )
     nome = models.CharField(_("nome"), max_length=255)
     descricao = models.TextField(_("breve descricao"), blank=True)
-    numero_contrato = models.CharField(_("número do contrato"), max_length=100, blank=True)
+    numero_contrato = models.CharField(
+        _("número do contrato"),
+        max_length=100,
+        blank=True,
+    )
     trecho = models.CharField(_("trecho"), max_length=255, blank=True)
     engenheiro_responsavel = models.CharField(
         _("engenheiro responsável"),
