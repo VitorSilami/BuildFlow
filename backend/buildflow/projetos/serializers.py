@@ -6,7 +6,18 @@ from .models import Projeto
 class ProjetoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Projeto
-        fields = ["id", "nome", "descricao", "criado_por", "created_at", "updated_at"]
+        fields = [
+            "id",
+            "nome",
+            "descricao",
+            "numero_contrato",
+            "trecho",
+            "engenheiro_responsavel",
+            "status",
+            "criado_por",
+            "created_at",
+            "updated_at",
+        ]
         read_only_fields = ["id", "criado_por", "created_at", "updated_at"]
 
     def validate_nome(self, value: str) -> str:

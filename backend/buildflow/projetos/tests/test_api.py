@@ -89,3 +89,43 @@ def test_anonimo_nao_acessa_projetos():
     # DRF usa 403 (nao 401) quando o unico authenticator configurado
     # (SessionAuthentication) nao oferece challenge WWW-Authenticate.
     assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_criar_projeto_aceita_campos_opcionais_novos():
+    usuario = UsuarioFactory()
+
+    response = _authenticated_client(usuario).post(
+        PROJETOS_URL,
+        {
+            "nome": "Duplicação BR-365",
+            "numero_contrato": "CTR-2026-01",
+            "trecho": "BR-365 · km 10-25",
+            "engenheiro_responsavel": "Eng. Carlos Mendes",
+            "status": "pausado",
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    projeto = Projeto.objects.get(nome="Duplicação BR-365")
+    assert projeto.numero_contrato == "CTR-2026-01"
+    assert projeto.trecho == "BR-365 · km 10-25"
+    assert projeto.engenheiro_responsavel == "Eng. Carlos Mendes"
+    assert projeto.status == "pausado"
+
+
+def test_criar_projeto_sem_campos_novos_usa_status_ativo_por_padrao():
+    usuario = UsuarioFactory()
+
+    response = _authenticated_client(usuario).post(
+        PROJETOS_URL,
+        {"nome": "Projeto Simples"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    projeto = Projeto.objects.get(nome="Projeto Simples")
+    assert projeto.numero_contrato == ""
+    assert projeto.trecho == ""
+    assert projeto.engenheiro_responsavel == ""
+    assert projeto.status == "ativo"

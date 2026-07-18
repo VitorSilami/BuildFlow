@@ -18,6 +18,11 @@ class Projeto(models.Model):
 
     tenant_path = "empresa"
 
+    class StatusChoices(models.TextChoices):
+        ATIVO = "ativo", _("Ativo")
+        PAUSADO = "pausado", _("Pausado")
+        CONCLUIDO = "concluido", _("Concluído")
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     empresa = models.ForeignKey(
         Empresa,
@@ -27,6 +32,19 @@ class Projeto(models.Model):
     )
     nome = models.CharField(_("nome"), max_length=255)
     descricao = models.TextField(_("breve descricao"), blank=True)
+    numero_contrato = models.CharField(_("número do contrato"), max_length=100, blank=True)
+    trecho = models.CharField(_("trecho"), max_length=255, blank=True)
+    engenheiro_responsavel = models.CharField(
+        _("engenheiro responsável"),
+        max_length=255,
+        blank=True,
+    )
+    status = models.CharField(
+        _("status"),
+        max_length=16,
+        choices=StatusChoices.choices,
+        default=StatusChoices.ATIVO,
+    )
     criado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("criado por"),
