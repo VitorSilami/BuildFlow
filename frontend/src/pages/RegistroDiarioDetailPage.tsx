@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { Alert, Card, PageHeader, Spinner } from '../components/ui'
+import { Alert, Button, Card, EmptyState, PageHeader, Spinner } from '../components/ui'
 import { FotoUpload } from '../features/registros-diarios/FotoUpload'
 import { useRegistroDiario } from '../features/registros-diarios/registrosDiariosApi'
 
@@ -13,9 +13,9 @@ export function RegistroDiarioDetailPage() {
     return (
       <Alert>
         <p className="mb-2">Não foi possível carregar o registro diário.</p>
-        <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => void refetch()}>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
           Tentar novamente
-        </button>
+        </Button>
       </Alert>
     )
   }
@@ -30,21 +30,21 @@ export function RegistroDiarioDetailPage() {
           { label: registro.data_referencia },
         ]}
         actions={
-          <Link to={`/projetos/${projetoId}/registros-diarios`} className="btn btn-outline-secondary btn-sm">
-            Voltar para a lista
-          </Link>
+          <Button asChild variant="outline" size="sm">
+            <Link to={`/projetos/${projetoId}/registros-diarios`}>Voltar para a lista</Link>
+          </Button>
         }
       />
 
       <Card title="Gerais">
-        <p className="mb-1">Turno: {registro.turno}</p>
-        <p className="mb-0">Clima: {registro.clima}</p>
+        <p className="text-sm">Turno: {registro.turno}</p>
+        <p className="text-sm">Clima: {registro.clima}</p>
       </Card>
 
       <Card title="Produção">
-        <ul className="list-group list-group-flush" aria-label="Produção">
+        <ul className="divide-y divide-border" aria-label="Produção">
           {registro.producoes.map((producao, index) => (
-            <li className="list-group-item" key={index}>
+            <li className="py-2 text-sm" key={index}>
               {producao.rodovia} — km {producao.km_inicial} a {producao.km_final} — {producao.quantidade}
             </li>
           ))}
@@ -52,9 +52,9 @@ export function RegistroDiarioDetailPage() {
       </Card>
 
       <Card title="Equipe">
-        <ul className="list-group list-group-flush" aria-label="Presenças">
+        <ul className="divide-y divide-border" aria-label="Presenças">
           {registro.presencas.map((presenca, index) => (
-            <li className="list-group-item" key={index}>
+            <li className="py-2 text-sm" key={index}>
               {presenca.nome_avulso || presenca.pessoa} — {presenca.funcao} ({presenca.status})
             </li>
           ))}
@@ -62,9 +62,9 @@ export function RegistroDiarioDetailPage() {
       </Card>
 
       <Card title="Máquinas">
-        <ul className="list-group list-group-flush" aria-label="Máquinas">
+        <ul className="divide-y divide-border" aria-label="Máquinas">
           {registro.maquinas.map((maquina, index) => (
-            <li className="list-group-item" key={index}>
+            <li className="py-2 text-sm" key={index}>
               {maquina.identificacao_avulsa || maquina.maquina} — {maquina.horas_produtivas}h produtivas /{' '}
               {maquina.horas_paradas}h paradas
             </li>
@@ -74,9 +74,9 @@ export function RegistroDiarioDetailPage() {
 
       {registro.ocorrencias.length > 0 && (
         <Card title="Ocorrências">
-          <ul className="list-group list-group-flush" aria-label="Ocorrências">
+          <ul className="divide-y divide-border" aria-label="Ocorrências">
             {registro.ocorrencias.map((ocorrencia, index) => (
-              <li className="list-group-item" key={index}>
+              <li className="py-2 text-sm" key={index}>
                 {ocorrencia.tipo}: {ocorrencia.descricao}
               </li>
             ))}
@@ -85,12 +85,12 @@ export function RegistroDiarioDetailPage() {
       )}
 
       <Card title="Fotos">
-        {registro.fotos.length === 0 && <p className="text-muted">Nenhuma foto anexada ainda.</p>}
-        <div className="d-flex flex-wrap gap-3 mb-3" aria-label="Fotos">
+        {registro.fotos.length === 0 && <EmptyState>Nenhuma foto anexada ainda.</EmptyState>}
+        <div className="mb-4 flex flex-wrap gap-4" aria-label="Fotos">
           {registro.fotos.map((foto) => (
-            <figure className="mb-0" key={foto.id}>
-              <img src={foto.arquivo} alt="" width={120} className="rounded" />
-              {foto.km && <figcaption className="small text-muted">km {foto.km}</figcaption>}
+            <figure className="m-0" key={foto.id}>
+              <img src={foto.arquivo} alt="" width={120} className="rounded-md" />
+              {foto.km && <figcaption className="text-xs text-muted-foreground">km {foto.km}</figcaption>}
             </figure>
           ))}
         </div>
