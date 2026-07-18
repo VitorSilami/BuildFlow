@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Alert, FormField } from '../../components/ui'
+import { Alert, Button, FormField, Input, Textarea } from '../../components/ui'
 import { projetoFormSchema } from '../../schemas/projeto'
 import { useCriarProjeto } from './projetosApi'
 
@@ -35,9 +35,8 @@ export function ProjetoForm({ onCreated }: ProjetoFormProps) {
   return (
     <form onSubmit={handleSubmit} aria-label="Criar novo projeto">
       <FormField id="projeto-nome" label="Nome do projeto" error={nomeError}>
-        <input
+        <Input
           id="projeto-nome"
-          className="form-control"
           value={nome}
           onChange={(event) => setNome(event.target.value)}
           aria-invalid={nomeError ? 'true' : undefined}
@@ -46,19 +45,14 @@ export function ProjetoForm({ onCreated }: ProjetoFormProps) {
       </FormField>
 
       <FormField id="projeto-descricao" label="Breve descrição">
-        <textarea
-          id="projeto-descricao"
-          className="form-control"
-          value={descricao}
-          onChange={(event) => setDescricao(event.target.value)}
-        />
+        <Textarea id="projeto-descricao" value={descricao} onChange={(event) => setDescricao(event.target.value)} />
       </FormField>
 
       {criarProjeto.isError && <Alert>Não foi possível criar o projeto. Tente novamente.</Alert>}
 
-      <button type="submit" className="btn btn-primary" disabled={criarProjeto.isPending}>
+      <Button type="submit" disabled={criarProjeto.isPending}>
         {criarProjeto.isPending ? 'Criando…' : 'Criar projeto'}
-      </button>
+      </Button>
     </form>
   )
 }

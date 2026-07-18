@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Alert, Card, PageHeader, Spinner } from '../components/ui'
+import { Alert, Button, Card, EmptyState, PageHeader, Spinner } from '../components/ui'
 import { ProjetoForm } from '../features/projetos/ProjetoForm'
 import { useProjetos } from '../features/projetos/projetosApi'
 
@@ -15,10 +15,10 @@ export function ProjetosListPage() {
         title="Projetos"
         breadcrumbs={[{ label: 'Projetos' }]}
         actions={
-          <button type="button" className="btn btn-primary d-flex align-items-center gap-2" onClick={() => setShowForm((current) => !current)}>
+          <Button className="gap-2" onClick={() => setShowForm((current) => !current)}>
             <Plus size={16} aria-hidden="true" />
             {showForm ? 'Cancelar' : 'Novo Projeto'}
-          </button>
+          </Button>
         }
       />
 
@@ -33,28 +33,30 @@ export function ProjetosListPage() {
       {isError && (
         <Alert>
           <p className="mb-2">Não foi possível carregar os projetos.</p>
-          <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => void refetch()}>
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>
             Tentar novamente
-          </button>
+          </Button>
         </Alert>
       )}
 
       {!isLoading && !isError && data?.results.length === 0 && (
-        <p className="text-muted">Nenhum projeto ainda. Crie o primeiro projeto para começar.</p>
+        <EmptyState>Nenhum projeto ainda. Crie o primeiro projeto para começar.</EmptyState>
       )}
 
       {!isLoading && !isError && data && data.results.length > 0 && (
-        <div className="row" aria-label="Lista de projetos">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" aria-label="Lista de projetos">
           {data.results.map((projeto) => (
-            <div className="col-12 col-md-6 col-lg-4" key={projeto.id}>
-              <Card title={projeto.nome}>
-                {projeto.descricao && <p>{projeto.descricao}</p>}
-                <div className="d-flex gap-3">
-                  <Link to={`/projetos/${projeto.id}/registros-diarios`}>Registros diários</Link>
-                  <Link to={`/projetos/${projeto.id}/configuracoes`}>Configurações</Link>
-                </div>
-              </Card>
-            </div>
+            <Card title={projeto.nome} key={projeto.id}>
+              {projeto.descricao && <p className="mb-3 text-sm text-muted-foreground">{projeto.descricao}</p>}
+              <div className="flex gap-4 text-sm">
+                <Link to={`/projetos/${projeto.id}/registros-diarios`} className="font-medium text-primary hover:underline">
+                  Registros diários
+                </Link>
+                <Link to={`/projetos/${projeto.id}/configuracoes`} className="font-medium text-primary hover:underline">
+                  Configurações
+                </Link>
+              </div>
+            </Card>
           ))}
         </div>
       )}
