@@ -20,6 +20,9 @@ frontend/dist-ssr/
 frontend/playwright-report/
 frontend/test-results/
 
+# Resíduo da migração Bootstrap/Mazer (mantido localmente, não rastrear)
+mazer-main/
+
 # Editores
 .vscode/*
 !.vscode/settings.json

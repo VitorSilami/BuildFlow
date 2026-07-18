@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Alert, Button, Card, EmptyState, PageHeader, Spinner } from '../components/ui'
+import { Button, Card, EmptyState, ErrorRetry, PageHeader, Spinner } from '../components/ui'
 import { ProjetoForm } from '../features/projetos/ProjetoForm'
 import { useProjetos } from '../features/projetos/projetosApi'
 
@@ -31,12 +31,7 @@ export function ProjetosListPage() {
       {isLoading && <Spinner label="Carregando projetos…" />}
 
       {isError && (
-        <Alert>
-          <p className="mb-2">Não foi possível carregar os projetos.</p>
-          <Button variant="outline" size="sm" onClick={() => void refetch()}>
-            Tentar novamente
-          </Button>
-        </Alert>
+        <ErrorRetry message="Não foi possível carregar os projetos." onRetry={() => void refetch()} />
       )}
 
       {!isLoading && !isError && data?.results.length === 0 && (

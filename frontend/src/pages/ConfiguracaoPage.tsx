@@ -9,7 +9,7 @@ import {
   useCriarPessoa,
   useCriarValorCusto,
 } from '../features/configuracoes/configuracaoApi'
-import { Alert, Button, Card, EmptyState, FormField, Input, PageHeader, SelectField, Spinner } from '../components/ui'
+import { Button, Card, EmptyState, ErrorRetry, FormField, Input, PageHeader, SelectField, Spinner } from '../components/ui'
 
 export function ConfiguracaoPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
@@ -40,12 +40,10 @@ export function ConfiguracaoPage() {
   if (configuracao.isLoading) return <Spinner label="Carregando…" />
   if (configuracao.isError || !configuracao.data) {
     return (
-      <Alert>
-        <p className="mb-2">Não foi possível carregar a configuração do projeto.</p>
-        <Button variant="outline" size="sm" onClick={() => void configuracao.refetch()}>
-          Tentar novamente
-        </Button>
-      </Alert>
+      <ErrorRetry
+        message="Não foi possível carregar a configuração do projeto."
+        onRetry={() => void configuracao.refetch()}
+      />
     )
   }
 

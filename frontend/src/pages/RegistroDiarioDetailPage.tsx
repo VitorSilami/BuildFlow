@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { Alert, Button, Card, EmptyState, PageHeader, Spinner } from '../components/ui'
+import { Button, Card, EmptyState, ErrorRetry, PageHeader, Spinner } from '../components/ui'
 import { FotoUpload } from '../features/registros-diarios/FotoUpload'
 import { useRegistroDiario } from '../features/registros-diarios/registrosDiariosApi'
 
@@ -10,14 +10,7 @@ export function RegistroDiarioDetailPage() {
   if (isLoading) return <Spinner label="Carregando…" />
 
   if (isError || !registro) {
-    return (
-      <Alert>
-        <p className="mb-2">Não foi possível carregar o registro diário.</p>
-        <Button variant="outline" size="sm" onClick={() => void refetch()}>
-          Tentar novamente
-        </Button>
-      </Alert>
-    )
+    return <ErrorRetry message="Não foi possível carregar o registro diário." onRetry={() => void refetch()} />
   }
 
   return (

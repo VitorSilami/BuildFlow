@@ -12,7 +12,7 @@ import type {
   PresencaInput,
   ProducaoDiariaInput,
 } from '../types/registroDiario'
-import { Alert, Button, Card, FormField, Input, PageHeader, SelectField, Spinner } from '../components/ui'
+import { Alert, Button, Card, FormField, Input, PageHeader, SelectField, Spinner, Textarea } from '../components/ui'
 
 const PRODUCAO_VAZIA: ProducaoDiariaInput = {
   rodovia: '',
@@ -472,9 +472,8 @@ export function RdoPage() {
           {ocorrencias.map((ocorrencia, index) => (
             <fieldset key={index} className="mb-4 rounded-md border border-border p-4">
               <FormField id={`ocorrencia-descricao-${index}`} label="Descrição">
-                <textarea
+                <Textarea
                   id={`ocorrencia-descricao-${index}`}
-                  className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
                   value={ocorrencia.descricao}
                   onChange={(event) =>
                     setOcorrencias((current) =>

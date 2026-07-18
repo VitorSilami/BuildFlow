@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { Alert, Button, EmptyState, PageHeader, Spinner } from '../components/ui'
+import { Button, EmptyState, ErrorRetry, PageHeader, Spinner } from '../components/ui'
 import { useRegistrosDiarios } from '../features/registros-diarios/registrosDiariosApi'
 
 export function RegistrosDiariosListPage() {
@@ -25,12 +25,7 @@ export function RegistrosDiariosListPage() {
       {isLoading && <Spinner label="Carregando registros…" />}
 
       {isError && (
-        <Alert>
-          <p className="mb-2">Não foi possível carregar os registros diários.</p>
-          <Button variant="outline" size="sm" onClick={() => void refetch()}>
-            Tentar novamente
-          </Button>
-        </Alert>
+        <ErrorRetry message="Não foi possível carregar os registros diários." onRetry={() => void refetch()} />
       )}
 
       {!isLoading && !isError && data?.results.length === 0 && (
