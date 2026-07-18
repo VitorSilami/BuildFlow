@@ -5,15 +5,13 @@ import { Topbar } from './Topbar'
 
 export function DashboardLayout() {
   return (
-    <div id="app">
-      <div id="sidebar">
-        <Sidebar />
-      </div>
-      <div id="main">
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex flex-1 flex-col">
         <Topbar />
-        <div className="page-content px-3">
+        <main className="flex-1 px-4 py-6 md:px-8">
           <Outlet />
-        </div>
+        </main>
         <Footer />
       </div>
     </div>

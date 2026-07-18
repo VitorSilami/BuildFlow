@@ -1,64 +1,48 @@
 import { FileText, LayoutGrid, Settings } from 'lucide-react'
 import { NavLink, useParams } from 'react-router-dom'
-import { useTheme } from '../features/theme/ThemeContext'
 
-export function Sidebar() {
+const navItemClass = ({ isActive }: { isActive: boolean }) =>
+  `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+    isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-surface hover:text-ink'
+  }`
+
+export function SidebarNav() {
   const { projetoId } = useParams<{ projetoId?: string }>()
-  const { theme, toggleTheme } = useTheme()
 
   return (
-    <div className="sidebar-wrapper active">
-      <div className="sidebar-header position-relative">
-        <div className="d-flex justify-content-between align-items-center">
-          <div className="logo">
-            <span className="fw-bold fs-4">BuildFlow</span>
-          </div>
-          <div className="form-check form-switch">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="toggle-dark"
-              checked={theme === 'dark'}
-              onChange={toggleTheme}
-              aria-label="Alternar tema claro/escuro"
-            />
-          </div>
-        </div>
+    <nav className="flex flex-col gap-1 p-3">
+      <p className="px-3 pb-2 pt-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        Navegação
+      </p>
+      <NavLink to="/projetos" className={navItemClass}>
+        <LayoutGrid size={18} aria-hidden="true" />
+        Projetos
+      </NavLink>
+      {projetoId && (
+        <>
+          <NavLink to={`/projetos/${projetoId}/registros-diarios`} className={navItemClass}>
+            <FileText size={18} aria-hidden="true" />
+            Registros diários
+          </NavLink>
+          <NavLink to={`/projetos/${projetoId}/configuracoes`} className={navItemClass}>
+            <Settings size={18} aria-hidden="true" />
+            Configurações
+          </NavLink>
+        </>
+      )}
+    </nav>
+  )
+}
+
+export function Sidebar() {
+  return (
+    <aside className="hidden w-64 shrink-0 border-r border-border bg-background lg:flex lg:flex-col">
+      <div className="flex h-16 items-center border-b border-border px-4">
+        <span className="font-display text-lg font-bold tracking-tight text-ink">
+          Build<span className="text-signal">Flow</span>
+        </span>
       </div>
-      <div className="sidebar-menu">
-        <ul className="menu">
-          <li className="sidebar-title">Navegação</li>
-          <li className="sidebar-item">
-            <NavLink to="/projetos" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-              <LayoutGrid size={18} aria-hidden="true" />
-              <span>Projetos</span>
-            </NavLink>
-          </li>
-          {projetoId && (
-            <>
-              <li className="sidebar-item">
-                <NavLink
-                  to={`/projetos/${projetoId}/registros-diarios`}
-                  className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
-                >
-                  <FileText size={18} aria-hidden="true" />
-                  <span>Registros diários</span>
-                </NavLink>
-              </li>
-              <li className="sidebar-item">
-                <NavLink
-                  to={`/projetos/${projetoId}/configuracoes`}
-                  className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
-                >
-                  <Settings size={18} aria-hidden="true" />
-                  <span>Configurações</span>
-                </NavLink>
-              </li>
-            </>
-          )}
-        </ul>
-      </div>
-    </div>
+      <SidebarNav />
+    </aside>
   )
 }

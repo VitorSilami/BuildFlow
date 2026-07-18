@@ -1,7 +1,7 @@
 export function Footer() {
   return (
-    <footer className="footer text-center text-muted py-3">
-      <p className="mb-0">BuildFlow — Gestão diária de obras</p>
+    <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
+      BuildFlow — Gestão diária de obras
     </footer>
   )
 }
