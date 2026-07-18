@@ -1,11 +1,19 @@
+from decimal import Decimal
 from http import HTTPStatus
 
 import pytest
 from rest_framework.test import APIClient
 
+from buildflow.configuracoes.models import CatalogoServico
+from buildflow.configuracoes.models import Disciplina
+from buildflow.configuracoes.models import Equipe
+from buildflow.configuracoes.models import MetaMensal
+from buildflow.configuracoes.models import Unidade
 from buildflow.core.tests.factories import EmpresaFactory
 from buildflow.core.tests.factories import UsuarioFactory
 from buildflow.projetos.models import Projeto
+from buildflow.registros_diarios.models import ProducaoDiaria
+from buildflow.registros_diarios.models import RegistroDiario
 
 pytestmark = pytest.mark.django_db
 
@@ -129,3 +137,73 @@ def test_criar_projeto_sem_campos_novos_usa_status_ativo_por_padrao():
     assert projeto.trecho == ""
     assert projeto.engenheiro_responsavel == ""
     assert projeto.status == "ativo"
+
+
+def test_lista_projetos_inclui_execucao_percentual_calculada():
+    empresa = EmpresaFactory()
+    usuario = UsuarioFactory(empresa=empresa)
+    projeto = Projeto.objects.create(
+        empresa=empresa,
+        nome="Projeto Com Meta",
+        criado_por=usuario,
+    )
+    unidade = Unidade.objects.create(sigla="m³", descricao="metro cúbico")
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+    )
+    MetaMensal.objects.create(
+        projeto=projeto,
+        disciplina=disciplina,
+        unidade=unidade,
+        valor_alvo=Decimal("1000"),
+        peso_percentual=Decimal("100"),
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    registro = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial="0.000",
+        km_final="1.000",
+        quantidade=Decimal("250"),
+        unidade=unidade,
+    )
+
+    response = _authenticated_client(usuario).get(PROJETOS_URL)
+
+    assert response.status_code == HTTPStatus.OK
+    item = next(
+        r for r in response.json()["results"] if r["nome"] == "Projeto Com Meta"
+    )
+    assert item["execucao_percentual"] == "25.00"
+
+
+def test_projeto_sem_meta_retorna_execucao_percentual_null():
+    usuario = UsuarioFactory()
+    Projeto.objects.create(
+        empresa=usuario.empresa,
+        nome="Projeto Sem Meta",
+        criado_por=usuario,
+    )
+
+    response = _authenticated_client(usuario).get(PROJETOS_URL)
+
+    assert response.status_code == HTTPStatus.OK
+    item = next(
+        r for r in response.json()["results"] if r["nome"] == "Projeto Sem Meta"
+    )
+    assert item["execucao_percentual"] is None
