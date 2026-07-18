@@ -437,3 +437,15 @@ Task: "Models RegistroDiario/ProducaoDiaria/Presenca/ApontamentoMaquina/Ocorrenc
 Após Foundational + US1 + US2 prontos: um desenvolvedor em US3, outro em US5 (cadastros), um terceiro
 começa US4 usando lançamento avulso (sem esperar US5) e integra o seletor de cadastro (T059) quando US5
 estiver pronta.
+
+---
+
+**Backend do "Field OS" (2026-07-18)**: `Projeto` ganha `numero_contrato`, `trecho`,
+`engenheiro_responsavel` e `status` (todos opcionais, migration `0003`). Novo
+`calcular_execucao_percentual` (`buildflow/projetos/services.py`) computa `% execução` a partir de
+`MetaMensal.peso_percentual` x `ProducaoDiaria.quantidade` real — nunca inventado, retorna `None`
+quando não há base de cálculo. Novo endpoint `GET /api/v1/dashboard/` agrega projetos por status,
+execução média e alertas de RDO atrasado (>7 dias). Frontend consumidor fica para um plano
+separado (`docs/superpowers/plans/2026-07-18-field-os-frontend.md`, quando escrito).
+
+**Verificado**: suíte pytest completa + ruff limpos.
