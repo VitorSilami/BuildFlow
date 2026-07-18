@@ -9,7 +9,7 @@ import {
   useCriarPessoa,
   useCriarValorCusto,
 } from '../features/configuracoes/configuracaoApi'
-import { Alert, Card, PageHeader, Spinner } from '../components/ui'
+import { Alert, Button, Card, EmptyState, FormField, Input, PageHeader, SelectField, Spinner } from '../components/ui'
 
 export function ConfiguracaoPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
@@ -42,9 +42,9 @@ export function ConfiguracaoPage() {
     return (
       <Alert>
         <p className="mb-2">Não foi possível carregar a configuração do projeto.</p>
-        <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => void configuracao.refetch()}>
+        <Button variant="outline" size="sm" onClick={() => void configuracao.refetch()}>
           Tentar novamente
-        </button>
+        </Button>
       </Alert>
     )
   }
@@ -58,91 +58,59 @@ export function ConfiguracaoPage() {
 
       <Card title="Disciplinas">
         <div aria-label="Disciplinas">
-          {disciplinas.length === 0 && <p className="text-muted">Nenhuma disciplina cadastrada ainda.</p>}
-          <ul className="list-group list-group-flush mb-3">
+          {disciplinas.length === 0 && <EmptyState>Nenhuma disciplina cadastrada ainda.</EmptyState>}
+          <ul className="mb-4 divide-y divide-border">
             {disciplinas.map((disciplina) => (
-              <li className="list-group-item" key={disciplina.id}>
-                {disciplina.nome}
-              </li>
+              <li className="py-2 text-sm" key={disciplina.id}>{disciplina.nome}</li>
             ))}
           </ul>
-          <div className="row g-2 align-items-end">
-            <div className="col-auto">
-              <label htmlFor="nova-disciplina" className="form-label">
-                Nova disciplina
-              </label>
-              <input
-                id="nova-disciplina"
-                className="form-control"
-                value={nomeDisciplina}
-                onChange={(event) => setNomeDisciplina(event.target.value)}
-              />
-            </div>
-            <div className="col-auto">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => criarDisciplina.mutate(nomeDisciplina, { onSuccess: () => setNomeDisciplina('') })}
-                disabled={!nomeDisciplina.trim() || criarDisciplina.isPending}
-              >
-                Adicionar disciplina
-              </button>
-            </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <FormField id="nova-disciplina" label="Nova disciplina">
+              <Input id="nova-disciplina" value={nomeDisciplina} onChange={(event) => setNomeDisciplina(event.target.value)} />
+            </FormField>
+            <Button
+              onClick={() => criarDisciplina.mutate(nomeDisciplina, { onSuccess: () => setNomeDisciplina('') })}
+              disabled={!nomeDisciplina.trim() || criarDisciplina.isPending}
+            >
+              Adicionar disciplina
+            </Button>
           </div>
         </div>
       </Card>
 
       <Card title="Metas">
         <div aria-label="Metas">
-          {metas.length === 0 && <p className="text-muted">Nenhuma meta cadastrada ainda.</p>}
-          <ul className="list-group list-group-flush mb-3">
+          {metas.length === 0 && <EmptyState>Nenhuma meta cadastrada ainda.</EmptyState>}
+          <ul className="mb-4 divide-y divide-border">
             {metas.map((meta) => (
-              <li className="list-group-item" key={meta.id}>
+              <li className="py-2 text-sm" key={meta.id}>
                 {disciplinas.find((d) => d.id === meta.disciplina)?.nome ?? meta.disciplina}: {meta.valor_alvo}
                 {meta.peso_percentual ? ` (${meta.peso_percentual}%)` : ''}
               </li>
             ))}
           </ul>
-          <p className="text-muted">
+          <p className="mb-4 text-sm text-muted-foreground">
             Soma dos pesos: {somaPesos}%{' '}
             {Math.abs(somaPesos - 100) > 0.01 && somaPesos > 0 && '(atenção: não fecha 100%)'}
           </p>
 
-          <div className="row g-2 align-items-end">
-            <div className="col-md-4">
-              <label htmlFor="meta-disciplina" className="form-label">
-                Disciplina
-              </label>
-              <select
-                id="meta-disciplina"
-                className="form-select"
-                value={metaDisciplinaId}
-                onChange={(event) => setMetaDisciplinaId(event.target.value)}
-              >
-                <option value="">Selecione…</option>
-                {disciplinas.map((disciplina) => (
-                  <option key={disciplina.id} value={disciplina.id}>
-                    {disciplina.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="meta-valor" className="form-label">
-                Valor alvo
-              </label>
-              <input id="meta-valor" className="form-control" value={metaValorAlvo} onChange={(event) => setMetaValorAlvo(event.target.value)} />
-            </div>
-            <div className="col-md-2">
-              <label htmlFor="meta-peso" className="form-label">
-                Peso (%)
-              </label>
-              <input id="meta-peso" className="form-control" value={metaPeso} onChange={(event) => setMetaPeso(event.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <button
-                type="button"
-                className="btn btn-primary w-100"
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <SelectField
+              id="meta-disciplina"
+              label="Disciplina"
+              value={metaDisciplinaId}
+              onChange={setMetaDisciplinaId}
+              options={disciplinas.map((disciplina) => ({ value: disciplina.id, label: disciplina.nome }))}
+            />
+            <FormField id="meta-valor" label="Valor alvo">
+              <Input id="meta-valor" value={metaValorAlvo} onChange={(event) => setMetaValorAlvo(event.target.value)} />
+            </FormField>
+            <FormField id="meta-peso" label="Peso (%)">
+              <Input id="meta-peso" value={metaPeso} onChange={(event) => setMetaPeso(event.target.value)} />
+            </FormField>
+            <div className="flex items-end">
+              <Button
+                className="w-full"
                 disabled={!metaDisciplinaId || !metaValorAlvo || criarMeta.isPending}
                 onClick={() =>
                   criarMeta.mutate(
@@ -157,7 +125,7 @@ export function ConfiguracaoPage() {
                 }
               >
                 Adicionar meta
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -165,77 +133,53 @@ export function ConfiguracaoPage() {
 
       <Card title="Equipes">
         <div aria-label="Equipes">
-          {equipes.length === 0 && <p className="text-muted">Nenhuma equipe cadastrada ainda.</p>}
-          <ul className="list-group list-group-flush mb-3">
+          {equipes.length === 0 && <EmptyState>Nenhuma equipe cadastrada ainda.</EmptyState>}
+          <ul className="mb-4 divide-y divide-border">
             {equipes.map((equipe) => (
-              <li className="list-group-item" key={equipe.id}>
-                <strong>{equipe.nome}</strong>
-                <ul className="mb-0">
+              <li className="py-2 text-sm" key={equipe.id}>
+                <strong className="text-ink">{equipe.nome}</strong>
+                <ul className="mt-1 pl-4 text-muted-foreground">
                   {equipe.pessoas.map((pessoa) => (
-                    <li key={pessoa.id}>
-                      {pessoa.nome} — {pessoa.funcao}
-                    </li>
+                    <li key={pessoa.id}>{pessoa.nome} — {pessoa.funcao}</li>
                   ))}
                   {equipe.maquinas.map((maquina) => (
-                    <li key={maquina.id}>
-                      {maquina.nome} ({maquina.codigo})
-                    </li>
+                    <li key={maquina.id}>{maquina.nome} ({maquina.codigo})</li>
                   ))}
                 </ul>
               </li>
             ))}
           </ul>
 
-          <div className="row g-2 align-items-end mb-4">
-            <div className="col-auto">
-              <label htmlFor="nova-equipe" className="form-label">
-                Nova equipe
-              </label>
-              <input id="nova-equipe" className="form-control" value={nomeEquipe} onChange={(event) => setNomeEquipe(event.target.value)} />
-            </div>
-            <div className="col-auto">
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={!nomeEquipe.trim() || criarEquipe.isPending}
-                onClick={() => criarEquipe.mutate(nomeEquipe, { onSuccess: () => setNomeEquipe('') })}
-              >
-                Adicionar equipe
-              </button>
-            </div>
+          <div className="mb-6 flex flex-wrap items-end gap-3">
+            <FormField id="nova-equipe" label="Nova equipe">
+              <Input id="nova-equipe" value={nomeEquipe} onChange={(event) => setNomeEquipe(event.target.value)} />
+            </FormField>
+            <Button
+              disabled={!nomeEquipe.trim() || criarEquipe.isPending}
+              onClick={() => criarEquipe.mutate(nomeEquipe, { onSuccess: () => setNomeEquipe('') })}
+            >
+              Adicionar equipe
+            </Button>
           </div>
 
-          <h5>Adicionar pessoa</h5>
-          <div className="row g-2 align-items-end mb-4">
-            <div className="col-md-3">
-              <label htmlFor="pessoa-equipe" className="form-label">
-                Equipe
-              </label>
-              <select id="pessoa-equipe" className="form-select" value={pessoaEquipeId} onChange={(event) => setPessoaEquipeId(event.target.value)}>
-                <option value="">Selecione…</option>
-                {equipes.map((equipe) => (
-                  <option key={equipe.id} value={equipe.id}>
-                    {equipe.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="pessoa-nome" className="form-label">
-                Nome
-              </label>
-              <input id="pessoa-nome" className="form-control" value={pessoaNome} onChange={(event) => setPessoaNome(event.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="pessoa-funcao" className="form-label">
-                Função
-              </label>
-              <input id="pessoa-funcao" className="form-control" value={pessoaFuncao} onChange={(event) => setPessoaFuncao(event.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <button
-                type="button"
-                className="btn btn-primary w-100"
+          <h5 className="mb-3 font-display text-sm font-semibold text-ink">Adicionar pessoa</h5>
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+            <SelectField
+              id="pessoa-equipe"
+              label="Equipe"
+              value={pessoaEquipeId}
+              onChange={setPessoaEquipeId}
+              options={equipes.map((equipe) => ({ value: equipe.id, label: equipe.nome }))}
+            />
+            <FormField id="pessoa-nome" label="Nome">
+              <Input id="pessoa-nome" value={pessoaNome} onChange={(event) => setPessoaNome(event.target.value)} />
+            </FormField>
+            <FormField id="pessoa-funcao" label="Função">
+              <Input id="pessoa-funcao" value={pessoaFuncao} onChange={(event) => setPessoaFuncao(event.target.value)} />
+            </FormField>
+            <div className="flex items-end">
+              <Button
+                className="w-full"
                 disabled={!pessoaEquipeId || !pessoaNome.trim() || criarPessoa.isPending}
                 onClick={() =>
                   criarPessoa.mutate(
@@ -245,41 +189,28 @@ export function ConfiguracaoPage() {
                 }
               >
                 Adicionar pessoa
-              </button>
+              </Button>
             </div>
           </div>
 
-          <h5>Adicionar máquina</h5>
-          <div className="row g-2 align-items-end">
-            <div className="col-md-3">
-              <label htmlFor="maquina-equipe" className="form-label">
-                Equipe
-              </label>
-              <select id="maquina-equipe" className="form-select" value={maquinaEquipeId} onChange={(event) => setMaquinaEquipeId(event.target.value)}>
-                <option value="">Selecione…</option>
-                {equipes.map((equipe) => (
-                  <option key={equipe.id} value={equipe.id}>
-                    {equipe.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="maquina-codigo" className="form-label">
-                Código
-              </label>
-              <input id="maquina-codigo" className="form-control" value={maquinaCodigo} onChange={(event) => setMaquinaCodigo(event.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="maquina-nome" className="form-label">
-                Nome
-              </label>
-              <input id="maquina-nome" className="form-control" value={maquinaNome} onChange={(event) => setMaquinaNome(event.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <button
-                type="button"
-                className="btn btn-primary w-100"
+          <h5 className="mb-3 font-display text-sm font-semibold text-ink">Adicionar máquina</h5>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <SelectField
+              id="maquina-equipe"
+              label="Equipe"
+              value={maquinaEquipeId}
+              onChange={setMaquinaEquipeId}
+              options={equipes.map((equipe) => ({ value: equipe.id, label: equipe.nome }))}
+            />
+            <FormField id="maquina-codigo" label="Código">
+              <Input id="maquina-codigo" value={maquinaCodigo} onChange={(event) => setMaquinaCodigo(event.target.value)} />
+            </FormField>
+            <FormField id="maquina-nome" label="Nome">
+              <Input id="maquina-nome" value={maquinaNome} onChange={(event) => setMaquinaNome(event.target.value)} />
+            </FormField>
+            <div className="flex items-end">
+              <Button
+                className="w-full"
                 disabled={!maquinaEquipeId || !maquinaNome.trim() || criarMaquina.isPending}
                 onClick={() =>
                   criarMaquina.mutate(
@@ -289,7 +220,7 @@ export function ConfiguracaoPage() {
                 }
               >
                 Adicionar máquina
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -297,40 +228,32 @@ export function ConfiguracaoPage() {
 
       <Card title="Valores">
         <div aria-label="Valores de custo">
-          {valoresCusto.length === 0 && <p className="text-muted">Nenhum valor cadastrado ainda.</p>}
-          <ul className="list-group list-group-flush mb-3">
+          {valoresCusto.length === 0 && <EmptyState>Nenhum valor cadastrado ainda.</EmptyState>}
+          <ul className="mb-4 divide-y divide-border">
             {valoresCusto.map((valor) => (
-              <li className="list-group-item" key={valor.id}>
-                {valor.descricao} ({valor.tipo}): {valor.valor}
-              </li>
+              <li className="py-2 text-sm" key={valor.id}>{valor.descricao} ({valor.tipo}): {valor.valor}</li>
             ))}
           </ul>
-          <div className="row g-2 align-items-end">
-            <div className="col-md-3">
-              <label htmlFor="valor-tipo" className="form-label">
-                Tipo
-              </label>
-              <select id="valor-tipo" className="form-select" value={valorTipo} onChange={(event) => setValorTipo(event.target.value as typeof valorTipo)}>
-                <option value="mao_de_obra">Mão de obra</option>
-                <option value="equipamento">Equipamento</option>
-              </select>
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="valor-descricao" className="form-label">
-                Descrição
-              </label>
-              <input id="valor-descricao" className="form-control" value={valorDescricao} onChange={(event) => setValorDescricao(event.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="valor-valor" className="form-label">
-                Valor
-              </label>
-              <input id="valor-valor" className="form-control" value={valorValor} onChange={(event) => setValorValor(event.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <button
-                type="button"
-                className="btn btn-primary w-100"
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <SelectField
+              id="valor-tipo"
+              label="Tipo"
+              value={valorTipo}
+              onChange={(value) => setValorTipo(value as typeof valorTipo)}
+              options={[
+                { value: 'mao_de_obra', label: 'Mão de obra' },
+                { value: 'equipamento', label: 'Equipamento' },
+              ]}
+            />
+            <FormField id="valor-descricao" label="Descrição">
+              <Input id="valor-descricao" value={valorDescricao} onChange={(event) => setValorDescricao(event.target.value)} />
+            </FormField>
+            <FormField id="valor-valor" label="Valor">
+              <Input id="valor-valor" value={valorValor} onChange={(event) => setValorValor(event.target.value)} />
+            </FormField>
+            <div className="flex items-end">
+              <Button
+                className="w-full"
                 disabled={!valorDescricao.trim() || !valorValor || criarValorCusto.isPending}
                 onClick={() =>
                   criarValorCusto.mutate(
@@ -340,7 +263,7 @@ export function ConfiguracaoPage() {
                 }
               >
                 Adicionar valor
-              </button>
+              </Button>
             </div>
           </div>
         </div>
