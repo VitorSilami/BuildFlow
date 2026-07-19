@@ -130,3 +130,37 @@ test('filtro por status mostra apenas projetos do status selecionado', async ({ 
   await expect(page.getByText('Contorno BR-101')).toBeVisible()
   await expect(page.getByText('Duplicação BR-365')).not.toBeVisible()
 })
+
+test('filtro sem projetos correspondentes mostra mensagem de vazio', async ({ page }) => {
+  await mockAuthenticated(page)
+  await page.route(PROJETOS_URL, (route) =>
+    route.fulfill({
+      json: {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [
+          {
+            id: 'projeto-ativo',
+            nome: 'Duplicação BR-365',
+            descricao: '',
+            numero_contrato: '',
+            trecho: '',
+            engenheiro_responsavel: '',
+            status: 'ativo',
+            execucao_percentual: null,
+            criado_por: 1,
+          },
+        ],
+      },
+    }),
+  )
+
+  await page.goto('/projetos')
+
+  await expect(page.getByText('Duplicação BR-365')).toBeVisible()
+
+  await page.getByRole('tab', { name: 'Concluídos' }).click()
+
+  await expect(page.getByText('Nenhum projeto neste status.')).toBeVisible()
+})

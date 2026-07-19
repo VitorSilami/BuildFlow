@@ -61,7 +61,7 @@ export function ProjetosListPage() {
       {!isLoading && !isError && data && data.results.length > 0 && (
         <>
           <Tabs value={filtro} onValueChange={(value) => setFiltro(value as FiltroStatus)} className="mb-6">
-            <TabsList>
+            <TabsList aria-label="Filtrar por status">
               <TabsTrigger value="todos">Todos</TabsTrigger>
               <TabsTrigger value="ativo">Ativos</TabsTrigger>
               <TabsTrigger value="pausado">Pausados</TabsTrigger>
