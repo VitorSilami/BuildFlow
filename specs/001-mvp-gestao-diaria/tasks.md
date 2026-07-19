@@ -449,3 +449,14 @@ execução média e alertas de RDO atrasado (>7 dias). Frontend consumidor fica 
 separado (`docs/superpowers/plans/2026-07-18-field-os-frontend.md`, quando escrito).
 
 **Verificado**: suíte pytest completa + ruff limpos.
+
+**Frontend do "Field OS" — Dashboard (2026-07-19)**: nova `DashboardPage` consumindo
+`GET /api/v1/dashboard/` (contagens por status, execução média, projetos ativos, alertas de RDO
+atrasado). `/dashboard` vira o destino pós-login (era `/projetos`). Sidebar ganha o Dashboard como
+primeiro item, agrupamento "Operação" para os itens existentes, e subtítulo "Field OS" na marca.
+Topbar ganha busca client-side de projetos (reaproveitando o cache de `useProjetos()`, sem
+endpoint novo, com fetch lazy — só dispara ao digitar, evitando uma requisição em toda pagina
+autenticada). Próximos passos do redesign "Field OS" (Projetos, RDO wizard, Configurações) ficam
+em planos separados.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
