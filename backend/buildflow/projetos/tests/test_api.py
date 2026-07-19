@@ -258,6 +258,67 @@ def test_atualizar_projeto_ignora_empresa_enviada_no_payload():
     assert projeto.empresa_id == empresa.id  # nunca a empresa enviada no payload
 
 
+def test_atualizar_projeto_ignora_criado_por_enviado_no_payload():
+    empresa = EmpresaFactory()
+    usuario = UsuarioFactory(empresa=empresa)
+    outro_usuario = UsuarioFactory(empresa=empresa)
+    projeto = Projeto.objects.create(
+        empresa=empresa,
+        nome="Projeto Y",
+        criado_por=usuario,
+    )
+
+    response = _authenticated_client(usuario).patch(
+        f"{PROJETOS_URL}{projeto.id}/",
+        {"criado_por": outro_usuario.id},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    projeto.refresh_from_db()
+    assert projeto.criado_por_id == usuario.id  # nunca o criado_por enviado no payload
+
+
+def test_atualizar_projeto_via_put_substitui_campos_editaveis():
+    empresa = EmpresaFactory()
+    usuario = UsuarioFactory(empresa=empresa)
+    projeto = Projeto.objects.create(
+        empresa=empresa,
+        nome="Projeto Original",
+        descricao="Descricao original",
+        numero_contrato="CTR-0001",
+        trecho="BR-101 · km 0-10",
+        engenheiro_responsavel="Eng. Original",
+        status="ativo",
+        criado_por=usuario,
+    )
+
+    response = _authenticated_client(usuario).put(
+        f"{PROJETOS_URL}{projeto.id}/",
+        {
+            "nome": "Projeto Renovado",
+            "descricao": "",
+            "numero_contrato": "",
+            "trecho": "",
+            "engenheiro_responsavel": "",
+            "status": "concluido",
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    body = response.json()
+    assert body["nome"] == "Projeto Renovado"
+    assert body["status"] == "concluido"
+    assert body["execucao_percentual"] is None
+    assert body["ultimo_rdo_data"] is None
+
+    projeto.refresh_from_db()
+    assert projeto.nome == "Projeto Renovado"
+    assert projeto.descricao == ""
+    assert projeto.status == "concluido"
+
+
 def test_atualizar_projeto_de_outra_empresa_retorna_404():
     empresa_a = EmpresaFactory()
     usuario_a = UsuarioFactory(empresa=empresa_a)
