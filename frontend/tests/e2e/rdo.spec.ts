@@ -48,26 +48,33 @@ const RDO_CRIADO = {
   fotos: [],
 }
 
-test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ page }) => {
+async function mockRotasBasicas(page: import('@playwright/test').Page) {
   await page.route(SESSION_URL, (route) =>
     route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
   )
   await page.route(CONFIG_URL, (route) => route.fulfill({ json: CONFIGURACAO }))
+  await page.route(RDO_DETAIL_URL, (route) => route.fulfill({ json: RDO_CRIADO }))
+}
+
+test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ page }) => {
+  await mockRotasBasicas(page)
   await page.route(RDO_CREATE_URL, (route) => {
     if (route.request().method() !== 'POST') return route.fallback()
     return route.fulfill({ status: 201, json: RDO_CRIADO })
   })
-  await page.route(RDO_DETAIL_URL, (route) => route.fulfill({ json: RDO_CRIADO }))
   await page.route(FOTO_URL, (route) =>
     route.fulfill({ status: 201, json: { id: 'foto-1', arquivo: '/media/foto.png', km: '10.250', created_at: '2026-07-17T00:00:00Z' } }),
   )
 
   await page.goto('/projetos/projeto-1/registros-diarios/novo')
 
+  // Passo 1: Gerais
   await page.getByLabel('Data').fill('2026-07-17')
   await page.getByLabel('Equipe', { exact: true }).selectOption('equipe-1')
   await page.getByLabel('Fiscal').selectOption('1')
+  await page.getByRole('button', { name: 'Próximo' }).click()
 
+  // Passo 2: Produção
   await page.getByLabel('Rodovia').fill('BR-365')
   await page.getByLabel('Disciplina').selectOption('disc-1')
   await page.getByLabel('Serviço').selectOption('serv-1')
@@ -75,13 +82,22 @@ test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ p
   await page.getByLabel('Km final').fill('10.500')
   await page.getByLabel('Quantidade').fill('500')
   await page.getByLabel('Unidade').selectOption('1')
+  await page.getByRole('button', { name: 'Próximo' }).click()
 
+  // Passo 3: Equipe
   await page.getByLabel('Nome (avulso)').fill('João Ajudante')
   await page.getByLabel('Função').fill('Ajudante')
+  await page.getByRole('button', { name: 'Próximo' }).click()
 
+  // Passo 4: Máquinas
   await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
   await page.getByLabel('Horas produtivas').fill('6')
+  await page.getByRole('button', { name: 'Próximo' }).click()
 
+  // Passo 5: Ocorrências (nenhuma)
+  await page.getByRole('button', { name: 'Próximo' }).click()
+
+  // Passo 6: Revisão
   await page.getByRole('button', { name: 'Salvar registro diário' }).click()
 
   // Apos salvar, navega para a tela de detalhe do RDO (nao fica so numa
@@ -107,11 +123,7 @@ test('trocar de nome avulso para pessoa cadastrada limpa o campo avulso', async 
   // Regressao: digitar um nome avulso e depois escolher uma pessoa cadastrada
   // deixava os dois campos preenchidos, violando a regra XOR (bug real
   // encontrado em teste manual, 2026-07-17).
-  await page.route(SESSION_URL, (route) =>
-    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
-  )
-  await page.route(CONFIG_URL, (route) => route.fulfill({ json: CONFIGURACAO }))
-  await page.route(RDO_DETAIL_URL, (route) => route.fulfill({ json: RDO_CRIADO }))
+  await mockRotasBasicas(page)
 
   let payloadRecebido: Record<string, unknown> | null = null
   await page.route(RDO_CREATE_URL, async (route) => {
@@ -125,6 +137,7 @@ test('trocar de nome avulso para pessoa cadastrada limpa o campo avulso', async 
   await page.getByLabel('Data').fill('2026-07-17')
   await page.getByLabel('Equipe', { exact: true }).selectOption('equipe-1')
   await page.getByLabel('Fiscal').selectOption('1')
+  await page.getByRole('button', { name: 'Próximo' }).click()
 
   await page.getByLabel('Rodovia').fill('BR-365')
   await page.getByLabel('Disciplina').selectOption('disc-1')
@@ -133,15 +146,20 @@ test('trocar de nome avulso para pessoa cadastrada limpa o campo avulso', async 
   await page.getByLabel('Km final').fill('10.500')
   await page.getByLabel('Quantidade').fill('500')
   await page.getByLabel('Unidade').selectOption('1')
+  await page.getByRole('button', { name: 'Próximo' }).click()
 
   // Digita um nome avulso primeiro...
   await page.getByLabel('Nome (avulso)').fill('Nome Digitado Errado')
   // ...depois muda de ideia e escolhe a pessoa cadastrada.
   await page.getByLabel('Pessoa cadastrada').selectOption('pessoa-1')
   await page.getByLabel('Função').fill('Ajudante')
+  await page.getByRole('button', { name: 'Próximo' }).click()
 
   await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
   await page.getByLabel('Horas produtivas').fill('6')
+  await page.getByRole('button', { name: 'Próximo' }).click()
+
+  await page.getByRole('button', { name: 'Próximo' }).click()
 
   await page.getByRole('button', { name: 'Salvar registro diário' }).click()
 
@@ -150,4 +168,72 @@ test('trocar de nome avulso para pessoa cadastrada limpa o campo avulso', async 
     .presencas
   expect(presencas[0].pessoa).toBe('pessoa-1')
   expect(presencas[0].nome_avulso).toBeFalsy()
+})
+
+test('grupos de botões de turno e clima atualizam a seleção e enviam no payload', async ({ page }) => {
+  await mockRotasBasicas(page)
+
+  let payloadRecebido: Record<string, unknown> | null = null
+  await page.route(RDO_CREATE_URL, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    payloadRecebido = route.request().postDataJSON()
+    return route.fulfill({ status: 201, json: RDO_CRIADO })
+  })
+
+  await page.goto('/projetos/projeto-1/registros-diarios/novo')
+
+  await page.getByLabel('Data').fill('2026-07-17')
+  await page.getByRole('button', { name: 'Noturno' }).click()
+  await page.getByRole('button', { name: 'Chuva', exact: true }).click()
+  await page.getByLabel('Equipe', { exact: true }).selectOption('equipe-1')
+  await page.getByLabel('Fiscal').selectOption('1')
+  await page.getByRole('button', { name: 'Próximo' }).click()
+
+  await page.getByLabel('Rodovia').fill('BR-365')
+  await page.getByLabel('Disciplina').selectOption('disc-1')
+  await page.getByLabel('Serviço').selectOption('serv-1')
+  await page.getByLabel('Km inicial').fill('10.000')
+  await page.getByLabel('Km final').fill('10.500')
+  await page.getByLabel('Quantidade').fill('500')
+  await page.getByLabel('Unidade').selectOption('1')
+  await page.getByRole('button', { name: 'Próximo' }).click()
+
+  await page.getByLabel('Nome (avulso)').fill('João Ajudante')
+  await page.getByLabel('Função').fill('Ajudante')
+  await page.getByRole('button', { name: 'Próximo' }).click()
+
+  await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
+  await page.getByLabel('Horas produtivas').fill('6')
+  await page.getByRole('button', { name: 'Próximo' }).click()
+
+  await page.getByRole('button', { name: 'Próximo' }).click()
+
+  await page.getByRole('button', { name: 'Salvar registro diário' }).click()
+
+  await expect(page).toHaveURL(/\/registros-diarios\/rdo-1$/)
+  const payload = payloadRecebido as { turno: string; clima: string }
+  expect(payload.turno).toBe('noturno')
+  expect(payload.clima).toBe('chuva')
+})
+
+test('duplicar dia anterior preenche equipe e fiscal do ultimo RDO', async ({ page }) => {
+  await mockRotasBasicas(page)
+  await page.route(RDO_CREATE_URL, (route) => {
+    if (route.request().method() !== 'GET') return route.fallback()
+    return route.fulfill({
+      json: {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [{ ...RDO_CRIADO, equipe: 'equipe-1', fiscal: 1 }],
+      },
+    })
+  })
+
+  await page.goto('/projetos/projeto-1/registros-diarios/novo')
+
+  await page.getByRole('button', { name: 'Duplicar dia anterior' }).click()
+
+  await expect(page.getByLabel('Equipe', { exact: true })).toHaveValue('equipe-1')
+  await expect(page.getByLabel('Fiscal')).toHaveValue('1')
 })
