@@ -1,7 +1,14 @@
+export type ProjetoStatus = 'ativo' | 'pausado' | 'concluido'
+
 export interface Projeto {
   id: string
   nome: string
   descricao: string
+  numero_contrato: string
+  trecho: string
+  engenheiro_responsavel: string
+  status: ProjetoStatus
+  execucao_percentual: string | null
   criado_por: number
   created_at: string
   updated_at: string

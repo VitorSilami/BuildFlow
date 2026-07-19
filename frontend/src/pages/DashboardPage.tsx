@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Badge, Card, EmptyState, ErrorRetry, PageHeader, Spinner } from '../components/ui'
 import { useDashboard } from '../features/dashboard/dashboardApi'
-
-function formatExecucao(valor: string | null): string {
-  return valor === null ? '—' : `${valor}%`
-}
+import { formatExecucao } from '../lib/format'
 
 export function DashboardPage() {
   const { data, isLoading, isError, refetch } = useDashboard()
