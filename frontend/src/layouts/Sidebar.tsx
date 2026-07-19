@@ -40,7 +40,7 @@ export function SidebarNav() {
 
 export function Sidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-border bg-background lg:flex lg:flex-col">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-border bg-background lg:flex lg:flex-col">
       <div className="flex h-16 flex-col justify-center border-b border-border px-4">
         <span className="font-display text-lg font-bold tracking-tight text-ink">
           Build<span className="text-signal">Flow</span>
