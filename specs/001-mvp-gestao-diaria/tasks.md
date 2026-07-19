@@ -471,3 +471,16 @@ list/create/retrieve), então o status só pode ser definido na criação. Próx
 redesign "Field OS" (RDO wizard, Configurações) ficam em planos separados.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Backend do "Field OS" — Edição de Projetos (2026-07-19)**: `ProjetoViewSet` ganha
+`UpdateModelMixin` (`PATCH`/`PUT /api/v1/projetos/{id}/`), aceitando os mesmos campos já graváveis
+na criação (`criado_por` protegido via `read_only_fields`, `empresa` protegida por omissão do
+próprio `Meta.fields` do serializer — nenhum dos dois é aceito do payload do cliente; isolamento
+multitenant automático via `TenantScopedViewSetMixin`). Novo campo `ultimo_rdo_data` no
+`ProjetoSerializer` (data do RDO mais recente do projeto, ou `null`) — a busca de "último RDO",
+antes inline em `DashboardView`, foi extraída para `obter_ultima_data_rdo()` em
+`projetos/services.py` e reaproveitada nos dois lugares. Sem migration nova. Frontend consumidor
+fica para um plano separado (`docs/superpowers/plans/2026-07-19-field-os-frontend-projetos-v2.md`,
+quando escrito).
+
+**Verificado**: suíte pytest completa (93/93) + ruff limpos.
