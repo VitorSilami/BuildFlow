@@ -29,11 +29,33 @@ test('lista vazia mostra estado vazio e permite criar o primeiro projeto', async
       projetoCriado = true
       return route.fulfill({
         status: 201,
-        json: { id: 'novo-projeto', nome: 'Duplicação BR-365', descricao: '', criado_por: 1 },
+        json: {
+          id: 'novo-projeto',
+          nome: 'Duplicação BR-365',
+          descricao: '',
+          numero_contrato: '',
+          trecho: '',
+          engenheiro_responsavel: '',
+          status: 'ativo',
+          execucao_percentual: null,
+          criado_por: 1,
+        },
       })
     }
     const results = projetoCriado
-      ? [{ id: 'novo-projeto', nome: 'Duplicação BR-365', descricao: '', criado_por: 1 }]
+      ? [
+          {
+            id: 'novo-projeto',
+            nome: 'Duplicação BR-365',
+            descricao: '',
+            numero_contrato: '',
+            trecho: '',
+            engenheiro_responsavel: '',
+            status: 'ativo',
+            execucao_percentual: null,
+            criado_por: 1,
+          },
+        ]
       : []
     return route.fulfill({ json: { count: results.length, next: null, previous: null, results } })
   })
@@ -60,4 +82,51 @@ test('nome vazio é rejeitado com erro próximo ao campo', async ({ page }) => {
   await page.getByRole('button', { name: 'Criar projeto' }).click()
 
   await expect(page.getByRole('alert')).toContainText('obrigatório')
+})
+
+test('filtro por status mostra apenas projetos do status selecionado', async ({ page }) => {
+  await mockAuthenticated(page)
+  await page.route(PROJETOS_URL, (route) =>
+    route.fulfill({
+      json: {
+        count: 2,
+        next: null,
+        previous: null,
+        results: [
+          {
+            id: 'projeto-ativo',
+            nome: 'Duplicação BR-365',
+            descricao: '',
+            numero_contrato: '',
+            trecho: '',
+            engenheiro_responsavel: '',
+            status: 'ativo',
+            execucao_percentual: null,
+            criado_por: 1,
+          },
+          {
+            id: 'projeto-pausado',
+            nome: 'Contorno BR-101',
+            descricao: '',
+            numero_contrato: '',
+            trecho: '',
+            engenheiro_responsavel: '',
+            status: 'pausado',
+            execucao_percentual: null,
+            criado_por: 1,
+          },
+        ],
+      },
+    }),
+  )
+
+  await page.goto('/projetos')
+
+  await expect(page.getByText('Duplicação BR-365')).toBeVisible()
+  await expect(page.getByText('Contorno BR-101')).toBeVisible()
+
+  await page.getByRole('tab', { name: 'Pausados' }).click()
+
+  await expect(page.getByText('Contorno BR-101')).toBeVisible()
+  await expect(page.getByText('Duplicação BR-365')).not.toBeVisible()
 })
