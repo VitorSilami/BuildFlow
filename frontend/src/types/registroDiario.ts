@@ -86,10 +86,13 @@ export interface OcorrenciaInput {
   descricao: string
 }
 
+export type Turno = 'diurno' | 'noturno'
+export type Clima = 'sol' | 'nublado' | 'chuva' | 'chuva_forte'
+
 export interface RegistroDiarioInput {
   data_referencia: string
-  turno: 'diurno' | 'noturno'
-  clima: 'sol' | 'nublado' | 'chuva' | 'chuva_forte'
+  turno: Turno
+  clima: Clima
   equipe: string
   fiscal: number
   producoes: ProducaoDiariaInput[]
