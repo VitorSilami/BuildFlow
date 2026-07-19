@@ -455,7 +455,7 @@ separado (`docs/superpowers/plans/2026-07-18-field-os-frontend.md`, quando escri
 atrasado). `/dashboard` vira o destino pós-login (era `/projetos`). Sidebar ganha o Dashboard como
 primeiro item, agrupamento "Operação" para os itens existentes, e subtítulo "Field OS" na marca.
 Topbar ganha busca client-side de projetos (reaproveitando o cache de `useProjetos()`, sem
-endpoint novo, com fetch lazy — só dispara ao digitar, evitando uma requisição em toda pagina
+endpoint novo, com fetch lazy — só dispara ao digitar, evitando uma requisição em toda página
 autenticada). Próximos passos do redesign "Field OS" (Projetos, RDO wizard, Configurações) ficam
 em planos separados.
 
