@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Alert, Button, FormField, Input, SelectField, Textarea } from '../../components/ui'
 import { projetoFormSchema } from '../../schemas/projeto'
-import type { ProjetoStatus } from '../../types/projeto'
-import { useCriarProjeto } from './projetosApi'
+import type { Projeto, ProjetoStatus } from '../../types/projeto'
+import { useAtualizarProjeto, useCriarProjeto } from './projetosApi'
 
 interface ProjetoFormProps {
-  onCreated: () => void
+  projeto?: Projeto
+  onSuccess: () => void
 }
 
 const STATUS_OPTIONS = [
@@ -14,15 +15,19 @@ const STATUS_OPTIONS = [
   { value: 'concluido', label: 'Concluído' },
 ]
 
-export function ProjetoForm({ onCreated }: ProjetoFormProps) {
-  const [nome, setNome] = useState('')
-  const [descricao, setDescricao] = useState('')
-  const [numeroContrato, setNumeroContrato] = useState('')
-  const [trecho, setTrecho] = useState('')
-  const [engenheiroResponsavel, setEngenheiroResponsavel] = useState('')
-  const [status, setStatus] = useState<ProjetoStatus>('ativo')
+export function ProjetoForm({ projeto, onSuccess }: ProjetoFormProps) {
+  const [nome, setNome] = useState(projeto?.nome ?? '')
+  const [descricao, setDescricao] = useState(projeto?.descricao ?? '')
+  const [numeroContrato, setNumeroContrato] = useState(projeto?.numero_contrato ?? '')
+  const [trecho, setTrecho] = useState(projeto?.trecho ?? '')
+  const [engenheiroResponsavel, setEngenheiroResponsavel] = useState(
+    projeto?.engenheiro_responsavel ?? '',
+  )
+  const [status, setStatus] = useState<ProjetoStatus>(projeto?.status ?? 'ativo')
   const [nomeError, setNomeError] = useState<string | null>(null)
   const criarProjeto = useCriarProjeto()
+  const atualizarProjeto = useAtualizarProjeto(projeto?.id ?? '')
+  const mutation = projeto ? atualizarProjeto : criarProjeto
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -41,21 +46,23 @@ export function ProjetoForm({ onCreated }: ProjetoFormProps) {
       return
     }
 
-    criarProjeto.mutate(result.data, {
+    mutation.mutate(result.data, {
       onSuccess: () => {
-        setNome('')
-        setDescricao('')
-        setNumeroContrato('')
-        setTrecho('')
-        setEngenheiroResponsavel('')
-        setStatus('ativo')
-        onCreated()
+        if (!projeto) {
+          setNome('')
+          setDescricao('')
+          setNumeroContrato('')
+          setTrecho('')
+          setEngenheiroResponsavel('')
+          setStatus('ativo')
+        }
+        onSuccess()
       },
     })
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-label="Criar novo projeto">
+    <form onSubmit={handleSubmit} aria-label={projeto ? 'Editar projeto' : 'Criar novo projeto'}>
       <FormField id="projeto-nome" label="Nome do projeto" error={nomeError}>
         <Input
           id="projeto-nome"
@@ -98,10 +105,22 @@ export function ProjetoForm({ onCreated }: ProjetoFormProps) {
         options={STATUS_OPTIONS}
       />
 
-      {criarProjeto.isError && <Alert>Não foi possível criar o projeto. Tente novamente.</Alert>}
+      {mutation.isError && (
+        <Alert>
+          {projeto
+            ? 'Não foi possível salvar as alterações. Tente novamente.'
+            : 'Não foi possível criar o projeto. Tente novamente.'}
+        </Alert>
+      )}
 
-      <Button type="submit" disabled={criarProjeto.isPending}>
-        {criarProjeto.isPending ? 'Criando…' : 'Criar projeto'}
+      <Button type="submit" disabled={mutation.isPending}>
+        {projeto
+          ? mutation.isPending
+            ? 'Salvando…'
+            : 'Salvar alterações'
+          : mutation.isPending
+            ? 'Criando…'
+            : 'Criar projeto'}
       </Button>
     </form>
   )

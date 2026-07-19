@@ -44,7 +44,7 @@ export function ProjetosListPage() {
 
       {showForm && (
         <Card title="Criar novo projeto">
-          <ProjetoForm onCreated={() => setShowForm(false)} />
+          <ProjetoForm onSuccess={() => setShowForm(false)} />
         </Card>
       )}
 
