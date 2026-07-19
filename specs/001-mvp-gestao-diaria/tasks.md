@@ -484,3 +484,15 @@ fica para um plano separado (`docs/superpowers/plans/2026-07-19-field-os-fronten
 quando escrito).
 
 **Verificado**: suíte pytest completa (93/93) + ruff limpos.
+
+**Frontend do "Field OS" — Edição de Projetos e Redesign de Cards (2026-07-19)**: `ProjetoForm`
+generalizado para criar e editar (prop `projeto?`, hook `useAtualizarProjeto` via `PATCH`); criação
+e edição agora abrem em modal (`Dialog`, primeiro consumo no codebase) em vez do card inline
+anterior. Cards de `ProjetosListPage` redesenhados: ícones em trecho/engenheiro/último RDO (novo
+campo `ultimo_rdo_data`), badge de status com cores semânticas reais (verde/âmbar/cinza), barra de
+execução via `Progress` (primeiro consumo) — mostrada só quando há dado real, nunca uma barra em 0%
+para "sem dado". Nova busca em texto (nome/trecho/engenheiro) somada aos tabs de status já
+existentes, tudo client-side sobre a lista já carregada. Sidebar/Topbar ganham `sticky`. Próximos
+passos do redesign "Field OS" (RDO wizard, Configurações) ficam em planos separados.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
