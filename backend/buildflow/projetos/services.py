@@ -7,8 +7,11 @@ from django.db.models import Sum
 
 from buildflow.configuracoes.models import MetaMensal
 from buildflow.registros_diarios.models import ProducaoDiaria
+from buildflow.registros_diarios.models import RegistroDiario
 
 if TYPE_CHECKING:
+    import datetime
+
     from .models import Projeto
 
 
@@ -52,3 +55,16 @@ def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
 
 def decimal_para_str_ou_none(valor: Decimal | None) -> str | None:
     return str(valor) if valor is not None else None
+
+
+def obter_ultima_data_rdo(projeto: Projeto) -> datetime.date | None:
+    """Data do RegistroDiario mais recente do projeto, ou None se nunca houve
+    nenhum — mesma regra de nunca inventar dado: ausencia de RDO e ausencia
+    de valor, nao uma data arbitraria.
+    """
+    ultimo = (
+        RegistroDiario.objects.filter(projeto=projeto)
+        .order_by("-data_referencia")
+        .first()
+    )
+    return ultimo.data_referencia if ultimo is not None else None

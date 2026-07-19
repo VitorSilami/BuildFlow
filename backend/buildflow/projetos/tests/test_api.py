@@ -295,3 +295,53 @@ def test_atualizar_projeto_com_nome_vazio_e_rejeitado():
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_ultimo_rdo_data_reflete_registro_mais_recente():
+    empresa = EmpresaFactory()
+    usuario = UsuarioFactory(empresa=empresa)
+    projeto = Projeto.objects.create(
+        empresa=empresa,
+        nome="Projeto Com RDO",
+        criado_por=usuario,
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-10",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+
+    response = _authenticated_client(usuario).get(PROJETOS_URL)
+
+    assert response.status_code == HTTPStatus.OK
+    item = next(r for r in response.json()["results"] if r["nome"] == "Projeto Com RDO")
+    assert item["ultimo_rdo_data"] == "2026-07-10"
+
+
+def test_ultimo_rdo_data_e_null_sem_nenhum_rdo():
+    usuario = UsuarioFactory()
+    Projeto.objects.create(
+        empresa=usuario.empresa,
+        nome="Projeto Sem RDO",
+        criado_por=usuario,
+    )
+
+    response = _authenticated_client(usuario).get(PROJETOS_URL)
+
+    assert response.status_code == HTTPStatus.OK
+    item = next(r for r in response.json()["results"] if r["nome"] == "Projeto Sem RDO")
+    assert item["ultimo_rdo_data"] is None

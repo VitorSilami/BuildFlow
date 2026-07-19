@@ -3,10 +3,12 @@ from rest_framework import serializers
 from .models import Projeto
 from .services import calcular_execucao_percentual
 from .services import decimal_para_str_ou_none
+from .services import obter_ultima_data_rdo
 
 
 class ProjetoSerializer(serializers.ModelSerializer):
     execucao_percentual = serializers.SerializerMethodField()
+    ultimo_rdo_data = serializers.SerializerMethodField()
 
     class Meta:
         model = Projeto
@@ -19,6 +21,7 @@ class ProjetoSerializer(serializers.ModelSerializer):
             "engenheiro_responsavel",
             "status",
             "execucao_percentual",
+            "ultimo_rdo_data",
             "criado_por",
             "created_at",
             "updated_at",
@@ -28,6 +31,10 @@ class ProjetoSerializer(serializers.ModelSerializer):
     def get_execucao_percentual(self, obj: Projeto) -> str | None:
         valor = calcular_execucao_percentual(obj)
         return decimal_para_str_ou_none(valor)
+
+    def get_ultimo_rdo_data(self, obj: Projeto) -> str | None:
+        data = obter_ultima_data_rdo(obj)
+        return data.isoformat() if data is not None else None
 
     def validate_nome(self, value: str) -> str:
         # FR-016: rejeitar nome vazio ou composto somente por espacos.

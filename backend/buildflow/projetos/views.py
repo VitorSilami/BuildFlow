@@ -9,12 +9,12 @@ from rest_framework.viewsets import GenericViewSet
 
 from buildflow.core.permissions import IsAuthenticatedWithEmpresa
 from buildflow.core.permissions import TenantScopedViewSetMixin
-from buildflow.registros_diarios.models import RegistroDiario
 
 from .models import Projeto
 from .serializers import ProjetoSerializer
 from .services import calcular_execucao_percentual
 from .services import decimal_para_str_ou_none
+from .services import obter_ultima_data_rdo
 
 DIAS_LIMITE_ALERTA_RDO = 7
 
@@ -70,16 +70,10 @@ class DashboardView(APIView):
         limite = hoje - datetime.timedelta(days=DIAS_LIMITE_ALERTA_RDO)
         alertas = []
         for projeto in projetos_ativos:
-            ultimo_rdo = (
-                RegistroDiario.objects.filter(projeto=projeto)
-                .order_by("-data_referencia")
-                .first()
-            )
-            if ultimo_rdo is None or ultimo_rdo.data_referencia < limite:
+            ultima_data = obter_ultima_data_rdo(projeto)
+            if ultima_data is None or ultima_data < limite:
                 dias_sem_rdo = (
-                    (hoje - ultimo_rdo.data_referencia).days
-                    if ultimo_rdo is not None
-                    else None
+                    (hoje - ultima_data).days if ultima_data is not None else None
                 )
                 alertas.append(
                     {
