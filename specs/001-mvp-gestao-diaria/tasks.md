@@ -496,3 +496,17 @@ existentes, tudo client-side sobre a lista já carregada. Sidebar/Topbar ganham 
 passos do redesign "Field OS" (RDO wizard, Configurações) ficam em planos separados.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Frontend do "Field OS" — Wizard de RDO (2026-07-19)**: `RdoPage` reescrita como wizard de 6
+passos (Gerais/Produção/Equipe/Máquinas/Ocorrências/Revisão), navegação Anterior/Próximo, cada
+passo extraído para seu próprio componente em `features/registros-diarios/wizard/`. Turno e Clima
+viram grupos de botões (`GrupoBotoes`) em vez de dropdowns — alvos maiores, mais fáceis de acertar
+em campo. "Duplicar dia anterior" busca o RDO mais recente do projeto (mesmo endpoint de listagem
+já existente) e pré-preenche apenas Equipe e Fiscal — nunca turno/clima/produção/presenças/
+máquinas/ocorrências, que mudam dia a dia. Validação Zod continua avaliada só no submit final (não
+por passo). O passo "Revisão" é informativo, não um upload real — fotos continuam sendo anexadas
+na tela de detalhe pós-criação (`FotoUpload`/`useEnviarFoto`), já que o registro precisa existir no
+backend antes de aceitar fotos; essa decisão foi confirmada com o usuário antes de escrever este
+plano. Próximo passo do redesign "Field OS" (Configurações) fica em plano separado.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
