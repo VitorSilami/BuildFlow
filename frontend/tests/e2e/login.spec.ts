@@ -54,7 +54,7 @@ test('usuário não autenticado é redirecionado para /login', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'BuildFlow' })).toBeVisible()
 });
 
-test('login com Google bem-sucedido redireciona para /projetos', async ({ page }) => {
+test('login com Google bem-sucedido redireciona para /dashboard', async ({ page }) => {
   let authenticated = false
   await page.route(SESSION_URL, (route) => {
     const body = authenticated
@@ -73,7 +73,7 @@ test('login com Google bem-sucedido redireciona para /projetos', async ({ page }
   await page.goto('/login')
   await page.getByRole('button', { name: 'Entrar com Google (stub)' }).click()
 
-  await expect(page).toHaveURL(/\/projetos$/)
+  await expect(page).toHaveURL(/\/dashboard$/)
 })
 
 test('login recusado (usuário não autorizado) mantém na tela de login com erro', async ({ page }) => {

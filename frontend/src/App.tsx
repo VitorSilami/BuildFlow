@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './features/auth/AuthContext'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { ConfiguracaoPage } from './pages/ConfiguracaoPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { ProjetosListPage } from './pages/ProjetosListPage'
 import { RdoPage } from './pages/RdoPage'
@@ -24,6 +25,7 @@ function App() {
           />
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/projetos" element={<ProjetosListPage />} />
               <Route path="/projetos/:projetoId/registros-diarios" element={<RegistrosDiariosListPage />} />
               <Route path="/projetos/:projetoId/registros-diarios/novo" element={<RdoPage />} />
@@ -34,7 +36,7 @@ function App() {
               <Route path="/projetos/:projetoId/configuracoes" element={<ConfiguracaoPage />} />
             </Route>
           </Route>
-          <Route path="/" element={<Navigate to="/projetos" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
