@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from .models import Projeto
 from .services import calcular_execucao_percentual
+from .services import decimal_para_str_ou_none
 
 
 class ProjetoSerializer(serializers.ModelSerializer):
@@ -26,7 +27,7 @@ class ProjetoSerializer(serializers.ModelSerializer):
 
     def get_execucao_percentual(self, obj: Projeto) -> str | None:
         valor = calcular_execucao_percentual(obj)
-        return str(valor) if valor is not None else None
+        return decimal_para_str_ou_none(valor)
 
     def validate_nome(self, value: str) -> str:
         # FR-016: rejeitar nome vazio ou composto somente por espacos.

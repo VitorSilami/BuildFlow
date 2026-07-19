@@ -28,7 +28,7 @@ def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
     soma_ponderada = Decimal("0")
 
     for meta in metas:
-        se_peso = meta.peso_percentual
+        peso = meta.peso_percentual
         producao_total = ProducaoDiaria.objects.filter(
             registro_diario__projeto=projeto,
             disciplina=meta.disciplina,
@@ -41,10 +41,14 @@ def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
             else Decimal("0")
         )
 
-        soma_ponderada += avanco_disciplina * se_peso
-        soma_pesos += se_peso
+        soma_ponderada += avanco_disciplina * peso
+        soma_pesos += peso
 
     if soma_pesos == 0:
         return None
 
     return (soma_ponderada / soma_pesos).quantize(Decimal("0.01"))
+
+
+def decimal_para_str_ou_none(valor: Decimal | None) -> str | None:
+    return str(valor) if valor is not None else None

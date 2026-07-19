@@ -14,6 +14,7 @@ from buildflow.registros_diarios.models import RegistroDiario
 from .models import Projeto
 from .serializers import ProjetoSerializer
 from .services import calcular_execucao_percentual
+from .services import decimal_para_str_ou_none
 
 DIAS_LIMITE_ALERTA_RDO = 7
 
@@ -54,9 +55,7 @@ class DashboardView(APIView):
                     "id": str(projeto.id),
                     "nome": projeto.nome,
                     "status": projeto.status,
-                    "execucao_percentual": str(execucao)
-                    if execucao is not None
-                    else None,
+                    "execucao_percentual": decimal_para_str_ou_none(execucao),
                 },
             )
 
@@ -98,9 +97,7 @@ class DashboardView(APIView):
                 "projetos_concluidos": projetos.filter(
                     status=Projeto.StatusChoices.CONCLUIDO,
                 ).count(),
-                "execucao_media": str(execucao_media)
-                if execucao_media is not None
-                else None,
+                "execucao_media": decimal_para_str_ou_none(execucao_media),
                 "projetos": projetos_payload,
                 "alertas": alertas,
             },

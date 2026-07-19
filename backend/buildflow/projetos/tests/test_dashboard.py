@@ -171,6 +171,24 @@ def test_alerta_para_projeto_ativo_sem_rdo_recente():
     assert alertas[0]["dias_sem_rdo"] == 9  # noqa: PLR2004
 
 
+def test_alerta_para_projeto_ativo_sem_nenhum_rdo():
+    empresa = EmpresaFactory()
+    usuario = UsuarioFactory(empresa=empresa)
+    Projeto.objects.create(
+        empresa=empresa,
+        nome="Nunca Registrado",
+        criado_por=usuario,
+    )
+
+    response = _authenticated_client(usuario).get(DASHBOARD_URL)
+
+    assert response.status_code == HTTPStatus.OK
+    alertas = response.json()["alertas"]
+    assert len(alertas) == 1
+    assert alertas[0]["projeto_nome"] == "Nunca Registrado"
+    assert alertas[0]["dias_sem_rdo"] is None
+
+
 def test_sem_alerta_para_projeto_com_rdo_recente():
     empresa = EmpresaFactory()
     usuario = UsuarioFactory(empresa=empresa)
