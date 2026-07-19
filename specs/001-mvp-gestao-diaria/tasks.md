@@ -460,3 +460,14 @@ autenticada). Próximos passos do redesign "Field OS" (Projetos, RDO wizard, Con
 em planos separados.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Frontend do "Field OS" — Projetos (2026-07-19)**: `ProjetoForm` ganha `numero_contrato`,
+`trecho`, `engenheiro_responsavel` e `status` (todos opcionais, `status` default "Ativo").
+`ProjetosListPage` reescrita: cards mostram status (badge), contrato, trecho, engenheiro e
+execução (`formatExecucao`, extraído para `lib/format.ts` e compartilhado com `DashboardPage`),
+com um filtro por status (Todos/Ativos/Pausados/Concluídos) client-side sobre a lista já
+carregada. Sem endpoint novo — não há ainda edição de projeto (`ProjetoViewSet` só suporta
+list/create/retrieve), então o status só pode ser definido na criação. Próximos passos do
+redesign "Field OS" (RDO wizard, Configurações) ficam em planos separados.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
