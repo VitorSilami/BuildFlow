@@ -43,6 +43,9 @@ export function Topbar() {
             <SheetTitle className="text-left font-display text-lg font-bold tracking-tight text-ink">
               Build<span className="text-signal">Flow</span>
             </SheetTitle>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Field OS
+            </span>
           </SheetHeader>
           <SidebarNav />
         </SheetContent>

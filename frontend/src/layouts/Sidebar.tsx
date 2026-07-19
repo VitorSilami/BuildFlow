@@ -1,4 +1,4 @@
-import { FileText, LayoutGrid, Settings } from 'lucide-react'
+import { FileText, LayoutDashboard, LayoutGrid, Settings } from 'lucide-react'
 import { NavLink, useParams } from 'react-router-dom'
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>
@@ -11,8 +11,12 @@ export function SidebarNav() {
 
   return (
     <nav className="flex flex-col gap-1 p-3">
-      <p className="px-3 pb-2 pt-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-        Navegação
+      <NavLink to="/dashboard" className={navItemClass}>
+        <LayoutDashboard size={18} aria-hidden="true" />
+        Dashboard
+      </NavLink>
+      <p className="px-3 pb-2 pt-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        Operação
       </p>
       <NavLink to="/projetos" className={navItemClass}>
         <LayoutGrid size={18} aria-hidden="true" />
@@ -37,9 +41,12 @@ export function SidebarNav() {
 export function Sidebar() {
   return (
     <aside className="hidden w-64 shrink-0 border-r border-border bg-background lg:flex lg:flex-col">
-      <div className="flex h-16 items-center border-b border-border px-4">
+      <div className="flex h-16 flex-col justify-center border-b border-border px-4">
         <span className="font-display text-lg font-bold tracking-tight text-ink">
           Build<span className="text-signal">Flow</span>
+        </span>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          Field OS
         </span>
       </div>
       <SidebarNav />
