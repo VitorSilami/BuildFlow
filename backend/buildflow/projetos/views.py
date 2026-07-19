@@ -24,6 +24,7 @@ class ProjetoViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     GenericViewSet,
 ):
     serializer_class = ProjetoSerializer

@@ -207,3 +207,91 @@ def test_projeto_sem_meta_retorna_execucao_percentual_null():
         r for r in response.json()["results"] if r["nome"] == "Projeto Sem Meta"
     )
     assert item["execucao_percentual"] is None
+
+
+def test_atualizar_projeto_altera_campos_editaveis():
+    empresa = EmpresaFactory()
+    usuario = UsuarioFactory(empresa=empresa)
+    projeto = Projeto.objects.create(
+        empresa=empresa,
+        nome="Projeto Original",
+        criado_por=usuario,
+    )
+
+    response = _authenticated_client(usuario).patch(
+        f"{PROJETOS_URL}{projeto.id}/",
+        {
+            "nome": "Projeto Atualizado",
+            "trecho": "BR-101 · km 5-20",
+            "engenheiro_responsavel": "Eng. Ana Souza",
+            "status": "pausado",
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    projeto.refresh_from_db()
+    assert projeto.nome == "Projeto Atualizado"
+    assert projeto.trecho == "BR-101 · km 5-20"
+    assert projeto.engenheiro_responsavel == "Eng. Ana Souza"
+    assert projeto.status == "pausado"
+
+
+def test_atualizar_projeto_ignora_empresa_enviada_no_payload():
+    empresa = EmpresaFactory()
+    outra_empresa = EmpresaFactory()
+    usuario = UsuarioFactory(empresa=empresa)
+    projeto = Projeto.objects.create(
+        empresa=empresa,
+        nome="Projeto X",
+        criado_por=usuario,
+    )
+
+    response = _authenticated_client(usuario).patch(
+        f"{PROJETOS_URL}{projeto.id}/",
+        {"empresa": str(outra_empresa.id)},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    projeto.refresh_from_db()
+    assert projeto.empresa_id == empresa.id  # nunca a empresa enviada no payload
+
+
+def test_atualizar_projeto_de_outra_empresa_retorna_404():
+    empresa_a = EmpresaFactory()
+    usuario_a = UsuarioFactory(empresa=empresa_a)
+    empresa_b = EmpresaFactory()
+    usuario_b = UsuarioFactory(empresa=empresa_b)
+    projeto_b = Projeto.objects.create(
+        empresa=empresa_b,
+        nome="Projeto B",
+        criado_por=usuario_b,
+    )
+
+    response = _authenticated_client(usuario_a).patch(
+        f"{PROJETOS_URL}{projeto_b.id}/",
+        {"nome": "Tentativa de alteracao"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    projeto_b.refresh_from_db()
+    assert projeto_b.nome == "Projeto B"
+
+
+def test_atualizar_projeto_com_nome_vazio_e_rejeitado():
+    usuario = UsuarioFactory()
+    projeto = Projeto.objects.create(
+        empresa=usuario.empresa,
+        nome="Projeto Valido",
+        criado_por=usuario,
+    )
+
+    response = _authenticated_client(usuario).patch(
+        f"{PROJETOS_URL}{projeto.id}/",
+        {"nome": "   "},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
