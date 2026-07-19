@@ -5,10 +5,11 @@ import type { Projeto, ProjetoListResponse } from '../../types/projeto'
 
 const PROJETOS_PATH = '/api/v1/projetos/'
 
-export function useProjetos() {
+export function useProjetos(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['projetos'],
     queryFn: () => apiClient.get<ProjetoListResponse>(PROJETOS_PATH),
+    enabled: options?.enabled ?? true,
   })
 }
 

@@ -16,7 +16,7 @@ export function Topbar() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [termoBusca, setTermoBusca] = useState('')
   const buscaRef = useRef<HTMLDivElement>(null)
-  const projetos = useProjetos()
+  const projetos = useProjetos({ enabled: termoBusca.length > 0 })
 
   useEffect(() => {
     function handleClickFora(event: MouseEvent) {
