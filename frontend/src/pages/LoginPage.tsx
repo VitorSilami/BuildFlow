@@ -57,7 +57,7 @@ export function LoginPage() {
             setStatus('authenticating')
             const success = await loginWithGoogle(response.credential)
             if (success) {
-              navigate('/projetos', { replace: true })
+              navigate('/dashboard', { replace: true })
             } else {
               setStatus('error')
             }
