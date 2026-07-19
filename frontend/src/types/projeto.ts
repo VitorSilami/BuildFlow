@@ -9,6 +9,7 @@ export interface Projeto {
   engenheiro_responsavel: string
   status: ProjetoStatus
   execucao_percentual: string | null
+  ultimo_rdo_data: string | null
   criado_por: number
   created_at: string
   updated_at: string

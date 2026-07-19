@@ -22,3 +22,14 @@ export function useCriarProjeto() {
     },
   })
 }
+
+export function useAtualizarProjeto(projetoId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (values: ProjetoFormValues) =>
+      apiClient.patch<Projeto>(`${PROJETOS_PATH}${projetoId}/`, values),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['projetos'] })
+    },
+  })
+}

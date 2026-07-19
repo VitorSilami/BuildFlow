@@ -12,3 +12,14 @@ export { Input } from './input'
 export { Label } from './label'
 export { Textarea } from './textarea'
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs'
+export {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription,
+  DialogClose,
+} from './dialog'
+export { Progress } from './progress'
