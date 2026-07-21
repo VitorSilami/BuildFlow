@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Badge, Card, EmptyState, ErrorRetry, PageHeader, Spinner } from '../components/ui'
 import { AtividadeRdoChart } from '../features/dashboard/AtividadeRdoChart'
+import { StatusDonutChart } from '../features/dashboard/StatusDonutChart'
 import { useDashboard } from '../features/dashboard/dashboardApi'
 import { formatExecucao } from '../lib/format'
 
@@ -37,6 +38,16 @@ export function DashboardPage() {
           <Card title="RDOs por dia">
             <AtividadeRdoChart dados={data.atividade_rdo} />
           </Card>
+
+          {data.projetos_ativos + data.projetos_pausados + data.projetos_concluidos > 0 && (
+            <Card title="Distribuição de status">
+              <StatusDonutChart
+                ativos={data.projetos_ativos}
+                pausados={data.projetos_pausados}
+                concluidos={data.projetos_concluidos}
+              />
+            </Card>
+          )}
 
           {data.alertas.length > 0 && (
             <Card title="Alertas de RDO">

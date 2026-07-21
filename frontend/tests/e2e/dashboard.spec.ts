@@ -54,6 +54,7 @@ test('dashboard mostra resumo, projetos ativos e alertas', async ({ page }) => {
   await expect(page.getByText('9 dias sem RDO')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Duplicação BR-365' }).first()).toBeVisible()
   await expect(page.getByLabel('Gráfico de RDOs por dia')).toBeVisible()
+  await expect(page.getByLabel('Gráfico de distribuição de status')).toBeVisible()
 })
 
 test('dashboard sem projetos ativos mostra estado vazio', async ({ page }) => {
@@ -78,6 +79,7 @@ test('dashboard sem projetos ativos mostra estado vazio', async ({ page }) => {
   // exact: true evita colisao com o em-dash que tambem aparece no texto do
   // Topbar ("Empresa A — Gerente Empresa A (gerente)").
   await expect(page.getByText('—', { exact: true })).toBeVisible()
+  await expect(page.getByLabel('Gráfico de distribuição de status')).not.toBeVisible()
 })
 
 test('busca no Topbar filtra projetos e navega ao clicar', async ({ page }) => {
