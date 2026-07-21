@@ -547,3 +547,15 @@ mudança de lógica de negócio, handlers ou validação. Encerra o redesign "Fi
 `2026-07-18-field-os-dashboard-design.md`.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Frontend — Piloto de identidade visual no Dashboard (2026-07-21)**: `Card` ganha prop opcional
+`eyebrow` (label mono-caps acima do título, aditivo — zero mudança pros 20+ consumidores
+existentes). `DashboardPage` ganha tratamento visual reaproveitado da `LoginPage`/`Sidebar`: tiles
+de resumo viram caixas com borda tracejada + label mono-caps (mesmo padrão da seção "facts" do
+mockup do login), eyebrows mono-caps nos cards de gráfico, textura `grid-blueprint` sutil
+(opacidade 10%) atrás do cabeçalho da página, acento `signal` no eyebrow do gráfico "RDOs por dia".
+Puramente apresentação — nenhuma mudança de dado ou lógica. Piloto: se a direção validar, estende
+pras outras telas autenticadas (Calendário, Configurações, Projetos, Wizard de RDO) numa iniciativa
+separada.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
