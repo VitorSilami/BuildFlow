@@ -1,18 +1,23 @@
 from __future__ import annotations
 
+import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from django.db.models import Count
 from django.db.models import Sum
+from django.utils import timezone
 
 from buildflow.configuracoes.models import MetaMensal
 from buildflow.registros_diarios.models import ProducaoDiaria
 from buildflow.registros_diarios.models import RegistroDiario
 
-if TYPE_CHECKING:
-    import datetime
+from .models import Projeto
 
-    from .models import Projeto
+if TYPE_CHECKING:
+    from buildflow.empresas.models import Empresa
+
+DIAS_JANELA_ATIVIDADE = 7
 
 
 def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
@@ -68,3 +73,38 @@ def obter_ultima_data_rdo(projeto: Projeto) -> datetime.date | None:
         .first()
     )
     return ultimo.data_referencia if ultimo is not None else None
+
+
+def obter_atividade_rdo_semana(empresa: Empresa) -> list[dict[str, str | int]]:
+    """Contagem de RegistroDiario por dia, ultimos 7 dias (hoje inclusive), dos
+    projetos ativos da empresa. Dias sem nenhum RDO aparecem com quantidade 0
+    explicito — o grafico de barras do frontend nao pode "pular" um dia sem
+    dado, senao a leitura do eixo X fica errada.
+    """
+    hoje = timezone.now().date()
+    inicio = hoje - datetime.timedelta(days=DIAS_JANELA_ATIVIDADE - 1)
+
+    linhas = (
+        RegistroDiario.objects.filter(
+            projeto__empresa=empresa,
+            projeto__status=Projeto.StatusChoices.ATIVO,
+            data_referencia__gte=inicio,
+            data_referencia__lte=hoje,
+        )
+        .values("data_referencia")
+        .annotate(quantidade=Count("id"))
+    )
+    contagem_por_dia = {
+        linha["data_referencia"]: linha["quantidade"] for linha in linhas
+    }
+
+    return [
+        {
+            "data": (inicio + datetime.timedelta(days=offset)).isoformat(),
+            "quantidade": contagem_por_dia.get(
+                inicio + datetime.timedelta(days=offset),
+                0,
+            ),
+        }
+        for offset in range(DIAS_JANELA_ATIVIDADE)
+    ]
