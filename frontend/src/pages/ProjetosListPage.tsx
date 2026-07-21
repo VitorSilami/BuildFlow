@@ -49,17 +49,19 @@ const STATUS_BADGE_CLASS: Record<ProjetoStatus, string> = {
 
 function ProjetosListSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+    <>
       <span role="status" className="sr-only">Carregando projetos…</span>
-      {Array.from({ length: 6 }, (_, i) => (
-        <div key={i} className="rounded-lg border border-border p-4">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="mt-3 h-3 w-1/2" />
-          <Skeleton className="mt-2 h-3 w-1/3" />
-          <Skeleton className="mt-4 h-2 w-full" />
-        </div>
-      ))}
-    </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="rounded-lg border border-border p-4">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="mt-3 h-3 w-1/2" />
+            <Skeleton className="mt-2 h-3 w-1/3" />
+            <Skeleton className="mt-4 h-2 w-full" />
+          </div>
+        ))}
+      </div>
+    </>
   )
 }
 

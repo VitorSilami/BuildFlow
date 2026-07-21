@@ -32,19 +32,21 @@ function formatarMesParaFiltro(mesAno: MesAno): string {
 
 function CalendarioSkeleton() {
   return (
-    <div aria-hidden="true">
+    <>
       <span role="status" className="sr-only">Carregando registros…</span>
-      <div className="mb-4 flex items-center justify-between">
-        <Skeleton className="h-8 w-20" />
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-8 w-16" />
+      <div aria-hidden="true">
+        <div className="mb-4 flex items-center justify-between">
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-16" />
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 35 }, (_, i) => (
+            <Skeleton key={i} className="h-20 rounded-md" />
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: 35 }, (_, i) => (
-          <Skeleton key={i} className="h-20 rounded-md" />
-        ))}
-      </div>
-    </div>
+    </>
   )
 }
 
