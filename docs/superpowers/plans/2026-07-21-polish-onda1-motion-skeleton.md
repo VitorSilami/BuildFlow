@@ -24,6 +24,12 @@ página, substituindo `<Spinner label="..."/>` nos 6 lugares que carregam uma te
   repo) — trocar por skeleton não quebra nenhuma asserção existente.
 - `LoginPage.tsx` **não muda** — seus 2 usos de `Spinner` são feedback inline do botão de login
   (não carregamento de página), fora de escopo desta onda.
+- Todo skeleton mantém o anúncio de carregamento pra leitor de tela (`<span role="status"
+  className="sr-only">`) — e esse span **nunca pode ser descendente** de um elemento com
+  `aria-hidden="true"` (remove a subárvore inteira da árvore de acessibilidade, independente do
+  `role` dos filhos). Lição da Task 2: a primeira tentativa colocou o span dentro do
+  `aria-hidden`, virando um no-op — corrigido movendo o span pra fora, como irmão dentro de um
+  Fragment.
 - Feedback de hover/press (`hover:-translate-y-px`, `active:scale-[0.98]`) não se aplica à
   variante `link` do `Button` (texto sublinhado não deve "levantar" nem "encolher" visualmente).
 - Nunca usar `--no-verify`; commits novos ao invés de amend.
@@ -261,6 +267,13 @@ git commit -m "feat: substitui spinner por skeleton loader no Dashboard, Projeto
 **Interfaces:**
 - Consumes: `Skeleton` (já exportado no barrel pela Task 2).
 
+**Nota importante (lição da Task 2):** o `<span role="status" className="sr-only">` que anuncia o
+carregamento pra leitor de tela **nunca pode ser descendente** de um elemento com
+`aria-hidden="true"` — `aria-hidden` remove a subárvore inteira da árvore de acessibilidade,
+`role`/`aria-live` dos filhos não importam. Todo componente de skeleton abaixo já vem estruturado
+certo desde o início (span como irmão do `<div aria-hidden="true">`, dentro de um Fragment
+`<>...</>`) — não mover o span pra dentro do `div aria-hidden` durante a implementação.
+
 - [ ] **Step 1: `ConfiguracaoPage.tsx` — skeleton das abas**
 
 Trocar o import (remover `Spinner`, adicionar `Skeleton`).
@@ -270,14 +283,17 @@ Adicionar o componente local:
 ```tsx
 function ConfiguracaoSkeleton() {
   return (
-    <div aria-hidden="true">
-      <Skeleton className="h-9 w-80" />
-      <div className="mt-4 space-y-2">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
+    <>
+      <span role="status" className="sr-only">Carregando…</span>
+      <div aria-hidden="true">
+        <Skeleton className="h-9 w-80" />
+        <div className="mt-4 space-y-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 ```
@@ -301,13 +317,16 @@ Adicionar o componente local:
 ```tsx
 function RdoWizardSkeleton() {
   return (
-    <div aria-hidden="true" className="space-y-4">
-      <Skeleton className="h-10 w-full" />
-      <div className="grid grid-cols-2 gap-4">
+    <>
+      <span role="status" className="sr-only">Carregando…</span>
+      <div aria-hidden="true" className="space-y-4">
         <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 ```
@@ -331,15 +350,18 @@ Adicionar o componente local:
 ```tsx
 function RegistroDiarioDetailSkeleton() {
   return (
-    <div aria-hidden="true" className="space-y-4">
-      {Array.from({ length: 3 }, (_, i) => (
-        <div key={i} className="rounded-lg border border-border p-4">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="mt-3 h-3 w-full" />
-          <Skeleton className="mt-2 h-3 w-2/3" />
-        </div>
-      ))}
-    </div>
+    <>
+      <span role="status" className="sr-only">Carregando…</span>
+      <div aria-hidden="true" className="space-y-4">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className="rounded-lg border border-border p-4">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="mt-3 h-3 w-full" />
+            <Skeleton className="mt-2 h-3 w-2/3" />
+          </div>
+        ))}
+      </div>
+    </>
   )
 }
 ```
