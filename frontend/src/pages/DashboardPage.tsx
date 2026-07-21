@@ -1,17 +1,43 @@
 import { Link } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, FolderKanban, PauseCircle, TrendingUp } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { Badge, Card, EmptyState, ErrorRetry, PageHeader, Progress, Spinner } from '../components/ui'
 import { AtividadeRdoChart } from '../features/dashboard/AtividadeRdoChart'
 import { StatusDonutChart } from '../features/dashboard/StatusDonutChart'
 import { useDashboard } from '../features/dashboard/dashboardApi'
 import { execucaoCorClasse, formatExecucao } from '../lib/format'
 
+interface TileResumoProps {
+  label: string
+  valor: string | number
+  icon: ReactNode
+}
+
+function TileResumo({ label, valor, icon }: TileResumoProps) {
+  return (
+    <div className="rounded-md border border-dashed border-border p-3">
+      <div className="flex items-center justify-between">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          {label}
+        </p>
+        {icon}
+      </div>
+      <p className="mt-1 text-3xl font-bold text-ink">{valor}</p>
+    </div>
+  )
+}
+
 export function DashboardPage() {
   const { data, isLoading, isError, refetch } = useDashboard()
 
   return (
     <main aria-label="Dashboard">
-      <PageHeader title="Dashboard" breadcrumbs={[{ label: 'Dashboard' }]} />
+      <div className="relative overflow-hidden rounded-lg">
+        <div className="grid-blueprint absolute inset-0 opacity-10" aria-hidden="true" />
+        <div className="relative">
+          <PageHeader title="Dashboard" breadcrumbs={[{ label: 'Dashboard' }]} />
+        </div>
+      </div>
 
       {isLoading && <Spinner label="Carregando dashboard…" />}
 
@@ -22,38 +48,42 @@ export function DashboardPage() {
       {!isLoading && !isError && data && (
         <>
           <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Resumo">
-            <Card title="Projetos ativos">
-              <div className="flex items-center gap-2">
-                <FolderKanban className="text-primary" size={20} aria-hidden="true" />
-                <p className="text-3xl font-bold text-ink">{data.projetos_ativos}</p>
-              </div>
-            </Card>
-            <Card title="Pausados">
-              <div className="flex items-center gap-2">
-                <PauseCircle className="text-amber-500" size={20} aria-hidden="true" />
-                <p className="text-3xl font-bold text-ink">{data.projetos_pausados}</p>
-              </div>
-            </Card>
-            <Card title="Concluídos">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="text-slate-500" size={20} aria-hidden="true" />
-                <p className="text-3xl font-bold text-ink">{data.projetos_concluidos}</p>
-              </div>
-            </Card>
-            <Card title="Execução média">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="text-emerald-500" size={20} aria-hidden="true" />
-                <p className="text-3xl font-bold text-ink">{formatExecucao(data.execucao_media)}</p>
-              </div>
-            </Card>
+            <TileResumo
+              label="Projetos ativos"
+              valor={data.projetos_ativos}
+              icon={<FolderKanban className="text-primary" size={18} aria-hidden="true" />}
+            />
+            <TileResumo
+              label="Pausados"
+              valor={data.projetos_pausados}
+              icon={<PauseCircle className="text-amber-500" size={18} aria-hidden="true" />}
+            />
+            <TileResumo
+              label="Concluídos"
+              valor={data.projetos_concluidos}
+              icon={<CheckCircle2 className="text-slate-500" size={18} aria-hidden="true" />}
+            />
+            <TileResumo
+              label="Execução média"
+              valor={formatExecucao(data.execucao_media)}
+              icon={<TrendingUp className="text-emerald-500" size={18} aria-hidden="true" />}
+            />
           </div>
 
-          <Card title="RDOs por dia">
+          <Card
+            title="RDOs por dia"
+            eyebrow={
+              <>
+                <span className="size-1.5 rounded-full bg-signal" aria-hidden="true" />
+                Últimos 7 dias
+              </>
+            }
+          >
             <AtividadeRdoChart dados={data.atividade_rdo} />
           </Card>
 
           {data.projetos_ativos + data.projetos_pausados + data.projetos_concluidos > 0 && (
-            <Card title="Distribuição de status">
+            <Card title="Distribuição de status" eyebrow="Projetos">
               <StatusDonutChart
                 ativos={data.projetos_ativos}
                 pausados={data.projetos_pausados}
