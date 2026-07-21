@@ -119,3 +119,48 @@ def test_detalhe_rdo_via_rota_plana(cenario):
 
     assert response.status_code == HTTPStatus.OK
     assert len(response.json()["producoes"]) == 1
+
+
+def test_filtro_mes_retorna_apenas_rdos_do_mes(cenario):
+    url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
+    client = _authenticated_client(cenario["usuario"])
+    client.post(url, _payload(cenario, data_referencia="2026-07-17"), format="json")
+    client.post(url, _payload(cenario, data_referencia="2026-08-01"), format="json")
+
+    response = client.get(url, {"mes": "2026-07"})
+
+    assert response.status_code == HTTPStatus.OK
+    corpo = response.json()
+    assert isinstance(corpo, list)
+    assert len(corpo) == 1
+    assert corpo[0]["data_referencia"] == "2026-07-17"
+
+
+def test_filtro_mes_sem_resultado_retorna_lista_vazia(cenario):
+    url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
+
+    response = _authenticated_client(cenario["usuario"]).get(url, {"mes": "2026-01"})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == []
+
+
+def test_filtro_mes_formato_invalido_retorna_400(cenario):
+    url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
+
+    response = _authenticated_client(cenario["usuario"]).get(url, {"mes": "invalido"})
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_sem_filtro_mes_mantem_paginacao(cenario):
+    url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
+    client = _authenticated_client(cenario["usuario"])
+    client.post(url, _payload(cenario), format="json")
+
+    response = client.get(url)
+
+    assert response.status_code == HTTPStatus.OK
+    corpo = response.json()
+    assert "results" in corpo
+    assert corpo["count"] == 1

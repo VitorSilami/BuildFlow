@@ -35,7 +35,24 @@ class RegistroDiarioViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(projeto_id=self.kwargs["projeto_pk"])
+        queryset = queryset.filter(projeto_id=self.kwargs["projeto_pk"])
+
+        mes = self.request.query_params.get("mes")
+        if mes:
+            ano, mes_numero = self._parse_filtro_mes(mes)
+            queryset = queryset.filter(
+                data_referencia__year=ano,
+                data_referencia__month=mes_numero,
+            )
+        return queryset
+
+    @staticmethod
+    def _parse_filtro_mes(mes: str) -> tuple[int, int]:
+        try:
+            ano_str, mes_str = mes.split("-")
+            return int(ano_str), int(mes_str)
+        except ValueError as erro:
+            raise ValidationError({"mes": "Use o formato YYYY-MM."}) from erro
 
     def _get_projeto(self) -> Projeto:
         # Principio I: o projeto so e valido se pertencer a empresa do
@@ -51,6 +68,8 @@ class RegistroDiarioViewSet(
 
     def list(self, request, *args, **kwargs):
         self._get_projeto()  # 404 antecipado se o projeto nao existe/nao e da empresa
+        if request.query_params.get("mes"):
+            self.pagination_class = None
         return super().list(request, *args, **kwargs)
 
 
