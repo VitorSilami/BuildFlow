@@ -14,13 +14,28 @@ export function useConfiguracaoRdo(projetoId: string) {
   })
 }
 
-export function useRegistrosDiarios(projetoId: string) {
+interface UseRegistrosDiariosOptions {
+  mes?: string
+}
+
+export function useRegistrosDiarios(
+  projetoId: string,
+  options: UseRegistrosDiariosOptions = {},
+) {
+  const { mes } = options
   return useQuery({
-    queryKey: ['registros-diarios', projetoId],
-    queryFn: () =>
-      apiClient.get<{ results: RegistroDiario[] }>(
+    queryKey: ['registros-diarios', projetoId, mes ?? null],
+    queryFn: async () => {
+      if (mes) {
+        const resultados = await apiClient.get<RegistroDiario[]>(
+          `/api/v1/projetos/${projetoId}/registros-diarios/?mes=${mes}`,
+        )
+        return { results: resultados }
+      }
+      return apiClient.get<{ results: RegistroDiario[] }>(
         `/api/v1/projetos/${projetoId}/registros-diarios/`,
-      ),
+      )
+    },
   })
 }
 

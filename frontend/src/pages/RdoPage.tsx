@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
 import {
   useConfiguracaoRdo,
@@ -32,6 +32,7 @@ import { Alert, Card, PageHeader, Spinner } from '../components/ui'
 export function RdoPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user } = useAuth()
   const configuracao = useConfiguracaoRdo(projetoId ?? '')
   const registrosAnteriores = useRegistrosDiarios(projetoId ?? '')
@@ -39,7 +40,7 @@ export function RdoPage() {
 
   const [passoAtual, setPassoAtual] = useState(0)
 
-  const [dataReferencia, setDataReferencia] = useState('')
+  const [dataReferencia, setDataReferencia] = useState(() => searchParams.get('data') ?? '')
   const [turno, setTurno] = useState<Turno>('diurno')
   const [clima, setClima] = useState<Clima>('sol')
   const [equipe, setEquipe] = useState('')

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 const SESSION_URL = '**/_allauth/browser/v1/auth/session'
-const LIST_URL = '**/api/v1/projetos/*/registros-diarios/'
+const LIST_URL = '**/api/v1/projetos/*/registros-diarios/**'
 const DETAIL_URL = '**/api/v1/registros-diarios/rdo-1/'
 
 const USUARIO = {
@@ -13,34 +13,35 @@ const USUARIO = {
   empresa_nome: 'Empresa A',
 }
 
+const HOJE_FIXO = new Date('2026-07-17T10:00:00')
+
 async function mockAuthenticated(page: import('@playwright/test').Page) {
   await page.route(SESSION_URL, (route) =>
     route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
   )
 }
 
-test('lista vazia mostra estado vazio e link para criar o primeiro registro', async ({ page }) => {
+test('mes vazio mostra a grade sem indicadores e permite criar RDO num dia', async ({ page }) => {
+  await page.clock.setFixedTime(HOJE_FIXO)
   await mockAuthenticated(page)
-  await page.route(LIST_URL, (route) =>
-    route.fulfill({ json: { count: 0, next: null, previous: null, results: [] } }),
-  )
+  await page.route(LIST_URL, (route) => route.fulfill({ json: [] }))
 
   await page.goto('/projetos/projeto-1/registros-diarios')
 
-  await expect(page.getByText('Nenhum registro diário ainda')).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Novo registro diário' })).toBeVisible()
+  await expect(page.getByLabel('Calendário de registros diários')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Julho 2026' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Dia 20, sem registro' }).click()
+
+  await expect(page).toHaveURL(/\/registros-diarios\/novo\?data=2026-07-20$/)
 })
 
-test('lista mostra registros existentes e navega para o detalhe', async ({ page }) => {
+test('dia com 1 RDO navega direto para o detalhe', async ({ page }) => {
+  await page.clock.setFixedTime(HOJE_FIXO)
   await mockAuthenticated(page)
   await page.route(LIST_URL, (route) =>
     route.fulfill({
-      json: {
-        count: 1,
-        next: null,
-        previous: null,
-        results: [{ id: 'rdo-1', data_referencia: '2026-07-17', turno: 'diurno', clima: 'sol' }],
-      },
+      json: [{ id: 'rdo-1', data_referencia: '2026-07-17', turno: 'diurno', clima: 'sol' }],
     }),
   )
   await page.route(DETAIL_URL, (route) =>
@@ -61,9 +62,48 @@ test('lista mostra registros existentes e navega para o detalhe', async ({ page 
 
   await page.goto('/projetos/projeto-1/registros-diarios')
 
-  await expect(page.getByRole('link', { name: /2026-07-17/ })).toBeVisible()
-  await page.getByRole('link', { name: /2026-07-17/ }).click()
+  await page.getByRole('button', { name: 'Dia 17, 1 registro(s)' }).click()
 
   await expect(page).toHaveURL(/\/registros-diarios\/rdo-1$/)
   await expect(page.getByText('BR-365')).toBeVisible()
+})
+
+test('dia com 2+ RDOs mostra lista inline em vez de navegar direto', async ({ page }) => {
+  await page.clock.setFixedTime(HOJE_FIXO)
+  await mockAuthenticated(page)
+  await page.route(LIST_URL, (route) =>
+    route.fulfill({
+      json: [
+        { id: 'rdo-1', data_referencia: '2026-07-17', turno: 'diurno', clima: 'sol' },
+        { id: 'rdo-2', data_referencia: '2026-07-17', turno: 'noturno', clima: 'nublado' },
+      ],
+    }),
+  )
+
+  await page.goto('/projetos/projeto-1/registros-diarios')
+
+  await page.getByRole('button', { name: 'Dia 17, 2 registro(s)' }).click()
+
+  await expect(page).toHaveURL(/\/registros-diarios$/)
+  await expect(page.getByRole('link', { name: /diurno — sol/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /noturno — nublado/ })).toBeVisible()
+})
+
+test('navegar para o mes seguinte refaz a busca com o novo filtro', async ({ page }) => {
+  await page.clock.setFixedTime(HOJE_FIXO)
+  await mockAuthenticated(page)
+
+  let ultimaUrlRequisitada = ''
+  await page.route(LIST_URL, (route) => {
+    ultimaUrlRequisitada = route.request().url()
+    return route.fulfill({ json: [] })
+  })
+
+  await page.goto('/projetos/projeto-1/registros-diarios')
+  await expect(page.getByRole('heading', { name: 'Julho 2026' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Mês seguinte' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Agosto 2026' })).toBeVisible()
+  expect(ultimaUrlRequisitada).toContain('mes=2026-08')
 })

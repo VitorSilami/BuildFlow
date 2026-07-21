@@ -237,3 +237,11 @@ test('duplicar dia anterior preenche equipe e fiscal do ultimo RDO', async ({ pa
   await expect(page.getByLabel('Equipe', { exact: true })).toHaveValue('equipe-1')
   await expect(page.getByLabel('Fiscal')).toHaveValue('1')
 })
+
+test('data vem pre-preenchida quando a URL tem o parametro data', async ({ page }) => {
+  await mockRotasBasicas(page)
+
+  await page.goto('/projetos/projeto-1/registros-diarios/novo?data=2026-07-20')
+
+  await expect(page.getByLabel('Data')).toHaveValue('2026-07-20')
+})
