@@ -116,3 +116,34 @@ test('busca no Topbar filtra projetos e navega ao clicar', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/projetos\/projeto-1\/registros-diarios$/)
 })
+
+test('barra de execucao usa cor por faixa', async ({ page }) => {
+  await mockAuthenticated(page)
+  await page.route(DASHBOARD_URL, (route) =>
+    route.fulfill({
+      json: {
+        projetos_ativos: 3,
+        projetos_pausados: 0,
+        projetos_concluidos: 0,
+        execucao_media: '50.00',
+        projetos: [
+          { id: 'p-baixa', nome: 'Baixa', status: 'ativo', execucao_percentual: '10.00' },
+          { id: 'p-media', nome: 'Media', status: 'ativo', execucao_percentual: '50.00' },
+          { id: 'p-alta', nome: 'Alta', status: 'ativo', execucao_percentual: '90.00' },
+        ],
+        alertas: [],
+        atividade_rdo: [],
+      },
+    }),
+  )
+
+  await page.goto('/dashboard')
+
+  const indicadorBaixa = page.locator('li', { hasText: 'Baixa' }).locator('[class*="bg-red-500"]')
+  const indicadorMedia = page.locator('li', { hasText: 'Media' }).locator('[class*="bg-amber-500"]')
+  const indicadorAlta = page.locator('li', { hasText: 'Alta' }).locator('[class*="bg-emerald-500"]')
+
+  await expect(indicadorBaixa).toBeVisible()
+  await expect(indicadorMedia).toBeVisible()
+  await expect(indicadorAlta).toBeVisible()
+})

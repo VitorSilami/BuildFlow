@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { Badge, Card, EmptyState, ErrorRetry, PageHeader, Spinner } from '../components/ui'
+import { AlertTriangle, CheckCircle2, FolderKanban, PauseCircle, TrendingUp } from 'lucide-react'
+import { Badge, Card, EmptyState, ErrorRetry, PageHeader, Progress, Spinner } from '../components/ui'
 import { AtividadeRdoChart } from '../features/dashboard/AtividadeRdoChart'
 import { StatusDonutChart } from '../features/dashboard/StatusDonutChart'
 import { useDashboard } from '../features/dashboard/dashboardApi'
-import { formatExecucao } from '../lib/format'
+import { execucaoCorClasse, formatExecucao } from '../lib/format'
 
 export function DashboardPage() {
   const { data, isLoading, isError, refetch } = useDashboard()
@@ -22,16 +23,28 @@ export function DashboardPage() {
         <>
           <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Resumo">
             <Card title="Projetos ativos">
-              <p className="text-3xl font-bold text-ink">{data.projetos_ativos}</p>
+              <div className="flex items-center gap-2">
+                <FolderKanban className="text-primary" size={20} aria-hidden="true" />
+                <p className="text-3xl font-bold text-ink">{data.projetos_ativos}</p>
+              </div>
             </Card>
             <Card title="Pausados">
-              <p className="text-3xl font-bold text-ink">{data.projetos_pausados}</p>
+              <div className="flex items-center gap-2">
+                <PauseCircle className="text-amber-500" size={20} aria-hidden="true" />
+                <p className="text-3xl font-bold text-ink">{data.projetos_pausados}</p>
+              </div>
             </Card>
             <Card title="Concluídos">
-              <p className="text-3xl font-bold text-ink">{data.projetos_concluidos}</p>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="text-slate-500" size={20} aria-hidden="true" />
+                <p className="text-3xl font-bold text-ink">{data.projetos_concluidos}</p>
+              </div>
             </Card>
             <Card title="Execução média">
-              <p className="text-3xl font-bold text-ink">{formatExecucao(data.execucao_media)}</p>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="text-emerald-500" size={20} aria-hidden="true" />
+                <p className="text-3xl font-bold text-ink">{formatExecucao(data.execucao_media)}</p>
+              </div>
             </Card>
           </div>
 
@@ -54,12 +67,15 @@ export function DashboardPage() {
               <ul aria-label="Alertas de RDO atrasado" className="flex flex-col gap-3">
                 {data.alertas.map((alerta) => (
                   <li key={alerta.projeto_id} className="flex items-center justify-between">
-                    <Link
-                      to={`/projetos/${alerta.projeto_id}/registros-diarios/novo`}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {alerta.projeto_nome}
-                    </Link>
+                    <span className="flex items-center gap-2">
+                      <AlertTriangle className="text-destructive" size={16} aria-hidden="true" />
+                      <Link
+                        to={`/projetos/${alerta.projeto_id}/registros-diarios/novo`}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        {alerta.projeto_nome}
+                      </Link>
+                    </span>
                     <Badge variant="destructive">
                       {alerta.dias_sem_rdo === null
                         ? 'Nunca registrado'
@@ -82,16 +98,26 @@ export function DashboardPage() {
             <Card title="Projetos ativos">
               <ul aria-label="Lista de projetos ativos" className="flex flex-col gap-3">
                 {data.projetos.map((projeto) => (
-                  <li key={projeto.id} className="flex items-center justify-between">
+                  <li key={projeto.id} className="flex items-center justify-between gap-4">
                     <Link
                       to={`/projetos/${projeto.id}/registros-diarios`}
                       className="font-medium text-primary hover:underline"
                     >
                       {projeto.nome}
                     </Link>
-                    <span className="text-sm text-muted-foreground">
-                      {formatExecucao(projeto.execucao_percentual)}
-                    </span>
+                    {projeto.execucao_percentual === null ? (
+                      <span className="text-sm text-muted-foreground">—</span>
+                    ) : (
+                      <div className="flex w-32 items-center gap-2">
+                        <Progress
+                          value={Number(projeto.execucao_percentual)}
+                          indicatorClassName={execucaoCorClasse(projeto.execucao_percentual)}
+                        />
+                        <span className="w-12 text-right text-sm text-muted-foreground">
+                          {formatExecucao(projeto.execucao_percentual)}
+                        </span>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
