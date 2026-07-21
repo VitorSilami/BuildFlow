@@ -1,9 +1,9 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 const CORES_STATUS = {
-  ativo: '#10b981',
-  pausado: '#f59e0b',
-  concluido: '#64748b',
+  ativo: 'var(--color-emerald-500)',
+  pausado: 'var(--color-amber-500)',
+  concluido: 'var(--color-slate-500)',
 } as const
 
 interface StatusDonutChartProps {
