@@ -529,3 +529,14 @@ projetos ativos e ícones nas tiles de resumo e nos alertas. `Progress` ganha pr
 `indicatorClassName` para permitir a cor por faixa sem duplicar o componente.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Frontend do "Field OS" — Calendário de RDOs (2026-07-21)**: `RegistrosDiariosListPage` substitui
+a lista simples por uma grade de calendário mensal (`CalendarioMensal`, matemática de `Date`
+nativo, sem lib de calendário). Cada dia mostra quantos RDOs existem; clique num dia vazio cria um
+RDO com a data pré-preenchida (`RdoPage` agora lê `?data=YYYY-MM-DD` da URL), clique num dia com 1
+RDO vai direto pro detalhe, clique num dia com 2+ RDOs (diurno + noturno no mesmo dia, por exemplo)
+abre uma lista inline pra escolher qual. `useRegistrosDiarios` ganha parâmetro opcional `mes`
+consumindo o filtro `?mes=` do backend, normalizando a resposta pro mesmo formato `{ results }` já
+usado no resto do app.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
