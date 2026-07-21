@@ -571,3 +571,13 @@ login, não carregamento de página). Próximas ondas (redução de ruído visua
 feedback/toast, UI otimista) ficam em planos separados.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Frontend — Polish SaaS profissional, Onda 2 (2026-07-21)**: segunda onda do polimento — `EmptyState`
+ganha ícone/título opcionais (aditivo, retrocompatível com os 5 usos que continuam só texto),
+aplicado aos 3 empty states "de página" (Dashboard, 2 na listagem de Projetos); botão de editar
+projeto (ícone de lápis) fica oculto por padrão e aparece no hover/foco do card (`Card` ganha a
+classe `group/card`), reduzindo ruído visual nas listas — mesma lógica do Notion de esconder ação
+secundária até o usuário precisar dela. Próximas ondas (sistema de feedback/toast, UI otimista)
+ficam em planos separados.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
