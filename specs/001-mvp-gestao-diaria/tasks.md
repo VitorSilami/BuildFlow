@@ -510,3 +510,13 @@ backend antes de aceitar fotos; essa decisão foi confirmada com o usuário ante
 plano. Próximo passo do redesign "Field OS" (Configurações) fica em plano separado.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Backend do "Field OS" — Conclusão (2026-07-21)**: `GET /api/v1/dashboard/` ganha `atividade_rdo`
+(contagem de RDOs por dia, últimos 7 dias, dias sem registro aparecem com `quantidade: 0` — o
+gráfico de barras do frontend não pode "pular" dia). `GET /api/v1/projetos/{id}/registros-diarios/`
+ganha filtro opcional `?mes=YYYY-MM`: quando presente, filtra por mês e retorna uma lista plana sem
+paginação (formato de resposta muda de `{count, next, previous, results}` para um array simples só
+nesse caso — usado pelo calendário de RDOs do frontend); formato inválido retorna 400. Sem o
+parâmetro, comportamento e formato de resposta atuais ficam intactos.
+
+**Verificado**: suíte pytest completa + ruff limpos.
