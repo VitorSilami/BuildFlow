@@ -11,6 +11,11 @@ export interface DashboardAlerta {
   dias_sem_rdo: number | null
 }
 
+export interface DashboardAtividadeDia {
+  data: string
+  quantidade: number
+}
+
 export interface DashboardResponse {
   projetos_ativos: number
   projetos_pausados: number
@@ -18,4 +23,5 @@ export interface DashboardResponse {
   execucao_media: string | null
   projetos: DashboardProjeto[]
   alertas: DashboardAlerta[]
+  atividade_rdo: DashboardAtividadeDia[]
 }

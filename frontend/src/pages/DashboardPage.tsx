@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Badge, Card, EmptyState, ErrorRetry, PageHeader, Spinner } from '../components/ui'
+import { AtividadeRdoChart } from '../features/dashboard/AtividadeRdoChart'
 import { useDashboard } from '../features/dashboard/dashboardApi'
 import { formatExecucao } from '../lib/format'
 
@@ -32,6 +33,10 @@ export function DashboardPage() {
               <p className="text-3xl font-bold text-ink">{formatExecucao(data.execucao_media)}</p>
             </Card>
           </div>
+
+          <Card title="RDOs por dia">
+            <AtividadeRdoChart dados={data.atividade_rdo} />
+          </Card>
 
           {data.alertas.length > 0 && (
             <Card title="Alertas de RDO">

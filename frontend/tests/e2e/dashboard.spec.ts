@@ -34,6 +34,15 @@ test('dashboard mostra resumo, projetos ativos e alertas', async ({ page }) => {
           { id: 'projeto-1', nome: 'Duplicação BR-365', status: 'ativo', execucao_percentual: '40.00' },
         ],
         alertas: [{ projeto_id: 'projeto-1', projeto_nome: 'Duplicação BR-365', dias_sem_rdo: 9 }],
+        atividade_rdo: [
+          { data: '2026-07-14', quantidade: 2 },
+          { data: '2026-07-15', quantidade: 0 },
+          { data: '2026-07-16', quantidade: 3 },
+          { data: '2026-07-17', quantidade: 1 },
+          { data: '2026-07-18', quantidade: 0 },
+          { data: '2026-07-19', quantidade: 4 },
+          { data: '2026-07-20', quantidade: 2 },
+        ],
       },
     }),
   )
@@ -44,6 +53,7 @@ test('dashboard mostra resumo, projetos ativos e alertas', async ({ page }) => {
   await expect(page.getByText('40.00%').first()).toBeVisible()
   await expect(page.getByText('9 dias sem RDO')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Duplicação BR-365' }).first()).toBeVisible()
+  await expect(page.getByLabel('Gráfico de RDOs por dia')).toBeVisible()
 })
 
 test('dashboard sem projetos ativos mostra estado vazio', async ({ page }) => {
@@ -57,6 +67,7 @@ test('dashboard sem projetos ativos mostra estado vazio', async ({ page }) => {
         execucao_media: null,
         projetos: [],
         alertas: [],
+        atividade_rdo: [],
       },
     }),
   )
@@ -80,6 +91,7 @@ test('busca no Topbar filtra projetos e navega ao clicar', async ({ page }) => {
         execucao_media: null,
         projetos: [],
         alertas: [],
+        atividade_rdo: [],
       },
     }),
   )
