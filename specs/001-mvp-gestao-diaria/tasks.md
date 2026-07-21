@@ -540,3 +540,10 @@ consumindo o filtro `?mes=` do backend, normalizando a resposta pro mesmo format
 usado no resto do app.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Frontend do "Field OS" — Configurações em abas (2026-07-21)**: `ConfiguracaoPage` reorganizada de
+4 `Card`s empilhados para `Tabs` (Disciplinas / Metas / Equipes / Valores) — reduz rolagem, zero
+mudança de lógica de negócio, handlers ou validação. Encerra o redesign "Field OS" iniciado em
+`2026-07-18-field-os-dashboard-design.md`.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
