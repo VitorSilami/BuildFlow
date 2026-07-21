@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Button, Card, ErrorRetry, PageHeader, Spinner } from '../components/ui'
+import { Button, Card, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
 import {
   CalendarioMensal,
   type DiaCalendario,
@@ -28,6 +28,23 @@ function mesSeguinte(mesAno: MesAno): MesAno {
 
 function formatarMesParaFiltro(mesAno: MesAno): string {
   return `${mesAno.ano}-${String(mesAno.mes).padStart(2, '0')}`
+}
+
+function CalendarioSkeleton() {
+  return (
+    <div aria-hidden="true">
+      <div className="mb-4 flex items-center justify-between">
+        <Skeleton className="h-8 w-20" />
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-8 w-16" />
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: 35 }, (_, i) => (
+          <Skeleton key={i} className="h-20 rounded-md" />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export function RegistrosDiariosListPage() {
@@ -72,7 +89,7 @@ export function RegistrosDiariosListPage() {
         }
       />
 
-      {isLoading && <Spinner label="Carregando registros…" />}
+      {isLoading && <CalendarioSkeleton />}
 
       {isError && (
         <ErrorRetry

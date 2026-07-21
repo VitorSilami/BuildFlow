@@ -14,7 +14,7 @@ import {
   Input,
   PageHeader,
   Progress,
-  Spinner,
+  Skeleton,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -45,6 +45,21 @@ const STATUS_BADGE_CLASS: Record<ProjetoStatus, string> = {
     'border-transparent bg-amber-500/15 text-amber-700 hover:bg-amber-500/15 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/20',
   concluido:
     'border-transparent bg-slate-500/15 text-slate-700 hover:bg-slate-500/15 dark:bg-slate-500/20 dark:text-slate-400 dark:hover:bg-slate-500/20',
+}
+
+function ProjetosListSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+      {Array.from({ length: 6 }, (_, i) => (
+        <div key={i} className="rounded-lg border border-border p-4">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="mt-3 h-3 w-1/2" />
+          <Skeleton className="mt-2 h-3 w-1/3" />
+          <Skeleton className="mt-4 h-2 w-full" />
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export function ProjetosListPage() {
@@ -78,7 +93,7 @@ export function ProjetosListPage() {
         }
       />
 
-      {isLoading && <Spinner label="Carregando projetos…" />}
+      {isLoading && <ProjetosListSkeleton />}
 
       {isError && (
         <ErrorRetry message="Não foi possível carregar os projetos." onRetry={() => void refetch()} />

@@ -23,3 +23,4 @@ export {
   DialogClose,
 } from './dialog'
 export { Progress } from './progress'
+export { Skeleton } from './skeleton'

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, FolderKanban, PauseCircle, TrendingUp } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Badge, Card, EmptyState, ErrorRetry, PageHeader, Progress, Spinner } from '../components/ui'
+import { Badge, Card, EmptyState, ErrorRetry, PageHeader, Progress, Skeleton } from '../components/ui'
 import { AtividadeRdoChart } from '../features/dashboard/AtividadeRdoChart'
 import { StatusDonutChart } from '../features/dashboard/StatusDonutChart'
 import { useDashboard } from '../features/dashboard/dashboardApi'
@@ -27,6 +27,25 @@ function TileResumo({ label, valor, icon }: TileResumoProps) {
   )
 }
 
+function DashboardSkeleton() {
+  return (
+    <div aria-hidden="true">
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="rounded-md border border-dashed border-border p-3">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="mt-2 h-8 w-16" />
+          </div>
+        ))}
+      </div>
+      <div className="mb-6 rounded-lg border border-border p-4">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="mt-4 h-[220px] w-full" />
+      </div>
+    </div>
+  )
+}
+
 export function DashboardPage() {
   const { data, isLoading, isError, refetch } = useDashboard()
 
@@ -39,7 +58,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {isLoading && <Spinner label="Carregando dashboard…" />}
+      {isLoading && <DashboardSkeleton />}
 
       {isError && (
         <ErrorRetry message="Não foi possível carregar o dashboard." onRetry={() => void refetch()} />
