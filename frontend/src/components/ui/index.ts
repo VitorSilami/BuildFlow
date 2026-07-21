@@ -24,3 +24,4 @@ export {
 } from './dialog'
 export { Progress } from './progress'
 export { Skeleton } from './skeleton'
+export { Toaster } from './toaster'

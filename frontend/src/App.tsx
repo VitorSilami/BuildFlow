@@ -9,6 +9,7 @@ import { RdoPage } from './pages/RdoPage'
 import { RegistroDiarioDetailPage } from './pages/RegistroDiarioDetailPage'
 import { RegistrosDiariosListPage } from './pages/RegistrosDiariosListPage'
 import { ProtectedRoute, PublicOnlyRoute } from './routes/ProtectedRoute'
+import { Toaster } from './components/ui'
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
+      <Toaster />
     </AuthProvider>
   )
 }

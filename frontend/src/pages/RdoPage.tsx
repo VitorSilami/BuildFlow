@@ -18,6 +18,8 @@ import {
   PRESENCA_VAZIA,
   PRODUCAO_VAZIA,
 } from '../features/registros-diarios/wizard/valoresVazios'
+import { formatData } from '../lib/format'
+import { toast } from '../hooks/use-toast'
 import { registroDiarioFormSchema } from '../schemas/registroDiario'
 import type {
   ApontamentoMaquinaInput,
@@ -120,8 +122,14 @@ export function RdoPage() {
     }
 
     criarRegistro.mutate(result.data, {
-      onSuccess: (registro) =>
-        navigate(`/projetos/${projetoId}/registros-diarios/${registro.id}`),
+      onSuccess: (registro) => {
+        toast({
+          title: 'Registro diário salvo',
+          description: `Registro de ${formatData(registro.data_referencia)} salvo com sucesso.`,
+          variant: 'success',
+        })
+        navigate(`/projetos/${projetoId}/registros-diarios/${registro.id}`)
+      },
       onError: () => setErro('Não foi possível salvar o registro diário. Tente novamente.'),
     })
   }

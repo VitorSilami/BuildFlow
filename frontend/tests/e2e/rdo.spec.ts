@@ -105,6 +105,10 @@ test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ p
   await expect(page).toHaveURL(/\/registros-diarios\/rdo-1$/)
   await expect(page.getByRole('heading', { name: /Registro diário/ })).toBeVisible()
 
+  // Momento de "dopamina": toast de sucesso aparece antes/durante a navegacao
+  // pro detalhe (nao so a navegacao silenciosa que ja existia).
+  await expect(page.getByText('Registro diário salvo').first()).toBeVisible()
+
   const fileInput = page.locator('#foto-arquivo')
   await fileInput.setInputFiles({
     name: 'foto.png',
