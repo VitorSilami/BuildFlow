@@ -581,3 +581,14 @@ secundária até o usuário precisar dela. Próximas ondas (sistema de feedback/
 ficam em planos separados.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Frontend — Polish SaaS profissional, Onda 3 (2026-07-21)**: terceira onda do polimento — sistema
+de toast leve (`@radix-ui/react-toast`, composite `Toaster` montado uma vez em `App.tsx`) para
+confirmações de sucesso; primeiro uso real é o "momento de dopamina" ao salvar um Registro Diário
+de Obra (fluxo mais repetido do produto), com toast de sucesso reaproveitando o motivo `[✓]` +
+cor `signal` já usado na seção de isolamento multitenant da `LoginPage`, visível antes/durante a
+navegação para o detalhe do registro criado. `Alert`/`ErrorRetry` continuam sendo o padrão de erro
+de formulário, sem mudança. Próxima onda (UI otimista + transição de página) fica em plano
+separado.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
