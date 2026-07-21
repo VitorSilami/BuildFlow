@@ -75,7 +75,7 @@ test('dashboard sem projetos ativos mostra estado vazio', async ({ page }) => {
 
   await page.goto('/dashboard')
 
-  await expect(page.getByText('Nenhum projeto ativo ainda.')).toBeVisible()
+  await expect(page.getByText('Nenhum projeto ativo')).toBeVisible()
   // exact: true evita colisao com o em-dash que tambem aparece no texto do
   // Topbar ("Empresa A — Gerente Empresa A (gerente)").
   await expect(page.getByText('—', { exact: true })).toBeVisible()

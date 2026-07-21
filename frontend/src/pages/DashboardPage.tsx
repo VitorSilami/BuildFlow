@@ -140,10 +140,10 @@ export function DashboardPage() {
           )}
 
           {data.projetos.length === 0 ? (
-            <EmptyState>
-              Nenhum projeto ativo ainda.{' '}
+            <EmptyState icon={<FolderKanban size={32} aria-hidden="true" />} title="Nenhum projeto ativo">
+              Crie um projeto para começar a registrar RDOs.{' '}
               <Link to="/projetos" className="font-medium text-primary hover:underline">
-                Crie um projeto para começar.
+                Ir para Projetos
               </Link>
             </EmptyState>
           ) : (

@@ -170,7 +170,7 @@ test('filtro sem projetos correspondentes mostra mensagem de vazio', async ({ pa
 
   await page.getByRole('tab', { name: 'Concluídos' }).click()
 
-  await expect(page.getByText('Nenhum projeto encontrado.')).toBeVisible()
+  await expect(page.getByText('Nenhum projeto encontrado')).toBeVisible()
 })
 
 test('editar projeto abre modal preenchido e salva alterações', async ({ page }) => {
@@ -279,4 +279,26 @@ test('busca em texto filtra por nome, trecho ou engenheiro', async ({ page }) =>
 
   await expect(page.getByText('Duplicação BR-365', { exact: true })).toBeVisible()
   await expect(page.getByText('Contorno BR-101', { exact: true })).not.toBeVisible()
+})
+
+test('botao de editar fica oculto ate hover ou foco no card', async ({ page }) => {
+  await mockAuthenticated(page)
+  await page.route(PROJETOS_URL, (route) =>
+    route.fulfill({
+      json: {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [{ id: 'projeto-1', nome: 'Duplicação BR-365', trecho: '', engenheiro_responsavel: '', status: 'ativo', execucao_percentual: null, ultimo_rdo_data: null }],
+      },
+    }),
+  )
+
+  await page.goto('/projetos')
+
+  const botaoEditar = page.getByRole('button', { name: 'Editar Duplicação BR-365' })
+  await expect(botaoEditar).toHaveCSS('opacity', '0')
+
+  await page.getByText('Duplicação BR-365').hover()
+  await expect(botaoEditar).toHaveCSS('opacity', '1')
 })

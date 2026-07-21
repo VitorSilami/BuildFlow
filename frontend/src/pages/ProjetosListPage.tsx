@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Pencil, Plus, Search, Settings, User } from 'lucide-react'
+import { Calendar, FolderPlus, MapPin, Pencil, Plus, Search, SearchX, Settings, User } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -103,7 +103,9 @@ export function ProjetosListPage() {
       )}
 
       {!isLoading && !isError && data?.results.length === 0 && (
-        <EmptyState>Nenhum projeto ainda. Crie o primeiro projeto para começar.</EmptyState>
+        <EmptyState icon={<FolderPlus size={32} aria-hidden="true" />} title="Nenhum projeto ainda">
+          Crie o primeiro projeto pra começar a registrar RDOs.
+        </EmptyState>
       )}
 
       {!isLoading && !isError && data && data.results.length > 0 && (
@@ -136,7 +138,9 @@ export function ProjetosListPage() {
           </div>
 
           {projetosFiltrados.length === 0 ? (
-            <EmptyState>Nenhum projeto encontrado.</EmptyState>
+            <EmptyState icon={<SearchX size={32} aria-hidden="true" />} title="Nenhum projeto encontrado">
+              Tente outro termo de busca ou outro filtro de status.
+            </EmptyState>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" aria-label="Lista de projetos">
               {projetosFiltrados.map((projeto) => (
@@ -158,6 +162,7 @@ export function ProjetosListPage() {
                         size="icon"
                         aria-label={`Editar ${projeto.nome}`}
                         onClick={() => setModal(projeto)}
+                        className="opacity-0 transition-opacity group-hover/card:opacity-100 group-focus-within/card:opacity-100"
                       >
                         <Pencil size={16} aria-hidden="true" />
                       </Button>
