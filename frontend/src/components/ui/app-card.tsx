@@ -10,7 +10,7 @@ interface CardProps {
 
 export function Card({ title, eyebrow, actions, children }: CardProps) {
   return (
-    <ShadcnCard className="mb-6">
+    <ShadcnCard className="group/card mb-6">
       {(title || actions) && (
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
