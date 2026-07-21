@@ -14,6 +14,7 @@ from .models import Projeto
 from .serializers import ProjetoSerializer
 from .services import calcular_execucao_percentual
 from .services import decimal_para_str_ou_none
+from .services import obter_atividade_rdo_semana
 from .services import obter_ultima_data_rdo
 
 DIAS_LIMITE_ALERTA_RDO = 7
@@ -95,5 +96,6 @@ class DashboardView(APIView):
                 "execucao_media": decimal_para_str_ou_none(execucao_media),
                 "projetos": projetos_payload,
                 "alertas": alertas,
+                "atividade_rdo": obter_atividade_rdo_semana(empresa),
             },
         )

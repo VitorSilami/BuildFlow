@@ -214,3 +214,31 @@ def test_anonimo_nao_acessa_dashboard():
     response = APIClient().get(DASHBOARD_URL)
 
     assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_atividade_rdo_aparece_no_dashboard():
+    empresa = EmpresaFactory()
+    usuario = UsuarioFactory(empresa=empresa)
+    projeto = Projeto.objects.create(
+        empresa=empresa,
+        nome="Ativo",
+        criado_por=usuario,
+        status="ativo",
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia=datetime.date.today(),  # noqa: DTZ011
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+
+    response = _authenticated_client(usuario).get(DASHBOARD_URL)
+
+    assert response.status_code == HTTPStatus.OK
+    atividade = response.json()["atividade_rdo"]
+    assert len(atividade) == 7  # noqa: PLR2004
+    assert atividade[-1]["quantidade"] == 1
