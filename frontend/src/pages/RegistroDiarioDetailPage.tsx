@@ -1,13 +1,30 @@
 import { Link, useParams } from 'react-router-dom'
-import { Button, Card, EmptyState, ErrorRetry, PageHeader, Spinner } from '../components/ui'
+import { Button, Card, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
 import { FotoUpload } from '../features/registros-diarios/FotoUpload'
 import { useRegistroDiario } from '../features/registros-diarios/registrosDiariosApi'
+
+function RegistroDiarioDetailSkeleton() {
+  return (
+    <>
+      <span role="status" className="sr-only">Carregando…</span>
+      <div aria-hidden="true" className="space-y-4">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className="rounded-lg border border-border p-4">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="mt-3 h-3 w-full" />
+            <Skeleton className="mt-2 h-3 w-2/3" />
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
 
 export function RegistroDiarioDetailPage() {
   const { projetoId, registroId } = useParams<{ projetoId: string; registroId: string }>()
   const { data: registro, isLoading, isError, refetch } = useRegistroDiario(registroId)
 
-  if (isLoading) return <Spinner label="Carregando…" />
+  if (isLoading) return <RegistroDiarioDetailSkeleton />
 
   if (isError || !registro) {
     return <ErrorRetry message="Não foi possível carregar o registro diário." onRetry={() => void refetch()} />

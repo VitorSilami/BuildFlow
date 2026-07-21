@@ -27,7 +27,22 @@ import type {
   ProducaoDiariaInput,
   Turno,
 } from '../types/registroDiario'
-import { Alert, Card, PageHeader, Spinner } from '../components/ui'
+import { Alert, Card, PageHeader, Skeleton } from '../components/ui'
+
+function RdoWizardSkeleton() {
+  return (
+    <>
+      <span role="status" className="sr-only">Carregando…</span>
+      <div aria-hidden="true" className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </div>
+    </>
+  )
+}
 
 export function RdoPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
@@ -62,7 +77,7 @@ export function RdoPage() {
 
   const [erro, setErro] = useState<string | null>(null)
 
-  if (configuracao.isLoading) return <Spinner label="Carregando…" />
+  if (configuracao.isLoading) return <RdoWizardSkeleton />
   if (configuracao.isError || !configuracao.data) {
     return <Alert>Não foi possível carregar os cadastros do projeto.</Alert>
   }

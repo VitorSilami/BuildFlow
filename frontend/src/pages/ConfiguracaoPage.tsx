@@ -18,12 +18,28 @@ import {
   Input,
   PageHeader,
   SelectField,
-  Spinner,
+  Skeleton,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '../components/ui'
+
+function ConfiguracaoSkeleton() {
+  return (
+    <>
+      <span role="status" className="sr-only">Carregando…</span>
+      <div aria-hidden="true">
+        <Skeleton className="h-9 w-80" />
+        <div className="mt-4 space-y-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
 
 export function ConfiguracaoPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
@@ -51,7 +67,7 @@ export function ConfiguracaoPage() {
   const [valorDescricao, setValorDescricao] = useState('')
   const [valorValor, setValorValor] = useState('')
 
-  if (configuracao.isLoading) return <Spinner label="Carregando…" />
+  if (configuracao.isLoading) return <ConfiguracaoSkeleton />
   if (configuracao.isError || !configuracao.data) {
     return (
       <ErrorRetry
