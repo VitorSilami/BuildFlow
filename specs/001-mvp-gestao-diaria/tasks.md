@@ -559,3 +559,15 @@ pras outras telas autenticadas (Calendário, Configurações, Projetos, Wizard d
 separada.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Frontend — Polish SaaS profissional, Onda 1 (2026-07-21)**: primeira onda do polimento
+inspirado em Linear/Notion/Spotify/Google/Microsoft — tokens de motion (`--duration-fast`,
+`--duration-base`, `--ease-emphasized`) aplicados ao `Button` (feedback de hover/press
+consistente, ausente até então), e skeleton loaders (componente shadcn já existente mas nunca
+adotado) substituindo o spinner genérico nas 6 telas de carregamento de página (Dashboard,
+Projetos, Calendário de RDOs, Configurações, Wizard de RDO, Detalhe de RDO) — sensação de "quase
+pronto" em vez de espera genérica. `LoginPage` mantém `Spinner` (feedback inline do botão de
+login, não carregamento de página). Próximas ondas (redução de ruído visual, sistema de
+feedback/toast, UI otimista) ficam em planos separados.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
