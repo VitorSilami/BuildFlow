@@ -106,8 +106,12 @@ test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ p
   await expect(page.getByRole('heading', { name: /Registro diário/ })).toBeVisible()
 
   // Momento de "dopamina": toast de sucesso aparece antes/durante a navegacao
-  // pro detalhe (nao so a navegacao silenciosa que ja existia).
-  await expect(page.getByText('Registro diário salvo').first()).toBeVisible()
+  // pro detalhe (nao so a navegacao silenciosa que ja existia). Escopado pra
+  // regiao do ToastViewport — o anunciador aria-live do Radix duplica o texto
+  // num node separado, e usar .first() dependeria de ordem de montagem no DOM.
+  await expect(
+    page.getByRole('region', { name: /Notifications/ }).getByText('Registro diário salvo'),
+  ).toBeVisible()
 
   const fileInput = page.locator('#foto-arquivo')
   await fileInput.setInputFiles({
