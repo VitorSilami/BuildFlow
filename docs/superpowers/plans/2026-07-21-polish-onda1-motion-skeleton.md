@@ -46,14 +46,21 @@ No bloco `@theme inline` (arquivo `frontend/src/app.css`), logo após a última 
 (`--color-signal: var(--signal);`), adicionar:
 
 ```css
-  --duration-fast: 120ms;
-  --duration-base: 200ms;
+  --transition-duration-fast: 120ms;
+  --transition-duration-base: 200ms;
   --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
 ```
 
 (Nome `ease-emphasized` deliberado, não `ease-out` — Tailwind já tem um `ease-out` padrão com
 outra curva; reaproveitar o nome sobrescreveria esse valor pra todo o app. `ease-emphasized` é o
-nome que o Material Design usa pra esse tipo de curva, evita colisão.)
+nome que o Material Design usa pra esse tipo de curva, evita colisão.
+
+Nome da chave do tema `--transition-duration-*`, não `--duration-*` — descoberto na revisão da
+Task 1: o utility `duration-*` do Tailwind v4 resolve contra o namespace `--transition-duration-*`
+especificamente, não `--duration-*`; usar o nome errado faz o utility compilar silenciosamente
+para nada, sem erro de build. As classes usadas no `button.tsx` continuam `duration-fast`/
+`duration-base` normalmente — só a chave declarada aqui no `@theme` precisa do prefixo
+`transition-`.)
 
 - [ ] **Step 2: Atualizar `button.tsx`**
 
