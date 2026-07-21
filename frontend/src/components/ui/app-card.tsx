@@ -15,7 +15,7 @@ export function Card({ title, eyebrow, actions, children }: CardProps) {
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
             {eyebrow && (
-              <p className="mb-1 flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-signal">
+              <p className="mb-1 flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                 {eyebrow}
               </p>
             )}
