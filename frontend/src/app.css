@@ -38,8 +38,8 @@
   --color-surface-strong: var(--surface-strong);
   --color-ink: var(--ink);
   --color-signal: var(--signal);
-  --duration-fast: 120ms;
-  --duration-base: 200ms;
+  --transition-duration-fast: 120ms;
+  --transition-duration-base: 200ms;
   --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
