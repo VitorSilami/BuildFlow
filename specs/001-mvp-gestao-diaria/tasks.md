@@ -520,3 +520,12 @@ nesse caso — usado pelo calendário de RDOs do frontend); formato inválido re
 parâmetro, comportamento e formato de resposta atuais ficam intactos.
 
 **Verificado**: suíte pytest completa + ruff limpos.
+
+**Frontend do "Field OS" — Dashboard com gráficos (2026-07-21)**: `DashboardPage` ganha 2 gráficos
+Recharts (nova dependência) — barra de "RDOs por dia" (últimos 7 dias, `atividade_rdo` do backend)
+e donut de distribuição de status (ativos/pausados/concluídos, mesmas cores semânticas dos badges
+de projeto), mais barra de execução "semáforo" (vermelho <30%/âmbar 30–70%/verde >70%) na lista de
+projetos ativos e ícones nas tiles de resumo e nos alertas. `Progress` ganha prop opcional
+`indicatorClassName` para permitir a cor por faixa sem duplicar o componente.
+
+**Verificado**: build + lint limpos, suíte E2E completa passando.
