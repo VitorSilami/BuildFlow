@@ -82,9 +82,12 @@ test('trocar de aba mantém a seção anterior preenchida ao voltar', async ({ p
 
   await expect(page.getByRole('listitem').filter({ hasText: 'Terraplenagem' })).toBeVisible()
 
+  await page.getByLabel('Nova disciplina').fill('Rascunho')
+
   await page.getByRole('tab', { name: 'Valores' }).click()
   await expect(page.getByLabel('Descrição')).toBeVisible()
 
   await page.getByRole('tab', { name: 'Disciplinas' }).click()
   await expect(page.getByRole('listitem').filter({ hasText: 'Terraplenagem' })).toBeVisible()
+  await expect(page.getByLabel('Nova disciplina')).toHaveValue('Rascunho')
 })
