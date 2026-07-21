@@ -50,6 +50,7 @@ const STATUS_BADGE_CLASS: Record<ProjetoStatus, string> = {
 function ProjetosListSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+      <span role="status" className="sr-only">Carregando projetos…</span>
       {Array.from({ length: 6 }, (_, i) => (
         <div key={i} className="rounded-lg border border-border p-4">
           <Skeleton className="h-5 w-3/4" />

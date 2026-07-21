@@ -33,6 +33,7 @@ function formatarMesParaFiltro(mesAno: MesAno): string {
 function CalendarioSkeleton() {
   return (
     <div aria-hidden="true">
+      <span role="status" className="sr-only">Carregando registros…</span>
       <div className="mb-4 flex items-center justify-between">
         <Skeleton className="h-8 w-20" />
         <Skeleton className="h-6 w-32" />

@@ -30,6 +30,7 @@ function TileResumo({ label, valor, icon }: TileResumoProps) {
 function DashboardSkeleton() {
   return (
     <div aria-hidden="true">
+      <span role="status" className="sr-only">Carregando dashboard…</span>
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {Array.from({ length: 4 }, (_, i) => (
           <div key={i} className="rounded-md border border-dashed border-border p-3">
