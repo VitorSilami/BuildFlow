@@ -633,3 +633,27 @@ cross-projeto do fiscal, e Dashboard/Custos & Ociosidade passarem a filtrar por 
 **Verificado**: `DJANGO_SETTINGS_MODULE=config.settings.test uv run pytest` completo + `ruff check`
 + `ruff format --check` limpos; `npm run build` + `npm run lint` limpos; suíte e2e
 `historico-aprovacoes.spec.ts` (4/4) passando.
+
+**Backend + Frontend — Módulo RNC (2026-07-22)**: terceiro módulo da expansão de escopo
+além do MVP, seguindo o protótipo `EPR_Daily_Completo.html` (bloco "NAO CONFORMIDADES")
+e o item de backlog já registrado em `specs/001-mvp-gestao-diaria/spec.md` (Assumptions).
+Novo app isolado `rnc`, restrito ao perfil Gerente (`IsGerente`): modelo `RNC` com
+identificação completa, causa raiz 6M (Método/Material/Mão de obra/Máquina/Medição/Meio
+ambiente) e workflow de status Pendente/Concluída — "Prazo excedido" é sempre calculado
+(`status_efetivo`), nunca um estado gravado. Numeração sequencial por projeto
+(`RNC-001`, `RNC-002`...). `AcaoCorretiva` é uma lista adicionada uma a uma via endpoint
+próprio (`POST /rncs/{id}/acoes-corretivas/`, sem update/delete nesta rodada — mesmo
+padrão já usado para `Foto` em `registros_diarios`). RNC é editável (`PATCH`) enquanto
+`pendente`; concluir exige `eficacia` (Eficaz/Ineficaz) e é uma transição terminal, sem
+reabertura. Taxonomia Categoria → Item fixa no código (`CATEGORIA_ITENS`), replicada
+idêntica no frontend para popular o dropdown em cascata. Novas páginas `RncListPage`
+(KPIs, filtro por status, cards) e `RncFormPage` (criação e edição, causa raiz como
+checklist, ações corretivas). Fora de escopo desta rodada: geração de ofício técnico
+por IA (placeholder já no próprio protótipo), exportação PDF/Excel, integração com
+mapa, taxonomia editável por empresa, reincidência automática, reabertura de RNC
+concluída, e fila cross-projeto.
+
+**Verificado**: `DJANGO_SETTINGS_MODULE=config.settings.test uv run pytest` completo +
+`ruff check` + `ruff format --check` limpos; `npm run build` + `npm run lint` limpos;
+suíte e2e completa (`rnc-form.spec.ts` 5/5, `rnc-list.spec.ts` 3/3, e todos os specs
+anteriores) passando.
