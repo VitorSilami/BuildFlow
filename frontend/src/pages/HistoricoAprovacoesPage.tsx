@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Button, Card, EmptyState, ErrorRetry, PageHeader, Skeleton, Textarea } from '../components/ui'
 import { useAuth } from '../features/auth/AuthContext'
+import { AprovacaoDonutChart } from '../features/registros-diarios/AprovacaoDonutChart'
 import {
   useAprovarRegistroDiario,
   useRegistrosDiarios,
@@ -46,9 +47,16 @@ function HistoricoSkeleton() {
   )
 }
 
-function TileHistorico({ label, valor, cor }: { label: string; valor: string; cor?: string }) {
+interface TileHistoricoProps {
+  label: string
+  valor: string
+  cor?: string
+  corFundo?: string
+}
+
+function TileHistorico({ label, valor, cor, corFundo }: TileHistoricoProps) {
   return (
-    <div className="rounded-lg border border-dashed border-border p-4">
+    <div className={`rounded-lg border p-4 ${corFundo ?? 'border-dashed border-border'}`}>
       <p className="mb-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
         {label}
       </p>
@@ -247,11 +255,33 @@ export function HistoricoAprovacoesPage() {
 
       {!registros.isLoading && !registros.isError && (
         <>
-          <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-            <TileHistorico label="Aguardando aprovação" valor={String(aguardando)} cor="text-amber-600" />
-            <TileHistorico label="Aprovados" valor={String(aprovados)} cor="text-emerald-600" />
-            <TileHistorico label="Rejeitados" valor={String(rejeitados)} cor="text-red-600" />
-            <TileHistorico label="Taxa de aprovação" valor={`${taxaAprovacao}%`} />
+          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 lg:col-span-2">
+              <TileHistorico
+                label="Aguardando aprovação"
+                valor={String(aguardando)}
+                cor="text-amber-600"
+                corFundo="border-amber-500/30 bg-amber-500/5"
+              />
+              <TileHistorico
+                label="Aprovados"
+                valor={String(aprovados)}
+                cor="text-emerald-600"
+                corFundo="border-emerald-500/30 bg-emerald-500/5"
+              />
+              <TileHistorico
+                label="Rejeitados"
+                valor={String(rejeitados)}
+                cor="text-red-600"
+                corFundo="border-red-500/30 bg-red-500/5"
+              />
+              <TileHistorico label="Taxa de aprovação" valor={`${taxaAprovacao}%`} />
+            </div>
+            {lista.length > 0 && (
+              <Card title="Distribuição por status">
+                <AprovacaoDonutChart aguardando={aguardando} aprovados={aprovados} rejeitados={rejeitados} />
+              </Card>
+            )}
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
