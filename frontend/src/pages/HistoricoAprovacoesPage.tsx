@@ -9,24 +9,13 @@ import {
   useRejeitarRegistroDiario,
 } from '../features/registros-diarios/registrosDiariosApi'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
+import { STATUS_REGISTRO_COR_TEXTO as COR_STATUS, STATUS_REGISTRO_LABEL as LABEL_STATUS } from '../features/registros-diarios/statusRegistroBadge'
 import { toast } from '../hooks/use-toast'
 import { formatData, formatDataHora } from '../lib/format'
 import type { RegistroDiario, StatusRegistro } from '../types/registroDiario'
 
 function mesAtualFiltro(): string {
   return new Date().toISOString().slice(0, 7)
-}
-
-const LABEL_STATUS: Record<StatusRegistro, string> = {
-  aguardando_aprovacao: 'Aguardando Aprovação',
-  aprovado: 'Aprovado',
-  rejeitado: 'Rejeitado',
-}
-
-const COR_STATUS: Record<StatusRegistro, string> = {
-  aguardando_aprovacao: 'border-amber-500 text-amber-600',
-  aprovado: 'border-emerald-500 text-emerald-600',
-  rejeitado: 'border-red-500 text-red-600',
 }
 
 const FILTROS_STATUS = ['', 'aguardando_aprovacao', 'aprovado', 'rejeitado'] as const

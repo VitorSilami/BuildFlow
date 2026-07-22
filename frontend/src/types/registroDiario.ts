@@ -65,11 +65,13 @@ export interface ProducaoDiariaInput {
   unidade: number
 }
 
+export type StatusPresenca = 'presente' | 'falta' | 'atestado'
+
 export interface PresencaInput {
   pessoa?: string
   nome_avulso?: string
   funcao: string
-  status: 'presente' | 'falta' | 'atestado'
+  status: StatusPresenca
 }
 
 export interface ApontamentoMaquinaInput {
@@ -110,7 +112,32 @@ export interface Foto {
   created_at: string
 }
 
-export interface RegistroDiario extends RegistroDiarioInput {
+export interface Producao extends ProducaoDiariaInput {
+  id: string
+  disciplina_nome: string
+  servico_nome: string
+  unidade_sigla: string
+}
+
+export interface Presenca extends PresencaInput {
+  id: string
+  pessoa_nome: string | null
+}
+
+export interface ApontamentoMaquina extends ApontamentoMaquinaInput {
+  id: string
+  maquina_nome: string | null
+  maquina_codigo: string | null
+  motivo_parada_descricao: string | null
+  eficiencia: number
+}
+
+export interface Ocorrencia extends OcorrenciaInput {
+  id: string
+}
+
+export interface RegistroDiario
+  extends Omit<RegistroDiarioInput, 'producoes' | 'presencas' | 'maquinas' | 'ocorrencias'> {
   id: string
   autor: number
   status: StatusRegistro
@@ -119,4 +146,10 @@ export interface RegistroDiario extends RegistroDiarioInput {
   created_at: string
   updated_at: string
   fotos: Foto[]
+  producoes: Producao[]
+  presencas: Presenca[]
+  maquinas: ApontamentoMaquina[]
+  ocorrencias: Ocorrencia[]
+  equipe_nome: string
+  fiscal_nome: string
 }

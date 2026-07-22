@@ -11,6 +11,10 @@ from .models import RegistroDiario
 
 
 class ProducaoDiariaSerializer(serializers.ModelSerializer):
+    disciplina_nome = serializers.CharField(source="disciplina.nome", read_only=True)
+    servico_nome = serializers.CharField(source="servico.nome", read_only=True)
+    unidade_sigla = serializers.CharField(source="unidade.sigla", read_only=True)
+
     class Meta:
         model = ProducaoDiaria
         fields = [
@@ -18,20 +22,28 @@ class ProducaoDiariaSerializer(serializers.ModelSerializer):
             "rodovia",
             "sentido",
             "disciplina",
+            "disciplina_nome",
             "servico",
+            "servico_nome",
             "km_inicial",
             "km_final",
             "quantidade",
             "unidade",
+            "unidade_sigla",
         ]
         read_only_fields = ["id"]
 
 
 class PresencaSerializer(serializers.ModelSerializer):
+    pessoa_nome = serializers.SerializerMethodField()
+
     class Meta:
         model = Presenca
-        fields = ["id", "pessoa", "nome_avulso", "funcao", "status"]
+        fields = ["id", "pessoa", "pessoa_nome", "nome_avulso", "funcao", "status"]
         read_only_fields = ["id"]
+
+    def get_pessoa_nome(self, obj: Presenca) -> str | None:
+        return obj.pessoa.nome if obj.pessoa_id else None
 
     def validate(self, attrs):
         services.validar_presenca(
@@ -43,19 +55,35 @@ class PresencaSerializer(serializers.ModelSerializer):
 
 class ApontamentoMaquinaSerializer(serializers.ModelSerializer):
     eficiencia = serializers.FloatField(read_only=True)
+    maquina_nome = serializers.SerializerMethodField()
+    maquina_codigo = serializers.SerializerMethodField()
+    motivo_parada_descricao = serializers.CharField(
+        source="motivo_parada.descricao",
+        read_only=True,
+        default=None,
+    )
 
     class Meta:
         model = ApontamentoMaquina
         fields = [
             "id",
             "maquina",
+            "maquina_nome",
+            "maquina_codigo",
             "identificacao_avulsa",
             "horas_produtivas",
             "horas_paradas",
             "motivo_parada",
+            "motivo_parada_descricao",
             "eficiencia",
         ]
         read_only_fields = ["id", "eficiencia"]
+
+    def get_maquina_nome(self, obj: ApontamentoMaquina) -> str | None:
+        return obj.maquina.nome if obj.maquina_id else None
+
+    def get_maquina_codigo(self, obj: ApontamentoMaquina) -> str | None:
+        return obj.maquina.codigo if obj.maquina_id else None
 
     def validate(self, attrs):
         services.validar_apontamento_maquina(
@@ -87,6 +115,8 @@ class RegistroDiarioSerializer(serializers.ModelSerializer):
     maquinas = ApontamentoMaquinaSerializer(many=True)
     ocorrencias = OcorrenciaSerializer(many=True, required=False, default=[])
     fotos = FotoSerializer(many=True, read_only=True)
+    equipe_nome = serializers.CharField(source="equipe.nome", read_only=True)
+    fiscal_nome = serializers.CharField(source="fiscal.nome", read_only=True)
 
     class Meta:
         model = RegistroDiario
@@ -96,7 +126,9 @@ class RegistroDiarioSerializer(serializers.ModelSerializer):
             "turno",
             "clima",
             "equipe",
+            "equipe_nome",
             "fiscal",
+            "fiscal_nome",
             "autor",
             "status",
             "motivo_rejeicao",
