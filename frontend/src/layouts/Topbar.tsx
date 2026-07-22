@@ -3,20 +3,17 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
 import { useTheme } from '../features/theme/ThemeContext'
-import { useProjetos } from '../features/projetos/projetosApi'
+import { useBuscaProjetos } from '../features/projetos/useBuscaProjetos'
 import { Button, Input } from '../components/ui'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet'
 import { SidebarNav } from './Sidebar'
-
-const MAX_RESULTADOS_BUSCA = 5
 
 export function Topbar() {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [termoBusca, setTermoBusca] = useState('')
   const buscaRef = useRef<HTMLDivElement>(null)
-  const projetos = useProjetos({ enabled: termoBusca.length > 0 })
+  const { termo: termoBusca, setTermo: setTermoBusca, resultados: resultadosBusca } = useBuscaProjetos()
 
   useEffect(() => {
     function handleClickFora(event: MouseEvent) {
@@ -27,12 +24,6 @@ export function Topbar() {
     document.addEventListener('mousedown', handleClickFora)
     return () => document.removeEventListener('mousedown', handleClickFora)
   }, [])
-
-  const resultadosBusca = termoBusca
-    ? (projetos.data?.results ?? [])
-        .filter((projeto) => projeto.nome.toLowerCase().includes(termoBusca.toLowerCase()))
-        .slice(0, MAX_RESULTADOS_BUSCA)
-    : []
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background px-4">
