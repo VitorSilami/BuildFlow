@@ -13,6 +13,16 @@ urlpatterns = [
         name="registro-diario-list",
     ),
     path(
+        "projetos/<uuid:projeto_pk>/registros-diarios/<uuid:pk>/aprovar/",
+        RegistroDiarioViewSet.as_view({"post": "aprovar"}),
+        name="registro-diario-aprovar",
+    ),
+    path(
+        "projetos/<uuid:projeto_pk>/registros-diarios/<uuid:pk>/rejeitar/",
+        RegistroDiarioViewSet.as_view({"post": "rejeitar"}),
+        name="registro-diario-rejeitar",
+    ),
+    path(
         "registros-diarios/<uuid:pk>/",
         RegistroDiarioDetailView.as_view({"get": "retrieve"}),
         name="registro-diario-detail",

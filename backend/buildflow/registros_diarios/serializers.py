@@ -98,6 +98,9 @@ class RegistroDiarioSerializer(serializers.ModelSerializer):
             "equipe",
             "fiscal",
             "autor",
+            "status",
+            "motivo_rejeicao",
+            "aprovado_em",
             "created_at",
             "updated_at",
             "producoes",
@@ -106,7 +109,15 @@ class RegistroDiarioSerializer(serializers.ModelSerializer):
             "ocorrencias",
             "fotos",
         ]
-        read_only_fields = ["id", "autor", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "autor",
+            "status",
+            "motivo_rejeicao",
+            "aprovado_em",
+            "created_at",
+            "updated_at",
+        ]
 
     def create(self, validated_data):
         producoes_data = validated_data.pop("producoes")

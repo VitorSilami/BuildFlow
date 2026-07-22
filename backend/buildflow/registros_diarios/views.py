@@ -13,6 +13,7 @@ from buildflow.projetos.models import Projeto
 
 from . import services
 from .models import RegistroDiario
+from .models import StatusRegistroChoices
 from .serializers import FotoSerializer
 from .serializers import RegistroDiarioSerializer
 
@@ -71,6 +72,31 @@ class RegistroDiarioViewSet(
         if request.query_params.get("mes"):
             self.pagination_class = None
         return super().list(request, *args, **kwargs)
+
+    def aprovar(self, request, *args, **kwargs):
+        registro = self.get_object()
+        try:
+            services.transicionar_status_registro(
+                registro=registro,
+                novo_status=StatusRegistroChoices.APROVADO,
+                usuario=request.user,
+            )
+        except DjangoValidationError as exc:
+            raise ValidationError({"detail": exc.messages}) from exc
+        return Response(self.get_serializer(registro).data)
+
+    def rejeitar(self, request, *args, **kwargs):
+        registro = self.get_object()
+        try:
+            services.transicionar_status_registro(
+                registro=registro,
+                novo_status=StatusRegistroChoices.REJEITADO,
+                usuario=request.user,
+                motivo_rejeicao=request.data.get("motivo_rejeicao", ""),
+            )
+        except DjangoValidationError as exc:
+            raise ValidationError({"detail": exc.messages}) from exc
+        return Response(self.get_serializer(registro).data)
 
 
 class RegistroDiarioDetailView(
