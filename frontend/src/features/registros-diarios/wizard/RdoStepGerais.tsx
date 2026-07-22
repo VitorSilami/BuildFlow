@@ -1,4 +1,6 @@
+import { Moon, Sun as SunIcon } from 'lucide-react'
 import { Button, FormField, Input } from '../../../components/ui'
+import { ICONE_CLIMA, LABEL_CLIMA } from '../climaIcons'
 import type { Clima, Equipe, Fiscal, Turno } from '../../../types/registroDiario'
 import { GrupoBotoes } from './GrupoBotoes'
 import { NATIVE_SELECT_CLASSNAME } from './nativeSelectClassName'
@@ -91,8 +93,8 @@ export function RdoStepGerais({
           value={turno}
           onChange={onTurnoChange}
           options={[
-            { value: 'diurno', label: 'Diurno' },
-            { value: 'noturno', label: 'Noturno' },
+            { value: 'diurno', label: 'Diurno', icon: <SunIcon size={16} className="text-amber-400" aria-hidden="true" /> },
+            { value: 'noturno', label: 'Noturno', icon: <Moon size={16} className="text-indigo-400" aria-hidden="true" /> },
           ]}
         />
         <GrupoBotoes
@@ -100,12 +102,11 @@ export function RdoStepGerais({
           label="Clima"
           value={clima}
           onChange={onClimaChange}
-          options={[
-            { value: 'sol', label: 'Sol' },
-            { value: 'nublado', label: 'Nublado' },
-            { value: 'chuva', label: 'Chuva' },
-            { value: 'chuva_forte', label: 'Chuva forte' },
-          ]}
+          options={(Object.keys(LABEL_CLIMA) as Clima[]).map((valor) => ({
+            value: valor,
+            label: LABEL_CLIMA[valor],
+            icon: ICONE_CLIMA[valor],
+          }))}
         />
       </div>
     </div>

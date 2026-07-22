@@ -24,4 +24,9 @@ export const MAQUINA_VAZIA: ApontamentoMaquinaInput = {
   horas_paradas: '0',
 }
 
-export const OCORRENCIA_VAZIA: OcorrenciaInput = { tipo: 'outro', recurso_afetado: 'outro', descricao: '' }
+export const OCORRENCIA_VAZIA: OcorrenciaInput = {
+  tipo: 'outro',
+  recurso_afetado: 'outro',
+  descricao: '',
+  km: '',
+}

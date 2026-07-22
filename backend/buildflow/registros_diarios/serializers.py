@@ -98,7 +98,7 @@ class ApontamentoMaquinaSerializer(serializers.ModelSerializer):
 class OcorrenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ocorrencia
-        fields = ["id", "tipo", "recurso_afetado", "descricao"]
+        fields = ["id", "tipo", "recurso_afetado", "descricao", "km"]
         read_only_fields = ["id"]
 
 

@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react'
 import { Button } from '../../../components/ui'
 
 interface GrupoBotoesOption<T extends string> {
   value: T
   label: string
+  icon?: ReactNode
 }
 
 interface GrupoBotoesProps<T extends string> {
@@ -25,8 +27,10 @@ export function GrupoBotoes<T extends string>({ id, label, value, onChange, opti
             key={option.value}
             type="button"
             variant={value === option.value ? 'default' : 'outline'}
+            className="gap-2"
             onClick={() => onChange(option.value)}
           >
+            {option.icon}
             {option.label}
           </Button>
         ))}

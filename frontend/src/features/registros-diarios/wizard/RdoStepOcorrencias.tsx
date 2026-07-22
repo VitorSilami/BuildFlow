@@ -1,5 +1,6 @@
+import { MapPin } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
-import { Button, FormField, Textarea } from '../../../components/ui'
+import { Button, FormField, Input, Textarea } from '../../../components/ui'
 import type { OcorrenciaInput } from '../../../types/registroDiario'
 import { OCORRENCIA_VAZIA } from './valoresVazios'
 
@@ -23,6 +24,26 @@ export function RdoStepOcorrencias({ ocorrencias, onOcorrenciasChange }: RdoStep
                 )
               }
             />
+          </FormField>
+          <FormField id={`ocorrencia-km-${index}`} label="Localização (km)">
+            <div className="relative">
+              <MapPin
+                size={14}
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                id={`ocorrencia-km-${index}`}
+                value={ocorrencia.km ?? ''}
+                placeholder="Ex.: 606.400"
+                className="pl-8"
+                onChange={(event) =>
+                  onOcorrenciasChange((current) =>
+                    current.map((item, i) => (i === index ? { ...item, km: event.target.value } : item)),
+                  )
+                }
+              />
+            </div>
           </FormField>
         </fieldset>
       ))}

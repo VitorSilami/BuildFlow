@@ -318,6 +318,13 @@ class Ocorrencia(models.Model):
         choices=RecursoAfetadoChoices.choices,
     )
     descricao = models.TextField(_("descrição"))
+    km = models.DecimalField(
+        _("km"),
+        max_digits=8,
+        decimal_places=3,
+        null=True,
+        blank=True,
+    )
 
     tenant_path = "registro_diario__projeto__empresa"
     objects = TenantScopedManager()

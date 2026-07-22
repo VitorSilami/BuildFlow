@@ -126,7 +126,7 @@ test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ p
 
   // Passo 4: Máquinas
   await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
-  await page.getByLabel('Horas produtivas').fill('6')
+  await page.getByLabel('Horas produtivas', { exact: true }).fill('6')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
   // Passo 5: Ocorrências (nenhuma)
@@ -199,7 +199,7 @@ test('trocar de nome avulso para pessoa cadastrada limpa o campo avulso', async 
   await page.getByRole('button', { name: 'Próximo' }).click()
 
   await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
-  await page.getByLabel('Horas produtivas').fill('6')
+  await page.getByLabel('Horas produtivas', { exact: true }).fill('6')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
   await page.getByRole('button', { name: 'Próximo' }).click()
@@ -246,7 +246,7 @@ test('grupos de botões de turno e clima atualizam a seleção e enviam no paylo
   await page.getByRole('button', { name: 'Próximo' }).click()
 
   await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
-  await page.getByLabel('Horas produtivas').fill('6')
+  await page.getByLabel('Horas produtivas', { exact: true }).fill('6')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
   await page.getByRole('button', { name: 'Próximo' }).click()

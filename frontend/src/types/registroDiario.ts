@@ -86,6 +86,7 @@ export interface OcorrenciaInput {
   tipo: string
   recurso_afetado: string
   descricao: string
+  km?: string
 }
 
 export type Turno = 'diurno' | 'noturno'
@@ -132,8 +133,9 @@ export interface ApontamentoMaquina extends ApontamentoMaquinaInput {
   eficiencia: number
 }
 
-export interface Ocorrencia extends OcorrenciaInput {
+export interface Ocorrencia extends Omit<OcorrenciaInput, 'km'> {
   id: string
+  km: string | null
 }
 
 export interface RegistroDiario
