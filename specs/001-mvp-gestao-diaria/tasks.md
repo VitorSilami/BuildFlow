@@ -612,3 +612,24 @@ spec/plano próprio quando priorizado) e a visão comparativa entre todos os pro
 **Verificado**: `uv run pytest` completo (121/121, os 3 testes antes reportados como falhando por
 divergência de fuso horário na virada de dia já passam agora que a data local avançou) + `ruff
 check`/`format`, build + lint + suíte E2E completa do frontend passando (29/29).
+
+**Backend + Frontend — Módulo Histórico & Aprovações (2026-07-22)**: segundo módulo da expansão de
+escopo além do MVP, seguindo o protótipo `EPR_Daily_Completo.html` (bloco 5.2) e o item de backlog
+já registrado em `specs/001-mvp-gestao-diaria/spec.md` (Clarifications/Assumptions: "sem workflow de
+aprovação nesta versão"). `RegistroDiario` ganha `status` (`aguardando_aprovacao` default /
+`aprovado` / `rejeitado`), `motivo_rejeicao` e `aprovado_em` — RDOs criados antes desta migração
+foram marcados como `aprovado` (não entram numa fila de pendências artificial). Só o usuário igual
+ao campo `fiscal` do RDO pode aprovar/rejeitar (`services.transicionar_status_registro`), via dois
+novos endpoints na viewset existente: `POST .../registros-diarios/{id}/aprovar/` e `.../rejeitar/`
+(motivo obrigatório na rejeição; RDO já decidido não pode ser reanalisado; outro usuário da mesma
+empresa recebe 403; isolamento cross-empresa continua 404). Rejeição é terminal nesta rodada — RDO
+continua não-editável, sem fluxo de reenvio. Nova página `HistoricoAprovacoesPage` (por projeto,
+com filtro de mês e de status, KPIs de aguardando/aprovados/rejeitados/taxa de aprovação calculados
+no frontend), visível a todos os perfis no Sidebar — os botões de decisão só aparecem para o
+usuário que é o fiscal do RDO. Fora de escopo desta rodada: reenvio de RDO rejeitado, fila
+cross-projeto do fiscal, e Dashboard/Custos & Ociosidade passarem a filtrar por status de aprovação
+(continuam somando todos os RDOs, como antes).
+
+**Verificado**: `DJANGO_SETTINGS_MODULE=config.settings.test uv run pytest` completo + `ruff check`
++ `ruff format --check` limpos; `npm run build` + `npm run lint` limpos; suíte e2e
+`historico-aprovacoes.spec.ts` (4/4) passando.
