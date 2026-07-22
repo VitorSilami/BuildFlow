@@ -205,7 +205,7 @@ export function HistoricoAprovacoesPage() {
     try {
       await rejeitar.mutateAsync({ registroId: id, motivoRejeicao: motivoTexto })
       setRejeitandoId(null)
-      toast({ title: 'RDO rejeitado.', variant: 'success' })
+      toast({ title: 'RDO rejeitado.', variant: 'default' })
     } catch {
       toast({ title: 'Não foi possível rejeitar o RDO.', variant: 'destructive' })
     }

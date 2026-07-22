@@ -68,5 +68,5 @@ def transicionar_status_registro(
     registro.aprovado_em = timezone.now()
     if novo_status == StatusRegistroChoices.REJEITADO:
         registro.motivo_rejeicao = motivo_rejeicao
-    registro.save(update_fields=["status", "aprovado_em", "motivo_rejeicao"])
+    registro.save(update_fields=["status", "aprovado_em", "motivo_rejeicao", "updated_at"])
     return registro
