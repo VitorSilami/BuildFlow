@@ -99,6 +99,7 @@ LOCAL_APPS = [
     "buildflow.projetos",
     "buildflow.configuracoes",
     "buildflow.registros_diarios",
+    "buildflow.custos_ociosidade",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

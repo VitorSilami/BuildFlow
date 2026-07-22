@@ -4,6 +4,8 @@ import typing
 
 from rest_framework.permissions import BasePermission
 
+from buildflow.usuarios.models import PerfilChoices
+
 if typing.TYPE_CHECKING:
     from rest_framework.request import Request
     from rest_framework.views import APIView
@@ -35,3 +37,19 @@ class TenantScopedViewSetMixin:
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.for_empresa(self.request.user.empresa)
+
+
+class IsGerente(BasePermission):
+    """Restringe a view ao perfil Gerente.
+
+    Primeira restricao real por perfil do sistema — dados de custo/deficit
+    por pessoa sao sensiveis o bastante para nao serem visiveis ao perfil
+    Auxiliar administrativo (mesma regra ja aplicada no protótipo funcional
+    de referencia do sistema).
+    """
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        user = request.user
+        return bool(
+            user and user.is_authenticated and user.perfil == PerfilChoices.GERENTE,
+        )
