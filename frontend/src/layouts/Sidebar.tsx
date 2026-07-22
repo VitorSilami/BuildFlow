@@ -1,6 +1,7 @@
 import { AlertTriangle, DollarSign, FileText, History, LayoutDashboard, LayoutGrid, Settings } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
+import { ProjectContextCard } from './sidebar/ProjectContextCard'
 import { SidebarGroup } from './sidebar/SidebarGroup'
 import { SidebarNavItem } from './sidebar/SidebarNavItem'
 import { SidebarSection } from './sidebar/SidebarSection'
@@ -22,6 +23,8 @@ export function SidebarNav() {
 
       {projetoId && (
         <>
+          <ProjectContextCard projetoId={projetoId} />
+
           <SidebarGroup title="Operação">
             <SidebarNavItem
               to={`/projetos/${projetoId}/registros-diarios`}

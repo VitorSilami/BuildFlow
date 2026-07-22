@@ -71,6 +71,26 @@ const RESPOSTA_CUSTOS = {
   ],
 }
 
+const PROJETO_DETALHE_URL = '**/api/v1/projetos/*/'
+const PROJETO_MOCK = {
+  id: 'projeto-1',
+  nome: 'Duplicação BR-365',
+  descricao: '',
+  numero_contrato: '',
+  trecho: '',
+  engenheiro_responsavel: '',
+  status: 'ativo',
+  execucao_percentual: '52',
+  ultimo_rdo_data: '2026-07-17',
+  criado_por: 1,
+  created_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z',
+}
+
+test.beforeEach(async ({ page }) => {
+  await page.route(PROJETO_DETALHE_URL, (route) => route.fulfill({ json: PROJETO_MOCK }))
+})
+
 test('gerente ve custos e ociosidade do projeto no mes', async ({ page }) => {
   await page.route(SESSION_URL, (route) =>
     route.fulfill({ json: { status: 200, data: { user: GERENTE }, meta: { is_authenticated: true } } }),
