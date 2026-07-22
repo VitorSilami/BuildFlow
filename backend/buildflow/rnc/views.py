@@ -23,7 +23,11 @@ class RncViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet)
     pagination_class = None
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(projeto_id=self.kwargs["projeto_pk"])
+        queryset = (
+            RNC.objects.for_empresa(self.request.user.empresa)
+            .filter(projeto_id=self.kwargs["projeto_pk"])
+            .prefetch_related("acoes_corretivas")
+        )
         status_param = self.request.query_params.get("status")
         if status_param:
             queryset = queryset.filter(status=status_param)
