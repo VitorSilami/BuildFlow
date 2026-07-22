@@ -13,6 +13,14 @@ export function useProjetos(options?: { enabled?: boolean }) {
   })
 }
 
+export function useProjeto(projetoId: string | undefined) {
+  return useQuery({
+    queryKey: ['projeto', projetoId],
+    queryFn: () => apiClient.get<Projeto>(`${PROJETOS_PATH}${projetoId}/`),
+    enabled: Boolean(projetoId),
+  })
+}
+
 export function useCriarProjeto() {
   const queryClient = useQueryClient()
   return useMutation({
