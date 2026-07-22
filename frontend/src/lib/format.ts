@@ -24,3 +24,14 @@ const FORMATADOR_MOEDA = new Intl.NumberFormat('pt-BR', { style: 'currency', cur
 export function formatMoeda(valor: string): string {
   return FORMATADOR_MOEDA.format(Number(valor))
 }
+
+export function formatDataHora(iso: string | null): string {
+  if (iso === null) return '—'
+  return new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}

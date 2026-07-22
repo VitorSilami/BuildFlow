@@ -86,3 +86,30 @@ export function useEnviarFoto(registroId: string) {
     },
   })
 }
+
+export function useAprovarRegistroDiario(projetoId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (registroId: string) =>
+      apiClient.post<RegistroDiario>(
+        `/api/v1/projetos/${projetoId}/registros-diarios/${registroId}/aprovar/`,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['registros-diarios', projetoId] })
+    },
+  })
+}
+
+export function useRejeitarRegistroDiario(projetoId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ registroId, motivoRejeicao }: { registroId: string; motivoRejeicao: string }) =>
+      apiClient.post<RegistroDiario>(
+        `/api/v1/projetos/${projetoId}/registros-diarios/${registroId}/rejeitar/`,
+        { motivo_rejeicao: motivoRejeicao },
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['registros-diarios', projetoId] })
+    },
+  })
+}

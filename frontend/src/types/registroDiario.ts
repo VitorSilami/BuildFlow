@@ -89,6 +89,8 @@ export interface OcorrenciaInput {
 export type Turno = 'diurno' | 'noturno'
 export type Clima = 'sol' | 'nublado' | 'chuva' | 'chuva_forte'
 
+export type StatusRegistro = 'aguardando_aprovacao' | 'aprovado' | 'rejeitado'
+
 export interface RegistroDiarioInput {
   data_referencia: string
   turno: Turno
@@ -111,6 +113,9 @@ export interface Foto {
 export interface RegistroDiario extends RegistroDiarioInput {
   id: string
   autor: number
+  status: StatusRegistro
+  motivo_rejeicao: string
+  aprovado_em: string | null
   created_at: string
   updated_at: string
   fotos: Foto[]
