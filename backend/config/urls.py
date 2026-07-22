@@ -27,6 +27,7 @@ urlpatterns += [
     path("api/v1/", include("buildflow.registros_diarios.urls")),
     path("api/v1/", include("buildflow.configuracoes.urls")),
     path("api/v1/", include("buildflow.custos_ociosidade.urls")),
+    path("api/v1/", include("buildflow.rnc.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
     path(
         "api/docs/",
