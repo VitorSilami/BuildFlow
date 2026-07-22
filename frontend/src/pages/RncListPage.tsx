@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Alert, Button, Card, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
 import { useAuth } from '../features/auth/AuthContext'
+import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { CATEGORIA_LABELS } from '../features/rnc/categoriaItens'
 import { useRncs } from '../features/rnc/rncApi'
 import type { Rnc, StatusEfetivo } from '../types/rnc'
@@ -66,6 +67,7 @@ function CardRnc({ rnc, projetoId }: { rnc: Rnc; projetoId: string }) {
 
 export function RncListPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
+  const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'RNCs' }])
   const { user } = useAuth()
   const [filtroStatus, setFiltroStatus] = useState('')
   const ehGerente = user?.perfil === 'gerente'
@@ -75,7 +77,7 @@ export function RncListPage() {
   if (!ehGerente) {
     return (
       <main aria-label="RNCs">
-        <PageHeader title="RNCs" breadcrumbs={[{ label: 'RNCs' }]} />
+        <PageHeader title="RNCs" breadcrumbs={breadcrumbs} />
         <Alert>Esta tela é restrita ao perfil Gerente.</Alert>
       </main>
     )
@@ -91,7 +93,7 @@ export function RncListPage() {
     <main aria-label="RNCs">
       <PageHeader
         title="RNCs"
-        breadcrumbs={[{ label: 'RNCs' }]}
+        breadcrumbs={breadcrumbs}
         actions={
           <Button asChild>
             <Link to={`/projetos/${projetoId}/rncs/novo`}>Nova RNC</Link>

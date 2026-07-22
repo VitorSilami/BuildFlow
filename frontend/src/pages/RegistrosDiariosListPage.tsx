@@ -8,6 +8,7 @@ import {
   type MesAno,
 } from '../features/registros-diarios/CalendarioMensal'
 import { useRegistrosDiarios } from '../features/registros-diarios/registrosDiariosApi'
+import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 
 function mesAnoAtual(): MesAno {
   const hoje = new Date()
@@ -59,6 +60,7 @@ export function RegistrosDiariosListPage() {
   const { data, isLoading, isError, refetch } = useRegistrosDiarios(projetoId ?? '', {
     mes: formatarMesParaFiltro(mesAno),
   })
+  const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'Registros diários' }])
 
   function irParaMes(novoMesAno: MesAno) {
     setDiaSelecionado(null)
@@ -81,7 +83,7 @@ export function RegistrosDiariosListPage() {
     <main aria-label="Registros diários">
       <PageHeader
         title="Registros diários"
-        breadcrumbs={[{ label: 'Projetos', to: '/projetos' }, { label: 'Registros diários' }]}
+        breadcrumbs={breadcrumbs}
         actions={
           <Button asChild className="gap-2">
             <Link to={`/projetos/${projetoId}/registros-diarios/novo`}>

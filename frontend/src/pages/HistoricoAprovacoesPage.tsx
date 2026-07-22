@@ -7,6 +7,7 @@ import {
   useRegistrosDiarios,
   useRejeitarRegistroDiario,
 } from '../features/registros-diarios/registrosDiariosApi'
+import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { toast } from '../hooks/use-toast'
 import { formatData, formatDataHora } from '../lib/format'
 import type { RegistroDiario, StatusRegistro } from '../types/registroDiario'
@@ -171,6 +172,7 @@ function CardRegistro({
 
 export function HistoricoAprovacoesPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
+  const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'Histórico & Aprovações' }])
   const { user } = useAuth()
   const [mes, setMes] = useState(mesAtualFiltro())
   const [filtroStatus, setFiltroStatus] = useState<StatusRegistro | ''>('')
@@ -222,7 +224,7 @@ export function HistoricoAprovacoesPage() {
     <main aria-label="Histórico e aprovações">
       <PageHeader
         title="Histórico & Aprovações"
-        breadcrumbs={[{ label: 'Histórico & Aprovações' }]}
+        breadcrumbs={breadcrumbs}
         actions={
           <input
             type="month"

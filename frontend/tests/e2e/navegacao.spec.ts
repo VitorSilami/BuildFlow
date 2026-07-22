@@ -177,3 +177,20 @@ test('switcher tem link para ver todos os projetos', async ({ page }) => {
 
   await expect(page).toHaveURL('/projetos')
 })
+
+test('breadcrumb mostra o nome do projeto e linka para o projeto', async ({ page }) => {
+  await mockSessao(page, GERENTE)
+  await mockProjetos(page)
+  await page.route('**/api/v1/projetos/projeto-1/registros-diarios/**', (route) =>
+    route.fulfill({ json: [] }),
+  )
+
+  await page.goto('/projetos/projeto-1/registros-diarios')
+
+  const breadcrumb = page.getByRole('navigation', { name: 'breadcrumb' })
+  await expect(breadcrumb.getByText('Projetos')).toBeVisible()
+  const linkProjeto = breadcrumb.getByRole('link', { name: 'Duplicação BR-365' })
+  await expect(linkProjeto).toBeVisible()
+  await expect(linkProjeto).toHaveAttribute('href', '/projetos/projeto-1/registros-diarios')
+  await expect(breadcrumb.getByText('Registros diários')).toBeVisible()
+})

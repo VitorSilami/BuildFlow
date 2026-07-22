@@ -18,6 +18,7 @@ import {
   PRESENCA_VAZIA,
   PRODUCAO_VAZIA,
 } from '../features/registros-diarios/wizard/valoresVazios'
+import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { formatData } from '../lib/format'
 import { toast } from '../hooks/use-toast'
 import { registroDiarioFormSchema } from '../schemas/registroDiario'
@@ -53,6 +54,10 @@ export function RdoPage() {
   const { user } = useAuth()
   const configuracao = useConfiguracaoRdo(projetoId ?? '')
   const registrosAnteriores = useRegistrosDiarios(projetoId ?? '')
+  const breadcrumbs = useProjetoBreadcrumbs(projetoId, [
+    { label: 'Registros diários', to: `/projetos/${projetoId}/registros-diarios` },
+    { label: 'Novo' },
+  ])
   const criarRegistro = useCriarRegistroDiario(projetoId ?? '')
 
   const [passoAtual, setPassoAtual] = useState(0)
@@ -138,11 +143,7 @@ export function RdoPage() {
     <main aria-label="Novo registro diário">
       <PageHeader
         title="Novo Registro Diário"
-        breadcrumbs={[
-          { label: 'Projetos', to: '/projetos' },
-          { label: 'Registros diários', to: `/projetos/${projetoId}/registros-diarios` },
-          { label: 'Novo' },
-        ]}
+        breadcrumbs={breadcrumbs}
       />
 
       <RdoWizardNav

@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Button, Card, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
 import { FotoUpload } from '../features/registros-diarios/FotoUpload'
 import { useRegistroDiario } from '../features/registros-diarios/registrosDiariosApi'
+import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 
 function RegistroDiarioDetailSkeleton() {
   return (
@@ -23,6 +24,10 @@ function RegistroDiarioDetailSkeleton() {
 export function RegistroDiarioDetailPage() {
   const { projetoId, registroId } = useParams<{ projetoId: string; registroId: string }>()
   const { data: registro, isLoading, isError, refetch } = useRegistroDiario(registroId)
+  const breadcrumbs = useProjetoBreadcrumbs(projetoId, [
+    { label: 'Registros diários', to: `/projetos/${projetoId}/registros-diarios` },
+    { label: registro?.data_referencia ?? '…' },
+  ])
 
   if (isLoading) return <RegistroDiarioDetailSkeleton />
 
@@ -34,11 +39,7 @@ export function RegistroDiarioDetailPage() {
     <main aria-label="Detalhe do registro diário">
       <PageHeader
         title={`Registro diário — ${registro.data_referencia}`}
-        breadcrumbs={[
-          { label: 'Projetos', to: '/projetos' },
-          { label: 'Registros diários', to: `/projetos/${projetoId}/registros-diarios` },
-          { label: registro.data_referencia },
-        ]}
+        breadcrumbs={breadcrumbs}
         actions={
           <Button asChild variant="outline" size="sm">
             <Link to={`/projetos/${projetoId}/registros-diarios`}>Voltar para a lista</Link>

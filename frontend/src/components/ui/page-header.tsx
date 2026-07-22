@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
 
-interface Breadcrumb {
+export interface Breadcrumb {
   label: string
   to?: string
 }

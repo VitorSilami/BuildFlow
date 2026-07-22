@@ -9,6 +9,7 @@ import {
   useCriarPessoa,
   useCriarValorCusto,
 } from '../features/configuracoes/configuracaoApi'
+import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import {
   Button,
   Card,
@@ -44,6 +45,7 @@ function ConfiguracaoSkeleton() {
 export function ConfiguracaoPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
   const configuracao = useConfiguracaoProjeto(projetoId ?? '')
+  const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'Configurações' }])
 
   const criarDisciplina = useCriarDisciplina(projetoId ?? '')
   const criarEquipe = useCriarEquipe(projetoId ?? '')
@@ -84,7 +86,7 @@ export function ConfiguracaoPage() {
 
   return (
     <main aria-label="Configurações do projeto">
-      <PageHeader title="Configurações" breadcrumbs={[{ label: 'Projetos', to: '/projetos' }, { label: 'Configurações' }]} />
+      <PageHeader title="Configurações" breadcrumbs={breadcrumbs} />
 
       <Tabs defaultValue="disciplinas">
         <TabsList aria-label="Seções de configuração">

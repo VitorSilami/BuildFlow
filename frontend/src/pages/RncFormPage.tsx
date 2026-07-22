@@ -18,6 +18,7 @@ import { AdicionarAcaoCorretivaForm } from '../features/rnc/AdicionarAcaoCorreti
 import { CATEGORIA_ITENS, CATEGORIA_LABELS, GRAVIDADE_LABELS, ORIGEM_LABELS, TIPO_LABELS } from '../features/rnc/categoriaItens'
 import { NATIVE_SELECT_CLASSNAME } from '../features/rnc/nativeSelectClassName'
 import { useAtualizarRnc, useConcluirRnc, useCriarRnc, useRnc } from '../features/rnc/rncApi'
+import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { toast } from '../hooks/use-toast'
 import type { Categoria, Gravidade, Origem, RncInput, TipoRnc } from '../types/rnc'
 
@@ -75,6 +76,10 @@ export function RncFormPage() {
   const ehGerente = user?.perfil === 'gerente'
 
   const rnc = useRnc(rncId, ehGerente)
+  const breadcrumbs = useProjetoBreadcrumbs(projetoId, [
+    { label: 'RNCs', to: `/projetos/${projetoId}/rncs` },
+    { label: ehEdicao ? 'Editar' : 'Nova' },
+  ])
   const criarRnc = useCriarRnc(projetoId ?? '')
   const atualizarRnc = useAtualizarRnc(rncId ?? '')
   const concluirRnc = useConcluirRnc(rncId ?? '')
@@ -151,7 +156,7 @@ export function RncFormPage() {
   if (!ehGerente) {
     return (
       <main aria-label={ehEdicao ? 'Editar RNC' : 'Nova RNC'}>
-        <PageHeader title={ehEdicao ? 'Editar RNC' : 'Nova RNC'} breadcrumbs={[{ label: 'RNCs' }]} />
+        <PageHeader title={ehEdicao ? 'Editar RNC' : 'Nova RNC'} breadcrumbs={breadcrumbs} />
         <Alert>Esta tela é restrita ao perfil Gerente.</Alert>
       </main>
     )
@@ -169,10 +174,7 @@ export function RncFormPage() {
     <main aria-label={ehEdicao ? 'Editar RNC' : 'Nova RNC'}>
       <PageHeader
         title={ehEdicao && rnc.data ? `RNC-${String(rnc.data.numero_sequencial).padStart(3, '0')}` : 'Nova RNC'}
-        breadcrumbs={[
-          { label: 'RNCs', to: `/projetos/${projetoId}/rncs` },
-          { label: ehEdicao ? 'Editar' : 'Nova' },
-        ]}
+        breadcrumbs={breadcrumbs}
       />
 
       {somenteLeitura && <Alert>Esta RNC já foi concluída e não pode mais ser editada.</Alert>}

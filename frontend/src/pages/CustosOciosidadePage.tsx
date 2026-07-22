@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { Alert, Card, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
 import { useAuth } from '../features/auth/AuthContext'
 import { useCustosOciosidade } from '../features/custos-ociosidade/custosOciosidadeApi'
+import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { formatMoeda } from '../lib/format'
 import type { CustosOciosidade } from '../types/custoOciosidade'
 
@@ -205,11 +206,12 @@ export function CustosOciosidadePage() {
   const [mes, setMes] = useState(mesAtualFiltro())
   const ehGerente = user?.perfil === 'gerente'
   const custos = useCustosOciosidade(projetoId ?? '', mes, ehGerente)
+  const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'Custos & Ociosidade' }])
 
   if (!ehGerente) {
     return (
       <main aria-label="Custos e ociosidade">
-        <PageHeader title="Custos & Ociosidade" breadcrumbs={[{ label: 'Custos & Ociosidade' }]} />
+        <PageHeader title="Custos & Ociosidade" breadcrumbs={breadcrumbs} />
         <Alert>Esta tela é restrita ao perfil Gerente.</Alert>
       </main>
     )
@@ -219,7 +221,7 @@ export function CustosOciosidadePage() {
     <main aria-label="Custos e ociosidade">
       <PageHeader
         title="Custos & Ociosidade"
-        breadcrumbs={[{ label: 'Custos & Ociosidade' }]}
+        breadcrumbs={breadcrumbs}
         actions={
           <input
             type="month"
