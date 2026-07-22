@@ -273,7 +273,7 @@ export function HistoricoAprovacoesPage() {
                 <CardRegistro
                   key={registro.id}
                   registro={registro}
-                  souFiscal={String(registro.fiscal) === user?.id}
+                  souFiscal={String(registro.fiscal) === String(user?.id)}
                   expandido={expandidoId === registro.id}
                   rejeitando={rejeitandoId === registro.id}
                   motivoTexto={motivoTexto}
