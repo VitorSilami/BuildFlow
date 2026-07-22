@@ -1,11 +1,9 @@
 import { AlertTriangle, DollarSign, FileText, History, LayoutDashboard, LayoutGrid, Settings } from 'lucide-react'
-import { NavLink, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
-
-const navItemClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-    isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-surface hover:text-ink'
-  }`
+import { SidebarGroup } from './sidebar/SidebarGroup'
+import { SidebarNavItem } from './sidebar/SidebarNavItem'
+import { SidebarSection } from './sidebar/SidebarSection'
 
 export function SidebarNav() {
   const { projetoId } = useParams<{ projetoId?: string }>()
@@ -13,43 +11,57 @@ export function SidebarNav() {
 
   return (
     <nav className="flex flex-col gap-1 p-3">
-      <NavLink to="/dashboard" className={navItemClass}>
-        <LayoutDashboard size={18} aria-hidden="true" />
-        Dashboard
-      </NavLink>
-      <p className="px-3 pb-2 pt-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-        Operação
-      </p>
-      <NavLink to="/projetos" className={navItemClass}>
-        <LayoutGrid size={18} aria-hidden="true" />
-        Projetos
-      </NavLink>
+      <SidebarSection title="Empresa">
+        <SidebarNavItem to="/dashboard" icon={<LayoutDashboard size={18} aria-hidden="true" />}>
+          Dashboard
+        </SidebarNavItem>
+        <SidebarNavItem to="/projetos" icon={<LayoutGrid size={18} aria-hidden="true" />}>
+          Projetos
+        </SidebarNavItem>
+      </SidebarSection>
+
       {projetoId && (
         <>
-          <NavLink to={`/projetos/${projetoId}/registros-diarios`} className={navItemClass}>
-            <FileText size={18} aria-hidden="true" />
-            Registros diários
-          </NavLink>
-          <NavLink to={`/projetos/${projetoId}/historico-aprovacoes`} className={navItemClass}>
-            <History size={18} aria-hidden="true" />
-            Histórico & Aprovações
-          </NavLink>
-          <NavLink to={`/projetos/${projetoId}/configuracoes`} className={navItemClass}>
-            <Settings size={18} aria-hidden="true" />
-            Configurações
-          </NavLink>
+          <SidebarGroup title="Operação">
+            <SidebarNavItem
+              to={`/projetos/${projetoId}/registros-diarios`}
+              icon={<FileText size={18} aria-hidden="true" />}
+            >
+              Registros diários
+            </SidebarNavItem>
+            <SidebarNavItem
+              to={`/projetos/${projetoId}/historico-aprovacoes`}
+              icon={<History size={18} aria-hidden="true" />}
+            >
+              Histórico & Aprovações
+            </SidebarNavItem>
+          </SidebarGroup>
+
           {user?.perfil === 'gerente' && (
-            <NavLink to={`/projetos/${projetoId}/rncs`} className={navItemClass}>
-              <AlertTriangle size={18} aria-hidden="true" />
-              RNCs
-            </NavLink>
+            <SidebarGroup title="Gestão">
+              <SidebarNavItem
+                to={`/projetos/${projetoId}/rncs`}
+                icon={<AlertTriangle size={18} aria-hidden="true" />}
+              >
+                RNCs
+              </SidebarNavItem>
+              <SidebarNavItem
+                to={`/projetos/${projetoId}/custos-ociosidade`}
+                icon={<DollarSign size={18} aria-hidden="true" />}
+              >
+                Custos & Ociosidade
+              </SidebarNavItem>
+            </SidebarGroup>
           )}
-          {user?.perfil === 'gerente' && (
-            <NavLink to={`/projetos/${projetoId}/custos-ociosidade`} className={navItemClass}>
-              <DollarSign size={18} aria-hidden="true" />
-              Custos & Ociosidade
-            </NavLink>
-          )}
+
+          <SidebarGroup title="Administração">
+            <SidebarNavItem
+              to={`/projetos/${projetoId}/configuracoes`}
+              icon={<Settings size={18} aria-hidden="true" />}
+            >
+              Configurações
+            </SidebarNavItem>
+          </SidebarGroup>
         </>
       )}
     </nav>
