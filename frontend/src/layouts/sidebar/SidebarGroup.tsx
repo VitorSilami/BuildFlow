@@ -15,11 +15,11 @@ export function SidebarGroup({ title, children }: SidebarGroupProps) {
         type="button"
         onClick={() => setExpandido((atual) => !atual)}
         aria-expanded={expandido}
-        className="flex items-center justify-between px-3 pb-1 pt-4 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-ink"
+        className="flex items-center justify-between px-3 pb-1 pt-3 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70 hover:text-muted-foreground"
       >
         {title}
         <ChevronDown
-          size={14}
+          size={12}
           aria-hidden="true"
           className={`transition-transform ${expandido ? '' : '-rotate-90'}`}
         />

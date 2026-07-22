@@ -1,10 +1,11 @@
-import { ChevronsUpDown, Search } from 'lucide-react'
+import { ChevronDown, Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Badge, Input } from '../../components/ui'
+import { Input } from '../../components/ui'
+import { useAuth } from '../../features/auth/AuthContext'
 import { useBuscaProjetos } from '../../features/projetos/useBuscaProjetos'
 import { useProjeto } from '../../features/projetos/projetosApi'
-import { STATUS_BADGE_CLASS, STATUS_LABEL } from '../../features/projetos/statusBadge'
+import { STATUS_DOT_CLASS, STATUS_LABEL } from '../../features/projetos/statusBadge'
 import { formatData, formatExecucao } from '../../lib/format'
 
 interface ProjectContextCardProps {
@@ -12,6 +13,7 @@ interface ProjectContextCardProps {
 }
 
 export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
+  const { user } = useAuth()
   const projeto = useProjeto(projetoId)
   const [aberto, setAberto] = useState(false)
   const { termo, setTermo, resultados } = useBuscaProjetos()
@@ -30,7 +32,7 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
 
   if (projeto.isLoading || !projeto.data) {
     return (
-      <div className="mx-3 mb-2 rounded-lg border border-dashed border-border p-3">
+      <div className="border-b border-border px-3 py-3">
         <p className="text-xs text-muted-foreground">Carregando projeto…</p>
       </div>
     )
@@ -39,30 +41,32 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
   const dados = projeto.data
 
   return (
-    <div ref={painelRef} className="relative mx-3 mb-2">
+    <div ref={painelRef} className="relative border-b border-border pb-2">
       <button
         type="button"
         onClick={() => setAberto((atual) => !atual)}
         aria-expanded={aberto}
         aria-label="Trocar de projeto"
-        className="flex w-full flex-col gap-2 rounded-lg border border-dashed border-border p-3 text-left hover:bg-surface"
+        className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-surface"
       >
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Projeto Atual
-          </p>
-          <ChevronsUpDown size={14} aria-hidden="true" className="shrink-0 text-muted-foreground" />
-        </div>
         <p className="truncate font-display text-sm font-bold text-ink">{dados.nome}</p>
-        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <Badge className={STATUS_BADGE_CLASS[dados.status]}>{STATUS_LABEL[dados.status]}</Badge>
+        {user?.empresa_nome && (
+          <p className="truncate text-xs text-muted-foreground">{user.empresa_nome}</p>
+        )}
+        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT_CLASS[dados.status]}`} aria-hidden="true" />
+          <span>{STATUS_LABEL[dados.status]}</span>
+          <span aria-hidden="true">·</span>
           <span>{formatExecucao(dados.execucao_percentual)}</span>
+          <ChevronDown size={12} aria-hidden="true" className="ml-auto shrink-0" />
         </div>
-        <p className="text-xs text-muted-foreground">Último RDO: {formatData(dados.ultimo_rdo_data)}</p>
+        <p className="mt-1 text-[11px] text-muted-foreground/70">
+          Último RDO: {formatData(dados.ultimo_rdo_data)}
+        </p>
       </button>
 
       {aberto && (
-        <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-md border border-border bg-background p-2 shadow-md">
+        <div className="absolute left-0 top-full z-10 mt-1 w-[calc(100%-1.5rem)] rounded-md border border-border bg-background p-2 shadow-md ml-3">
           <div className="relative mb-2">
             <Search
               size={14}

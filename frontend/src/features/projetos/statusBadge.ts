@@ -19,3 +19,12 @@ export const STATUS_BADGE_CLASS: Record<ProjetoStatus, string> = {
   concluido:
     'border-transparent bg-slate-500/15 text-slate-700 hover:bg-slate-500/15 dark:bg-slate-500/20 dark:text-slate-400 dark:hover:bg-slate-500/20',
 }
+
+// Dot de status compacto (sem caixa/borda) para contextos densos, como o
+// cabeçalho de projeto atual na sidebar — mesma paleta do STATUS_BADGE_CLASS,
+// sem o peso visual de um badge com borda.
+export const STATUS_DOT_CLASS: Record<ProjetoStatus, string> = {
+  ativo: 'bg-emerald-500',
+  pausado: 'bg-amber-500',
+  concluido: 'bg-slate-400',
+}

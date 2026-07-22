@@ -8,7 +8,7 @@ interface SidebarSectionProps {
 export function SidebarSection({ title, children }: SidebarSectionProps) {
   return (
     <div className="flex flex-col gap-1">
-      <p className="px-3 pb-1 pt-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+      <p className="px-3 pb-1 pt-3 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
         {title}
       </p>
       {children}
