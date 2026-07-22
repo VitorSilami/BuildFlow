@@ -91,3 +91,45 @@ test('trocar de aba mantém a seção anterior preenchida ao voltar', async ({ p
   await expect(page.getByRole('listitem').filter({ hasText: 'Terraplenagem' })).toBeVisible()
   await expect(page.getByLabel('Nova disciplina')).toHaveValue('Rascunho')
 })
+
+test('tipo equipamento mostra seletor de máquina cadastrada em vez de função', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [],
+        equipes: [
+          {
+            id: 'equipe-1',
+            nome: 'Equipe A',
+            pessoas: [],
+            maquinas: [{ id: 'maquina-1', codigo: 'ESC-01', nome: 'Escavadeira 320D' }],
+          },
+        ],
+        metas: [],
+        valores_custo: [],
+        soma_pesos_metas: 0,
+      },
+    }),
+  )
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'Valores' }).click()
+
+  await expect(page.getByLabel('Função')).toBeVisible()
+  await expect(page.getByLabel('Valor (R$/dia)')).toBeVisible()
+
+  // "Tipo" e "Máquina" sao SelectField (Radix, nao <select> nativo) — abrir
+  // via click e escolher a opcao por role, nao .selectOption() (nativo).
+  await page.getByLabel('Tipo').click()
+  await page.getByRole('option', { name: 'Equipamento' }).click()
+
+  await expect(page.getByLabel('Função')).not.toBeVisible()
+  await expect(page.getByLabel('Máquina')).toBeVisible()
+  await expect(page.getByLabel('Valor (R$/hora)')).toBeVisible()
+
+  await page.getByLabel('Máquina').click()
+  await expect(page.getByRole('option', { name: 'Escavadeira 320D (ESC-01)' })).toBeVisible()
+})

@@ -66,6 +66,8 @@ export function ConfiguracaoPage() {
   const [valorTipo, setValorTipo] = useState<'mao_de_obra' | 'equipamento'>('mao_de_obra')
   const [valorDescricao, setValorDescricao] = useState('')
   const [valorValor, setValorValor] = useState('')
+  const [valorFuncao, setValorFuncao] = useState('')
+  const [valorMaquinaId, setValorMaquinaId] = useState('')
 
   if (configuracao.isLoading) return <ConfiguracaoSkeleton />
   if (configuracao.isError || !configuracao.data) {
@@ -274,10 +276,13 @@ export function ConfiguracaoPage() {
               {valoresCusto.length === 0 && <EmptyState>Nenhum valor cadastrado ainda.</EmptyState>}
               <ul className="mb-4 divide-y divide-border">
                 {valoresCusto.map((valor) => (
-                  <li className="py-2 text-sm" key={valor.id}>{valor.descricao} ({valor.tipo}): {valor.valor}</li>
+                  <li className="py-2 text-sm" key={valor.id}>
+                    {valor.descricao} ({valor.tipo === 'mao_de_obra' ? 'Mão de obra' : 'Equipamento'})
+                    {valor.funcao && ` — ${valor.funcao}`}: {valor.valor}
+                  </li>
                 ))}
               </ul>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
                 <SelectField
                   id="valor-tipo"
                   label="Tipo"
@@ -288,10 +293,39 @@ export function ConfiguracaoPage() {
                     { value: 'equipamento', label: 'Equipamento' },
                   ]}
                 />
+                {valorTipo === 'mao_de_obra' ? (
+                  <FormField id="valor-funcao" label="Função">
+                    <Input
+                      id="valor-funcao"
+                      value={valorFuncao}
+                      onChange={(event) => setValorFuncao(event.target.value)}
+                    />
+                  </FormField>
+                ) : (
+                  <SelectField
+                    id="valor-maquina"
+                    label="Máquina"
+                    value={valorMaquinaId}
+                    onChange={setValorMaquinaId}
+                    options={equipes.flatMap((equipe) =>
+                      equipe.maquinas.map((maquina) => ({
+                        value: maquina.id,
+                        label: `${maquina.nome} (${maquina.codigo})`,
+                      })),
+                    )}
+                  />
+                )}
                 <FormField id="valor-descricao" label="Descrição">
-                  <Input id="valor-descricao" value={valorDescricao} onChange={(event) => setValorDescricao(event.target.value)} />
+                  <Input
+                    id="valor-descricao"
+                    value={valorDescricao}
+                    onChange={(event) => setValorDescricao(event.target.value)}
+                  />
                 </FormField>
-                <FormField id="valor-valor" label="Valor">
+                <FormField
+                  id="valor-valor"
+                  label={valorTipo === 'mao_de_obra' ? 'Valor (R$/dia)' : 'Valor (R$/hora)'}
+                >
                   <Input id="valor-valor" value={valorValor} onChange={(event) => setValorValor(event.target.value)} />
                 </FormField>
                 <div className="flex items-end">
@@ -300,8 +334,21 @@ export function ConfiguracaoPage() {
                     disabled={!valorDescricao.trim() || !valorValor || criarValorCusto.isPending}
                     onClick={() =>
                       criarValorCusto.mutate(
-                        { tipo: valorTipo, descricao: valorDescricao, valor: valorValor },
-                        { onSuccess: () => { setValorDescricao(''); setValorValor('') } },
+                        {
+                          tipo: valorTipo,
+                          descricao: valorDescricao,
+                          valor: valorValor,
+                          funcao: valorTipo === 'mao_de_obra' ? valorFuncao : undefined,
+                          maquina: valorTipo === 'equipamento' ? valorMaquinaId : undefined,
+                        },
+                        {
+                          onSuccess: () => {
+                            setValorDescricao('')
+                            setValorValor('')
+                            setValorFuncao('')
+                            setValorMaquinaId('')
+                          },
+                        },
                       )
                     }
                   >

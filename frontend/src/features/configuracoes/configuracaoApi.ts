@@ -66,8 +66,13 @@ export function useCriarMeta(projetoId: string) {
 export function useCriarValorCusto(projetoId: string) {
   const invalidar = useInvalidarConfiguracao(projetoId)
   return useMutation({
-    mutationFn: (values: { tipo: string; descricao: string; valor: string }) =>
-      apiClient.post<ValorCusto>(`/api/v1/projetos/${projetoId}/configuracao/valores/`, values),
+    mutationFn: (values: {
+      tipo: string
+      descricao: string
+      valor: string
+      funcao?: string
+      maquina?: string
+    }) => apiClient.post<ValorCusto>(`/api/v1/projetos/${projetoId}/configuracao/valores/`, values),
     onSuccess: invalidar,
   })
 }

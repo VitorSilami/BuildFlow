@@ -19,6 +19,8 @@ export interface ValorCusto {
   tipo: 'mao_de_obra' | 'equipamento'
   descricao: string
   valor: string
+  funcao: string
+  maquina: string | null
 }
 
 export interface ConfiguracaoProjeto {
