@@ -44,11 +44,19 @@ Linear, GitHub, Notion, Figma, Jira e Vercel.
    expandido por padrão), sem `localStorage`. YAGNI — se a falta de persistência
    incomodar no uso real, é uma mudança pequena de adicionar depois.
 5. **Project switcher, não link de "voltar pra lista"**: o Project Context
-   Card tem um dropdown de troca rápida de projeto (busca + lista curta +
+   Card tem um painel de troca rápida de projeto (busca + lista curta +
    link "Ver todos os projetos"), resolvendo a pergunta "como troco de
    projeto?" sem sair da tela atual. Reaproveita a mesma lógica de
    busca-e-filtra que já existe no Topbar (`Buscar projeto…`,
    `MAX_RESULTADOS_BUSCA = 5`) via um hook compartilhado, em vez de duplicá-la.
+   O painel usa o mesmo padrão de UI que o Topbar já usa hoje (botão trigger +
+   painel posicionado com `absolute` + fecha ao clicar fora via listener de
+   `mousedown`) — não o componente `DropdownMenu` do design system: esse
+   componente existe no repositório mas não é usado em lugar nenhum hoje, e
+   colocar um campo de busca dentro de um Radix `DropdownMenu` é arriscado
+   (o menu gerencia foco/teclado por roving-focus + typeahead, o que compete
+   com a digitação no input de busca). O padrão do Topbar já é comprovado no
+   próprio código e não introduz esse risco.
 6. **Botão "Entrar" → "Abrir Projeto"** na listagem de projetos. O card
    continua com botão explícito (não vira um único elemento clicável) —
    já existe um botão de editar (lápis) sobreposto no card, e tornar o card
@@ -112,19 +120,24 @@ Mostra nome do projeto, nome da empresa, badge de status (reaproveita
 compartilhado), execução % (`formatExecucao`, já existe em `lib/format.ts`) e
 último RDO (`formatData`). Usa o novo hook `useProjeto(projetoId)`.
 
-Contém o **project switcher**: um botão/trigger que abre um `Popover`-like
-(reaproveitando `DropdownMenu` do design system, já usado em outros lugares)
-com:
+Contém o **project switcher**: um botão trigger que abre/fecha um painel
+local (`useState<boolean>`, fecha ao clicar fora — mesmo padrão de
+`buscaRef`/`handleClickFora` já implementado em `Topbar.tsx`) com:
 - campo de busca (reaproveita o hook extraído do Topbar — ver abaixo)
 - lista curta dos projetos filtrados (máx. 5, mesmo limite do Topbar hoje)
 - rodapé "Ver todos os projetos →" linkando para `/projetos`
 
-### `ProjectBreadcrumb` — não é um componente novo, é uma mudança no `PageHeader`
-`PageHeader` ganha uma prop opcional `projetoId?: string`. Quando presente,
-prefixa a lista de breadcrumbs recebida com `Projetos > {nome do projeto}`
-(usando `useProjeto(projetoId)`), antes de renderizar o trail que a página
-já passa. Páginas de projeto passam só o trecho final; páginas fora de
-projeto (Dashboard, ProjetosListPage) continuam como estão, sem a prop.
+### `useProjetoBreadcrumbs` — não é um componente, é um hook
+`PageHeader` (`frontend/src/components/ui/page-header.tsx`) é hoje puramente
+apresentacional — não importa nada de `features/`. Em vez de dar a ele uma
+prop `projetoId` que dispararia um fetch por dentro (quebrando esse
+isolamento), um novo hook `useProjetoBreadcrumbs(projetoId, trilhaFinal)` em
+`frontend/src/features/projetos/useProjetoBreadcrumbs.ts` monta o array
+completo — `Projetos > {nome do projeto} > ...trilhaFinal` — usando
+`useProjeto(projetoId)` por baixo. Páginas de projeto chamam o hook e passam
+o resultado para o `breadcrumbs` que `PageHeader` já aceita, sem nenhuma
+mudança no `PageHeader` em si. Páginas fora de projeto (Dashboard,
+ProjetosListPage) continuam como estão, sem usar o hook.
 
 ## Camada de dados
 
@@ -176,11 +189,9 @@ Nenhuma rota muda. `DashboardLayout` continua montando `Sidebar` + `Topbar` +
 <PageHeader title="Custos & Ociosidade" breadcrumbs={[{ label: 'Custos & Ociosidade' }]} />
 
 // depois
-<PageHeader
-  title="Custos & Ociosidade"
-  projetoId={projetoId}
-  breadcrumbs={[{ label: 'Custos & Ociosidade' }]}
-/>
+const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'Custos & Ociosidade' }])
+// ...
+<PageHeader title="Custos & Ociosidade" breadcrumbs={breadcrumbs} />
 ```
 
 ## Fora de escopo
