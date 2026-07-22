@@ -1,4 +1,4 @@
-import { DollarSign, FileText, History, LayoutDashboard, LayoutGrid, Settings } from 'lucide-react'
+import { AlertTriangle, DollarSign, FileText, History, LayoutDashboard, LayoutGrid, Settings } from 'lucide-react'
 import { NavLink, useParams } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
 
@@ -38,6 +38,12 @@ export function SidebarNav() {
             <Settings size={18} aria-hidden="true" />
             Configurações
           </NavLink>
+          {user?.perfil === 'gerente' && (
+            <NavLink to={`/projetos/${projetoId}/rncs`} className={navItemClass}>
+              <AlertTriangle size={18} aria-hidden="true" />
+              RNCs
+            </NavLink>
+          )}
           {user?.perfil === 'gerente' && (
             <NavLink to={`/projetos/${projetoId}/custos-ociosidade`} className={navItemClass}>
               <DollarSign size={18} aria-hidden="true" />

@@ -9,6 +9,7 @@ import { LoginPage } from './pages/LoginPage'
 import { ProjetosListPage } from './pages/ProjetosListPage'
 import { RdoPage } from './pages/RdoPage'
 import { RncFormPage } from './pages/RncFormPage'
+import { RncListPage } from './pages/RncListPage'
 import { RegistroDiarioDetailPage } from './pages/RegistroDiarioDetailPage'
 import { RegistrosDiariosListPage } from './pages/RegistrosDiariosListPage'
 import { ProtectedRoute, PublicOnlyRoute } from './routes/ProtectedRoute'
@@ -38,6 +39,7 @@ function App() {
                 element={<RegistroDiarioDetailPage />}
               />
               <Route path="/projetos/:projetoId/configuracoes" element={<ConfiguracaoPage />} />
+              <Route path="/projetos/:projetoId/rncs" element={<RncListPage />} />
               <Route path="/projetos/:projetoId/rncs/novo" element={<RncFormPage />} />
               <Route path="/projetos/:projetoId/rncs/:rncId" element={<RncFormPage />} />
               <Route path="/projetos/:projetoId/custos-ociosidade" element={<CustosOciosidadePage />} />
