@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './features/auth/AuthContext'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { ConfiguracaoPage } from './pages/ConfiguracaoPage'
+import { CustosOciosidadePage } from './pages/CustosOciosidadePage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { ProjetosListPage } from './pages/ProjetosListPage'
@@ -35,6 +36,7 @@ function App() {
                 element={<RegistroDiarioDetailPage />}
               />
               <Route path="/projetos/:projetoId/configuracoes" element={<ConfiguracaoPage />} />
+              <Route path="/projetos/:projetoId/custos-ociosidade" element={<CustosOciosidadePage />} />
             </Route>
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

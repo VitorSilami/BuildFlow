@@ -1,5 +1,6 @@
-import { FileText, LayoutDashboard, LayoutGrid, Settings } from 'lucide-react'
+import { DollarSign, FileText, LayoutDashboard, LayoutGrid, Settings } from 'lucide-react'
 import { NavLink, useParams } from 'react-router-dom'
+import { useAuth } from '../features/auth/AuthContext'
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
@@ -8,6 +9,7 @@ const navItemClass = ({ isActive }: { isActive: boolean }) =>
 
 export function SidebarNav() {
   const { projetoId } = useParams<{ projetoId?: string }>()
+  const { user } = useAuth()
 
   return (
     <nav className="flex flex-col gap-1 p-3">
@@ -32,6 +34,12 @@ export function SidebarNav() {
             <Settings size={18} aria-hidden="true" />
             Configurações
           </NavLink>
+          {user?.perfil === 'gerente' && (
+            <NavLink to={`/projetos/${projetoId}/custos-ociosidade`} className={navItemClass}>
+              <DollarSign size={18} aria-hidden="true" />
+              Custos & Ociosidade
+            </NavLink>
+          )}
         </>
       )}
     </nav>

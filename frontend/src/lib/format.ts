@@ -18,3 +18,9 @@ export function execucaoCorClasse(valor: string | null): string {
   if (numero < LIMITE_EXECUCAO_MEDIA) return 'bg-amber-500'
   return 'bg-emerald-500'
 }
+
+const FORMATADOR_MOEDA = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
+export function formatMoeda(valor: string): string {
+  return FORMATADOR_MOEDA.format(Number(valor))
+}
