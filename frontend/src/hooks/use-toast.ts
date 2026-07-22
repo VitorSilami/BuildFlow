@@ -4,7 +4,7 @@ export interface ToastData {
   id: string
   title: string
   description?: string
-  variant?: 'default' | 'success'
+  variant?: 'default' | 'success' | 'destructive'
   open: boolean
 }
 

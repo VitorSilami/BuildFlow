@@ -4,6 +4,7 @@ import { DashboardLayout } from './layouts/DashboardLayout'
 import { ConfiguracaoPage } from './pages/ConfiguracaoPage'
 import { CustosOciosidadePage } from './pages/CustosOciosidadePage'
 import { DashboardPage } from './pages/DashboardPage'
+import { HistoricoAprovacoesPage } from './pages/HistoricoAprovacoesPage'
 import { LoginPage } from './pages/LoginPage'
 import { ProjetosListPage } from './pages/ProjetosListPage'
 import { RdoPage } from './pages/RdoPage'
@@ -37,6 +38,10 @@ function App() {
               />
               <Route path="/projetos/:projetoId/configuracoes" element={<ConfiguracaoPage />} />
               <Route path="/projetos/:projetoId/custos-ociosidade" element={<CustosOciosidadePage />} />
+              <Route
+                path="/projetos/:projetoId/historico-aprovacoes"
+                element={<HistoricoAprovacoesPage />}
+              />
             </Route>
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
