@@ -1,5 +1,10 @@
+from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+from .models import RegistroDiario
+from .models import StatusRegistroChoices
 
 MAX_FOTO_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 TIPOS_FOTO_PERMITIDOS = {"image/jpeg", "image/png", "image/webp"}
@@ -40,3 +45,28 @@ def validar_arquivo_foto(arquivo) -> None:
     if content_type and content_type not in TIPOS_FOTO_PERMITIDOS:
         msg = _("Formato de imagem não suportado. Use JPEG, PNG ou WebP.")
         raise ValidationError(msg)
+
+
+def transicionar_status_registro(
+    *,
+    registro: RegistroDiario,
+    novo_status: str,
+    usuario,
+    motivo_rejeicao: str = "",
+) -> RegistroDiario:
+    if usuario.id != registro.fiscal_id:
+        msg = _("Só o fiscal designado pode aprovar ou rejeitar este RDO.")
+        raise PermissionDenied(msg)
+    if registro.status != StatusRegistroChoices.AGUARDANDO_APROVACAO:
+        msg = _("Este RDO já foi analisado.")
+        raise ValidationError(msg)
+    if novo_status == StatusRegistroChoices.REJEITADO and not motivo_rejeicao:
+        msg = _("Informe o motivo da rejeição.")
+        raise ValidationError(msg)
+
+    registro.status = novo_status
+    registro.aprovado_em = timezone.now()
+    if novo_status == StatusRegistroChoices.REJEITADO:
+        registro.motivo_rejeicao = motivo_rejeicao
+    registro.save(update_fields=["status", "aprovado_em", "motivo_rejeicao"])
+    return registro

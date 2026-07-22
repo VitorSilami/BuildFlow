@@ -63,10 +63,17 @@ class OrigemChoices(models.TextChoices):
     AVULSO = "avulso", _("Avulso")
 
 
+class StatusRegistroChoices(models.TextChoices):
+    AGUARDANDO_APROVACAO = "aguardando_aprovacao", _("Aguardando Aprovação")
+    APROVADO = "aprovado", _("Aprovado")
+    REJEITADO = "rejeitado", _("Rejeitado")
+
+
 class RegistroDiario(models.Model):
     """RDO — relato de um dia de trabalho em um projeto.
 
-    Sem workflow de aprovacao nesta versao (Clarification, spec.md 2026-07-16).
+    Todo RDO nasce "Aguardando Aprovação" e só o fiscal designado pode
+    aprová-lo ou rejeitá-lo — ver services.transicionar_status_registro.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -105,6 +112,14 @@ class RegistroDiario(models.Model):
         null=True,
         blank=True,
     )
+    status = models.CharField(
+        _("status"),
+        max_length=24,
+        choices=StatusRegistroChoices.choices,
+        default=StatusRegistroChoices.AGUARDANDO_APROVACAO,
+    )
+    motivo_rejeicao = models.TextField(_("motivo da rejeição"), blank=True)
+    aprovado_em = models.DateTimeField(_("aprovado em"), null=True, blank=True)
     created_at = models.DateTimeField(_("criado em"), auto_now_add=True)
     updated_at = models.DateTimeField(_("atualizado em"), auto_now=True)
 
