@@ -18,7 +18,7 @@ const HOJE_FIXO = new Date('2026-07-17T10:00:00')
 const PROJETO_DETALHE_URL = '**/api/v1/projetos/*/'
 const PROJETO_MOCK = {
   id: 'projeto-1',
-  nome: 'Duplicação BR-365',
+  nome: 'Duplicação Rodovia Norte',
   descricao: '',
   numero_contrato: '',
   trecho: '',
