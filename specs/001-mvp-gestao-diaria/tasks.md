@@ -592,3 +592,23 @@ de formulário, sem mudança. Próxima onda (UI otimista + transição de págin
 separado.
 
 **Verificado**: build + lint limpos, suíte E2E completa passando.
+
+**Backend + Frontend — Módulo Custos & Ociosidade (2026-07-22)**: primeiro módulo da expansão de
+escopo além do MVP, seguindo o protótipo `EPR_Daily_Completo.html` (backlog já registrado em
+`specs/001-mvp-gestao-diaria/spec.md`, seção Assumptions). `ValorCusto` ganha `funcao` (mão de
+obra) e `maquina` (equipamento, FK), permitindo atribuir custo real por função/máquina —
+`valor` fixado como R$/dia (mão de obra) e R$/hora (equipamento). Novo app `custos_ociosidade`
+(somente leitura) cruza `Presenca`/`ApontamentoMaquina`/`ValorCusto`/`MotivoParada` já existentes
+para calcular, por projeto e por mês: custo e déficit de mão de obra (falta gera déficit,
+atestado não), custo e ociosidade de máquinas (por equipamento individual), eficiência gerencial,
+horas ociosas por causa e faltas por pessoa (reincidência ≥3). Novo endpoint
+`GET /api/v1/projetos/{id}/custos-ociosidade/?mes=YYYY-MM`, restrito ao perfil Gerente (primeira
+restrição real por perfil do sistema — `IsGerente`, `core/permissions.py`). Nova página
+`CustosOciosidadePage`, item no Sidebar visível só para Gerente. Fora de escopo desta rodada: EAP
+completa, RNC, Medição, Histórico & Aprovações (módulos independentes do protótipo, cada um com
+spec/plano próprio quando priorizado) e a visão comparativa entre todos os projetos da empresa
+(mesmo cálculo, endpoint agregado — próximo passo natural).
+
+**Verificado**: `uv run pytest` completo (121/121, os 3 testes antes reportados como falhando por
+divergência de fuso horário na virada de dia já passam agora que a data local avançou) + `ruff
+check`/`format`, build + lint + suíte E2E completa do frontend passando (29/29).
