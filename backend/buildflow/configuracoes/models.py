@@ -254,7 +254,12 @@ class MetaMensal(models.Model):
 class ValorCusto(models.Model):
     """Valor de custo de mao de obra ou equipamento (H — sub-aba "Valores dos
     Contratos"), recorte simplificado sem o modulo completo de
-    contratos/medicao (fora do escopo do MVP)."""
+    contratos/medicao (fora do escopo do MVP).
+
+    `valor` e R$/dia quando tipo=mao_de_obra (diaria) e R$/hora quando
+    tipo=equipamento (valor-hora de maquina) — usado pelo modulo de Custos &
+    Ociosidade para atribuir custo real por funcao/maquina.
+    """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     projeto = models.ForeignKey(
@@ -270,6 +275,15 @@ class ValorCusto(models.Model):
     )
     descricao = models.CharField(_("descricao"), max_length=255)
     valor = models.DecimalField(_("valor"), max_digits=12, decimal_places=2)
+    funcao = models.CharField(_("função"), max_length=255, blank=True)
+    maquina = models.ForeignKey(
+        Maquina,
+        verbose_name=_("máquina"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="valores_custo",
+    )
 
     tenant_path = "projeto__empresa"
     objects = TenantScopedManager()
@@ -278,6 +292,15 @@ class ValorCusto(models.Model):
         verbose_name = _("valor de custo")
         verbose_name_plural = _("valores de custo")
         ordering = ["descricao"]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(tipo="mao_de_obra", maquina__isnull=True)
+                    | models.Q(tipo="equipamento", funcao="")
+                ),
+                name="valor_custo_funcao_ou_maquina_por_tipo",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.descricao} ({self.get_tipo_display()})"

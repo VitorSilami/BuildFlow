@@ -4,6 +4,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from buildflow.configuracoes.models import Equipe
+from buildflow.configuracoes.models import Maquina
 from buildflow.core.tests.factories import UsuarioFactory
 from buildflow.registros_diarios.tests.factories import CatalogoServicoFactory
 from buildflow.registros_diarios.tests.factories import DisciplinaFactory
@@ -167,3 +168,87 @@ def test_ignora_projeto_enviado_no_payload_de_equipe():
     assert response.status_code == HTTPStatus.CREATED
     equipe = Equipe.objects.get(nome="Equipe X")
     assert equipe.projeto_id == projeto.id  # nunca o "outro_projeto" do payload
+
+
+def test_valor_custo_mao_de_obra_com_funcao_e_criado_com_sucesso():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    client = _authenticated_client(usuario)
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/valores/",
+        {
+            "tipo": "mao_de_obra",
+            "descricao": "Ajudante",
+            "valor": "250.00",
+            "funcao": "Ajudante",
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.CREATED, response.data
+    assert response.json()["funcao"] == "Ajudante"
+    assert response.json()["maquina"] is None
+
+
+def test_valor_custo_equipamento_com_maquina_e_criado_com_sucesso():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    equipe = EquipeFactory(projeto=projeto)
+    maquina = Maquina.objects.create(equipe=equipe, codigo="ESC-01", nome="Escavadeira")
+    client = _authenticated_client(usuario)
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/valores/",
+        {
+            "tipo": "equipamento",
+            "descricao": "Escavadeira 320D",
+            "valor": "180.00",
+            "maquina": str(maquina.id),
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.CREATED, response.data
+    assert response.json()["maquina"] == str(maquina.id)
+    assert response.json()["funcao"] == ""
+
+
+def test_valor_custo_mao_de_obra_com_maquina_e_rejeitado():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    equipe = EquipeFactory(projeto=projeto)
+    maquina = Maquina.objects.create(equipe=equipe, codigo="ESC-01", nome="Escavadeira")
+    client = _authenticated_client(usuario)
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/valores/",
+        {
+            "tipo": "mao_de_obra",
+            "descricao": "Ajudante",
+            "valor": "250.00",
+            "maquina": str(maquina.id),
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_valor_custo_equipamento_com_funcao_e_rejeitado():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    client = _authenticated_client(usuario)
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/valores/",
+        {
+            "tipo": "equipamento",
+            "descricao": "Escavadeira 320D",
+            "valor": "180.00",
+            "funcao": "Ajudante",
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST

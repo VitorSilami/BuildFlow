@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from . import services
 from .models import CatalogoServico
 from .models import Disciplina
 from .models import Equipe
@@ -67,4 +68,13 @@ class MetaMensalSerializer(serializers.ModelSerializer):
 class ValorCustoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ValorCusto
-        fields = ["id", "tipo", "descricao", "valor"]
+        fields = ["id", "tipo", "descricao", "valor", "funcao", "maquina"]
+        read_only_fields = ["id"]
+
+    def validate(self, attrs):
+        services.validar_valor_custo(
+            tipo=attrs.get("tipo"),
+            funcao=attrs.get("funcao", ""),
+            maquina=attrs.get("maquina"),
+        )
+        return attrs

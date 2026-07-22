@@ -8,11 +8,14 @@ from buildflow.configuracoes.models import Disciplina
 from buildflow.configuracoes.models import Equipe
 from buildflow.configuracoes.models import Maquina
 from buildflow.configuracoes.models import MetaMensal
+from buildflow.configuracoes.models import MotivoParada
 from buildflow.configuracoes.models import Pessoa
 from buildflow.configuracoes.models import Unidade
 from buildflow.configuracoes.models import ValorCusto
 from buildflow.empresas.models import Empresa
 from buildflow.projetos.models import Projeto
+from buildflow.registros_diarios.models import ApontamentoMaquina
+from buildflow.registros_diarios.models import Presenca
 from buildflow.registros_diarios.models import ProducaoDiaria
 from buildflow.registros_diarios.models import RegistroDiario
 from buildflow.usuarios.models import PerfilChoices
@@ -97,14 +100,30 @@ class Command(BaseCommand):
         )
 
         equipe = Equipe.objects.create(projeto=projeto, nome="Equipe 1")
-        Pessoa.objects.create(equipe=equipe, nome="José Ajudante", funcao="Ajudante")
-        Maquina.objects.create(equipe=equipe, codigo="ESC-01", nome="Escavadeira 320D")
+        pessoa = Pessoa.objects.create(
+            equipe=equipe,
+            nome="José Ajudante",
+            funcao="Ajudante",
+        )
+        maquina = Maquina.objects.create(
+            equipe=equipe,
+            codigo="ESC-01",
+            nome="Escavadeira 320D",
+        )
 
         ValorCusto.objects.create(
             projeto=projeto,
             tipo="mao_de_obra",
             descricao="Ajudante",
-            valor=2500,
+            funcao="Ajudante",
+            valor=250,
+        )
+        ValorCusto.objects.create(
+            projeto=projeto,
+            tipo="equipamento",
+            descricao="Escavadeira 320D",
+            maquina=maquina,
+            valor=180,
         )
 
         registro = RegistroDiario.objects.create(
@@ -126,4 +145,20 @@ class Command(BaseCommand):
             km_final="10.500",
             quantidade="500.000",
             unidade=unidade,
+        )
+        motivo_chuva, _ = MotivoParada.objects.get_or_create(descricao="Chuva")
+        Presenca.objects.create(
+            registro_diario=registro,
+            pessoa=pessoa,
+            funcao="Ajudante",
+            status="presente",
+            origem="composicao",
+        )
+        ApontamentoMaquina.objects.create(
+            registro_diario=registro,
+            maquina=maquina,
+            horas_produtivas="7.00",
+            horas_paradas="1.00",
+            motivo_parada=motivo_chuva,
+            origem="composicao",
         )
