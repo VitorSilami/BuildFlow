@@ -148,10 +148,7 @@ def _montar_payload_maquinas(
     custo_produtivo_total = Decimal("0")
     custo_ocioso_total = Decimal("0")
     payload = []
-    for maquina_id, dados in sorted(
-        agrupado.items(),
-        key=lambda item: item[1]["codigo"],
-    ):
+    for maquina_id, dados in agrupado.items():
         valor_hora = valores_hora.get(maquina_id)
         custo_produtivo = (
             (dados["horas_produtivas"] * valor_hora).quantize(Decimal("0.01"))
@@ -174,7 +171,7 @@ def _montar_payload_maquinas(
                 "horas_produtivas": decimal_para_str_ou_none(dados["horas_produtivas"]),
                 "horas_paradas": decimal_para_str_ou_none(dados["horas_paradas"]),
                 "custo_produtivo": decimal_para_str_ou_none(custo_produtivo),
-                "custo_ocioso": decimal_para_str_ou_none(custo_ocioso),
+                "custo_ocioso": custo_ocioso,  # decimal ate o sort abaixo
                 "eficiencia_percentual": _calcular_eficiencia_percentual(
                     dados["horas_produtivas"],
                     dados["horas_paradas"],
@@ -182,6 +179,11 @@ def _montar_payload_maquinas(
                 "tem_valor_cadastrado": valor_hora is not None,
             },
         )
+    # Maior custo parado primeiro — quem esta custando mais ocioso e o que
+    # mais merece atencao, nao a ordem alfabetica do codigo do equipamento.
+    payload.sort(key=lambda item: item["custo_ocioso"], reverse=True)
+    for item in payload:
+        item["custo_ocioso"] = decimal_para_str_ou_none(item["custo_ocioso"])
     return custo_produtivo_total, custo_ocioso_total, payload
 
 
@@ -228,12 +230,16 @@ def _montar_payload_faltas_por_pessoa(presencas, diarias: dict[str, Decimal]):
                 "funcao": dados["funcao"],
                 "faltas": dados["faltas"],
                 "atestados": dados["atestados"],
-                "valor_perdido": decimal_para_str_ou_none(valor_perdido),
+                "valor_perdido": valor_perdido,  # decimal ate o sort abaixo
                 "tem_valor_cadastrado": diaria is not None,
                 "reincidente": dados["faltas"] >= FALTAS_REINCIDENCIA_MINIMA,
             },
         )
-    payload.sort(key=lambda item: item["faltas"], reverse=True)
+    # Maior valor perdido primeiro — impacto financeiro, nao so contagem de
+    # faltas, e o que decide quem mais merece atencao.
+    payload.sort(key=lambda item: item["valor_perdido"], reverse=True)
+    for item in payload:
+        item["valor_perdido"] = decimal_para_str_ou_none(item["valor_perdido"])
     return payload
 
 

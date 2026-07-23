@@ -110,7 +110,7 @@ test('gerente ve custos e ociosidade do projeto no mes', async ({ page }) => {
   await expect(page.getByText(/R\$\s*5\.000,00/).first()).toBeVisible()
   await expect(page.getByText(/R\$\s*17\.000,00/)).toBeVisible()
   await expect(page.getByText('87%')).toBeVisible()
-  await expect(page.getByText('José Ajudante (Ajudante)')).toBeVisible()
+  await expect(page.getByRole('row', { name: /José Ajudante/ })).toContainText('Ajudante')
   await expect(page.getByText('reincidente')).toBeVisible()
   expect(ultimaUrlRequisitada).toContain('mes=2026-07')
 

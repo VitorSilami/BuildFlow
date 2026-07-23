@@ -155,6 +155,78 @@ def test_custo_e_ocioso_de_maquina_com_valor_cadastrado():
     ]
 
 
+def test_maquinas_por_equipamento_ordenado_por_custo_ocioso_desc():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    equipe = EquipeFactory(projeto=projeto)
+    barato = Maquina.objects.create(equipe=equipe, codigo="AAA-01", nome="Motoniveladora")
+    caro = Maquina.objects.create(equipe=equipe, codigo="ZZZ-01", nome="Escavadeira")
+    for maquina, valor in ((barato, Decimal("50.00")), (caro, Decimal("100.00"))):
+        ValorCusto.objects.create(
+            projeto=projeto,
+            tipo="equipamento",
+            descricao=maquina.nome,
+            maquina=maquina,
+            valor=valor,
+        )
+    rdo = _criar_rdo(projeto, equipe, usuario, dia=1)
+    ApontamentoMaquina.objects.create(
+        registro_diario=rdo,
+        maquina=barato,
+        horas_produtivas="6.00",
+        horas_paradas="1.00",
+        origem="composicao",
+    )
+    ApontamentoMaquina.objects.create(
+        registro_diario=rdo,
+        maquina=caro,
+        horas_produtivas="6.00",
+        horas_paradas="4.00",
+        origem="composicao",
+    )
+
+    resultado = calcular_custos_ociosidade(projeto, ANO, MES)
+
+    codigos = [item["codigo"] for item in resultado["maquinas_por_equipamento"]]
+    assert codigos == ["ZZZ-01", "AAA-01"]
+
+
+def test_faltas_por_pessoa_ordenado_por_valor_perdido_desc():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    equipe = EquipeFactory(projeto=projeto)
+    ValorCusto.objects.create(
+        projeto=projeto,
+        tipo="mao_de_obra",
+        descricao="Encarregado",
+        funcao="Encarregado",
+        valor=Decimal("300.00"),
+    )
+    ValorCusto.objects.create(
+        projeto=projeto,
+        tipo="mao_de_obra",
+        descricao="Ajudante",
+        funcao="Ajudante",
+        valor=Decimal("100.00"),
+    )
+    encarregado = Pessoa.objects.create(equipe=equipe, nome="Ana", funcao="Encarregado")
+    ajudante = Pessoa.objects.create(equipe=equipe, nome="Bruno", funcao="Ajudante")
+    for dia, pessoa, funcao in ((1, encarregado, "Encarregado"), (2, ajudante, "Ajudante")):
+        rdo = _criar_rdo(projeto, equipe, usuario, dia=dia)
+        Presenca.objects.create(
+            registro_diario=rdo,
+            pessoa=pessoa,
+            funcao=funcao,
+            status="falta",
+            origem="composicao",
+        )
+
+    resultado = calcular_custos_ociosidade(projeto, ANO, MES)
+
+    nomes = [item["nome"] for item in resultado["faltas_por_pessoa"]]
+    assert nomes == ["Ana", "Bruno"]
+
+
 def test_eficiencia_gerencial_e_none_sem_nenhuma_hora_registrada():
     usuario = UsuarioFactory()
     projeto = ProjetoParaRdoFactory(criado_por=usuario)

@@ -1,6 +1,19 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Alert, Card, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
+import {
+  Alert,
+  Card,
+  EmptyState,
+  ErrorRetry,
+  PageHeader,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui'
 import { useAuth } from '../features/auth/AuthContext'
 import { useCustosOciosidade } from '../features/custos-ociosidade/custosOciosidadeApi'
 import { CustoCompositionDonutChart } from '../features/custos-ociosidade/CustoCompositionDonutChart'
@@ -189,92 +202,128 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
         </Card>
       </div>
 
-      <Card title="Eficiência e custo parado por equipamento">
+      <Card title="Eficiência e custo parado por equipamento" eyebrow="Ordenado por custo parado">
         {dados.maquinas_por_equipamento.length === 0 ? (
           <EmptyState>Nenhum apontamento de máquina no mês.</EmptyState>
         ) : (
-          <ul className="divide-y divide-border">
-            {dados.maquinas_por_equipamento.map((item) => (
-              <li key={item.maquina_id} className="flex flex-col gap-1 py-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span>
-                    {item.nome} ({item.codigo}) — {item.equipe_nome}
-                  </span>
-                  <span className="flex items-center">
-                    {item.eficiencia_percentual === null ? '—' : `${item.eficiencia_percentual}%`}
-                    {' · '}
-                    {formatMoeda(item.custo_ocioso)}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Equipamento</TableHead>
+                <TableHead>Eficiência</TableHead>
+                <TableHead className="text-right">Custo parado</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dados.maquinas_por_equipamento.map((item) => (
+                <TableRow key={item.maquina_id}>
+                  <TableCell>
+                    <p className="font-medium text-ink">{item.codigo}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.nome} · {item.equipe_nome}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={`h-full rounded-full ${execucaoCorClasse(
+                            item.eficiencia_percentual === null ? null : String(item.eficiencia_percentual),
+                          )}`}
+                          style={{ width: `${item.eficiencia_percentual ?? 0}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-ink">
+                        {item.eficiencia_percentual === null ? '—' : `${item.eficiencia_percentual}%`}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className="font-semibold text-red-600">{formatMoeda(item.custo_ocioso)}</span>
                     {!item.tem_valor_cadastrado && <SemValorDefinido />}
-                  </span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full rounded-full ${execucaoCorClasse(
-                      item.eficiencia_percentual === null ? null : String(item.eficiencia_percentual),
-                    )}`}
-                    style={{ width: `${item.eficiencia_percentual ?? 0}%` }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </Card>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card title="Horas ociosas por causa">
-          {dados.horas_ociosas_por_causa.length === 0 ? (
-            <EmptyState>Nenhuma hora ociosa registrada no mês.</EmptyState>
-          ) : (
-            (() => {
-              const maximoHoras = Math.max(...dados.horas_ociosas_por_causa.map((item) => Number(item.horas)), 1)
-              return dados.horas_ociosas_por_causa.map((item) => (
-                <BarraSimples
-                  key={item.motivo}
-                  label={`${item.motivo} — ${item.horas}h`}
-                  valor={Number(item.horas)}
-                  maximo={maximoHoras}
-                  corBarra="bg-amber-500"
-                />
-              ))
-            })()
-          )}
-        </Card>
+      <Card title="Horas ociosas por causa">
+        {dados.horas_ociosas_por_causa.length === 0 ? (
+          <EmptyState>Nenhuma hora ociosa registrada no mês.</EmptyState>
+        ) : (
+          (() => {
+            const maximoHoras = Math.max(...dados.horas_ociosas_por_causa.map((item) => Number(item.horas)), 1)
+            return dados.horas_ociosas_por_causa.map((item) => (
+              <BarraSimples
+                key={item.motivo}
+                label={`${item.motivo} — ${item.horas}h`}
+                valor={Number(item.horas)}
+                maximo={maximoHoras}
+                corBarra="bg-amber-500"
+              />
+            ))
+          })()
+        )}
+      </Card>
 
-        <Card title="Faltas por pessoa">
-          {dados.faltas_por_pessoa.length === 0 ? (
-            <EmptyState>Nenhuma falta registrada no mês.</EmptyState>
-          ) : (
-            (() => {
-              const maximoValorPerdido = Math.max(
-                ...dados.faltas_por_pessoa.map((item) => Number(item.valor_perdido)),
-                1,
-              )
-              return dados.faltas_por_pessoa.map((item) => (
-                <div key={item.pessoa_id ?? item.nome} className="mb-3">
-                  <p className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>
-                      {item.nome} ({item.funcao}) — {item.faltas} falta(s) — {formatMoeda(item.valor_perdido)}
-                    </span>
-                    {!item.tem_valor_cadastrado && <SemValorDefinido />}
-                    {item.reincidente && (
-                      <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs text-red-600">
-                        reincidente
-                      </span>
-                    )}
-                  </p>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-red-500"
-                      style={{ width: `${(Number(item.valor_perdido) / maximoValorPerdido) * 100}%` }}
-                    />
-                  </div>
+      <Card title="Faltas por pessoa" eyebrow="Ordenado por valor perdido">
+        {dados.faltas_por_pessoa.length === 0 ? (
+          <EmptyState>Nenhuma falta registrada no mês.</EmptyState>
+        ) : (
+          (() => {
+            const totalPerdido = dados.faltas_por_pessoa.reduce(
+              (soma, item) => soma + Number(item.valor_perdido),
+              0,
+            )
+            return (
+              <>
+                <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{dados.faltas_por_pessoa.length} prestador(es) com ocorrência</span>
+                  <span className="font-semibold text-red-600">
+                    Total perdido: {formatMoeda(String(totalPerdido))}
+                  </span>
                 </div>
-              ))
-            })()
-          )}
-        </Card>
-      </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Prestador</TableHead>
+                      <TableHead>Função</TableHead>
+                      <TableHead className="text-right">Faltas</TableHead>
+                      <TableHead className="text-right">Atestados</TableHead>
+                      <TableHead className="text-right">Valor perdido</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dados.faltas_por_pessoa.map((item) => (
+                      <TableRow key={item.pessoa_id ?? item.nome}>
+                        <TableCell>
+                          <span className="flex items-center gap-2 font-medium text-ink">
+                            {item.nome}
+                            {item.reincidente && (
+                              <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+                                reincidente
+                              </span>
+                            )}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{item.funcao}</TableCell>
+                        <TableCell className="text-right font-semibold text-red-600">{item.faltas}</TableCell>
+                        <TableCell className="text-right font-semibold text-amber-600">{item.atestados}</TableCell>
+                        <TableCell className="text-right">
+                          <span className="font-semibold text-red-600">{formatMoeda(item.valor_perdido)}</span>
+                          {!item.tem_valor_cadastrado && <SemValorDefinido />}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
+            )
+          })()
+        )}
+      </Card>
     </>
   )
 }

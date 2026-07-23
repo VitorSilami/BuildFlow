@@ -26,4 +26,5 @@ export {
 } from './dialog'
 export { Progress } from './progress'
 export { Skeleton } from './skeleton'
+export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table'
 export { Toaster } from './toaster'
