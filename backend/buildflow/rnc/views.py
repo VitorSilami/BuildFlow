@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from buildflow.core.filtros import filtro_intervalo_datas
 from buildflow.core.permissions import IsAuthenticatedWithEmpresa
 from buildflow.core.permissions import IsGerente
 from buildflow.core.permissions import TenantScopedViewSetMixin
@@ -34,6 +35,13 @@ class RncViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet)
         categoria = self.request.query_params.get("categoria")
         if categoria:
             queryset = queryset.filter(categoria=categoria)
+        filtro_intervalo = filtro_intervalo_datas(
+            self.request.query_params.get("data_inicio"),
+            self.request.query_params.get("data_fim"),
+            "data_emissao",
+        )
+        if filtro_intervalo:
+            queryset = queryset.filter(**filtro_intervalo)
         return queryset
 
     def _get_projeto(self) -> Projeto:

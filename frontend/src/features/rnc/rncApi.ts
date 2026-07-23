@@ -5,16 +5,20 @@ import type { AcaoCorretiva, AcaoCorretivaInput, Rnc, RncInput } from '../../typ
 interface UseRncsOptions {
   status?: string
   categoria?: string
+  dataInicio?: string
+  dataFim?: string
 }
 
 export function useRncs(projetoId: string, options: UseRncsOptions = {}) {
-  const { status, categoria } = options
+  const { status, categoria, dataInicio, dataFim } = options
   return useQuery({
-    queryKey: ['rncs', projetoId, status ?? null, categoria ?? null],
+    queryKey: ['rncs', projetoId, status ?? null, categoria ?? null, dataInicio ?? null, dataFim ?? null],
     queryFn: () => {
       const params = new URLSearchParams()
       if (status) params.set('status', status)
       if (categoria) params.set('categoria', categoria)
+      if (dataInicio) params.set('data_inicio', dataInicio)
+      if (dataFim) params.set('data_fim', dataFim)
       const query = params.toString()
       return apiClient.get<Rnc[]>(
         `/api/v1/projetos/${projetoId}/rncs/${query ? `?${query}` : ''}`,

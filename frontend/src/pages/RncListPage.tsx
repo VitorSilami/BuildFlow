@@ -70,9 +70,15 @@ export function RncListPage() {
   const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'RNCs' }])
   const { user } = useAuth()
   const [filtroStatus, setFiltroStatus] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataFim, setDataFim] = useState('')
   const ehGerente = user?.perfil === 'gerente'
 
-  const rncs = useRncs(projetoId ?? '', { status: filtroStatus || undefined })
+  const rncs = useRncs(projetoId ?? '', {
+    status: filtroStatus || undefined,
+    dataInicio: dataInicio || undefined,
+    dataFim: dataFim || undefined,
+  })
 
   if (!ehGerente) {
     return (
@@ -95,9 +101,48 @@ export function RncListPage() {
         title="RNCs"
         breadcrumbs={breadcrumbs}
         actions={
-          <Button asChild>
-            <Link to={`/projetos/${projetoId}/rncs/novo`}>Nova RNC</Link>
-          </Button>
+          <div className="flex items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="rnc-data-inicio" className="text-xs text-muted-foreground">
+                De
+              </label>
+              <input
+                id="rnc-data-inicio"
+                type="date"
+                value={dataInicio}
+                max={dataFim || undefined}
+                onChange={(event) => setDataInicio(event.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="rnc-data-fim" className="text-xs text-muted-foreground">
+                Até
+              </label>
+              <input
+                id="rnc-data-fim"
+                type="date"
+                value={dataFim}
+                min={dataInicio || undefined}
+                onChange={(event) => setDataFim(event.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+            {(dataInicio || dataFim) && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDataInicio('')
+                  setDataFim('')
+                }}
+              >
+                Limpar período
+              </Button>
+            )}
+            <Button asChild>
+              <Link to={`/projetos/${projetoId}/rncs/novo`}>Nova RNC</Link>
+            </Button>
+          </div>
         }
       />
 

@@ -119,6 +119,39 @@ def test_listar_rncs_filtra_por_status():
     assert corpo[0]["id"] == str(rnc_pendente.id)
 
 
+def test_listar_rncs_filtra_por_intervalo_de_data_emissao():
+    usuario = UsuarioFactory(perfil=PerfilChoices.GERENTE)
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    dentro_do_intervalo = RncFactory(
+        projeto=projeto,
+        criado_por=usuario,
+        data_emissao="2026-07-15",
+    )
+    RncFactory(projeto=projeto, criado_por=usuario, data_emissao="2026-06-01")
+
+    response = _authenticated_client(usuario).get(
+        f"/api/v1/projetos/{projeto.id}/rncs/",
+        {"data_inicio": "2026-07-01", "data_fim": "2026-07-31"},
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    corpo = response.json()
+    assert len(corpo) == 1
+    assert corpo[0]["id"] == str(dentro_do_intervalo.id)
+
+
+def test_listar_rncs_intervalo_formato_invalido_retorna_400():
+    usuario = UsuarioFactory(perfil=PerfilChoices.GERENTE)
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+
+    response = _authenticated_client(usuario).get(
+        f"/api/v1/projetos/{projeto.id}/rncs/",
+        {"data_inicio": "invalido", "data_fim": "2026-07-31"},
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
 def test_detalhe_rnc_via_rota_plana():
     usuario = UsuarioFactory(perfil=PerfilChoices.GERENTE)
     rnc = RncFactory(criado_por=usuario, projeto__criado_por=usuario)

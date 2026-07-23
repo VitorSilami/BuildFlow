@@ -1,5 +1,3 @@
-import datetime
-
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins
@@ -9,6 +7,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from buildflow.core.filtros import filtro_intervalo_datas
 from buildflow.core.permissions import IsAuthenticatedWithEmpresa
 from buildflow.core.permissions import TenantScopedViewSetMixin
 from buildflow.projetos.models import Projeto
@@ -42,12 +41,9 @@ class RegistroDiarioViewSet(
 
         data_inicio = self.request.query_params.get("data_inicio")
         data_fim = self.request.query_params.get("data_fim")
-        if data_inicio or data_fim:
-            if not (data_inicio and data_fim):
-                raise ValidationError(
-                    {"data_inicio": "Informe data_inicio e data_fim juntos."},
-                )
-            return queryset.filter(**self._filtro_intervalo(data_inicio, data_fim))
+        filtro_intervalo = filtro_intervalo_datas(data_inicio, data_fim, "data_referencia")
+        if filtro_intervalo:
+            return queryset.filter(**filtro_intervalo)
 
         mes = self.request.query_params.get("mes")
         if mes:
@@ -65,21 +61,6 @@ class RegistroDiarioViewSet(
             return int(ano_str), int(mes_str)
         except ValueError as erro:
             raise ValidationError({"mes": "Use o formato YYYY-MM."}) from erro
-
-    @staticmethod
-    def _filtro_intervalo(data_inicio: str, data_fim: str) -> dict:
-        try:
-            inicio = datetime.date.fromisoformat(data_inicio)
-            fim = datetime.date.fromisoformat(data_fim)
-        except ValueError as erro:
-            raise ValidationError(
-                {"data_inicio": "Use o formato YYYY-MM-DD."},
-            ) from erro
-        if inicio > fim:
-            raise ValidationError(
-                {"data_fim": "data_fim deve ser maior ou igual a data_inicio."},
-            )
-        return {"data_referencia__gte": inicio, "data_referencia__lte": fim}
 
     def _get_projeto(self) -> Projeto:
         # Principio I: o projeto so e valido se pertencer a empresa do

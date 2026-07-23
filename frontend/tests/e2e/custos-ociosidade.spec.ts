@@ -66,6 +66,7 @@ const RESPOSTA_CUSTOS = {
       faltas: 3,
       atestados: 0,
       valor_perdido: '750.00',
+      tem_valor_cadastrado: true,
       reincidente: true,
     },
   ],

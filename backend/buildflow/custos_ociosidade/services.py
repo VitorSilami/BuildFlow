@@ -229,6 +229,7 @@ def _montar_payload_faltas_por_pessoa(presencas, diarias: dict[str, Decimal]):
                 "faltas": dados["faltas"],
                 "atestados": dados["atestados"],
                 "valor_perdido": decimal_para_str_ou_none(valor_perdido),
+                "tem_valor_cadastrado": diaria is not None,
                 "reincidente": dados["faltas"] >= FALTAS_REINCIDENCIA_MINIMA,
             },
         )

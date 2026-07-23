@@ -33,6 +33,7 @@ export interface FaltaPorPessoa {
   faltas: number
   atestados: number
   valor_perdido: string
+  tem_valor_cadastrado: boolean
   reincidente: boolean
 }
 

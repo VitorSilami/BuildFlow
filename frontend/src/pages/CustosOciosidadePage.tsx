@@ -256,6 +256,7 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
                     <span>
                       {item.nome} ({item.funcao}) — {item.faltas} falta(s) — {formatMoeda(item.valor_perdido)}
                     </span>
+                    {!item.tem_valor_cadastrado && <SemValorDefinido />}
                     {item.reincidente && (
                       <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs text-red-600">
                         reincidente
