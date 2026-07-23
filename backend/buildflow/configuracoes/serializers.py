@@ -1,11 +1,14 @@
 from rest_framework import serializers
 
+from buildflow.projetos.services import calcular_avanco_disciplina
+from buildflow.projetos.services import calcular_avanco_servico
+from buildflow.projetos.services import decimal_para_str_ou_none
+
 from . import services
 from .models import CatalogoServico
 from .models import Disciplina
 from .models import Equipe
 from .models import Maquina
-from .models import MetaMensal
 from .models import MotivoParada
 from .models import Pessoa
 from .models import Unidade
@@ -25,17 +28,34 @@ class MotivoParadaSerializer(serializers.ModelSerializer):
 
 
 class CatalogoServicoSerializer(serializers.ModelSerializer):
+    avanco_percentual = serializers.SerializerMethodField()
+
     class Meta:
         model = CatalogoServico
-        fields = ["id", "nome", "unidade"]
+        fields = [
+            "id",
+            "nome",
+            "unidade",
+            "peso_percentual",
+            "quantidade_planejada",
+            "quantidade_executada",
+            "avanco_percentual",
+        ]
+
+    def get_avanco_percentual(self, obj: CatalogoServico) -> str | None:
+        return decimal_para_str_ou_none(calcular_avanco_servico(obj))
 
 
 class DisciplinaSerializer(serializers.ModelSerializer):
     servicos = CatalogoServicoSerializer(many=True, read_only=True)
+    avanco_percentual = serializers.SerializerMethodField()
 
     class Meta:
         model = Disciplina
-        fields = ["id", "nome", "servicos"]
+        fields = ["id", "nome", "peso_percentual", "servicos", "avanco_percentual"]
+
+    def get_avanco_percentual(self, obj: Disciplina) -> str | None:
+        return decimal_para_str_ou_none(calcular_avanco_disciplina(obj))
 
 
 class PessoaSerializer(serializers.ModelSerializer):
@@ -57,12 +77,6 @@ class EquipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Equipe
         fields = ["id", "nome", "encarregado", "pessoas", "maquinas"]
-
-
-class MetaMensalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MetaMensal
-        fields = ["id", "disciplina", "unidade", "valor_alvo", "peso_percentual"]
 
 
 class ValorCustoSerializer(serializers.ModelSerializer):

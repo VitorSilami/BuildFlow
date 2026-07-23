@@ -8,10 +8,10 @@ from .views import EquipeDetailViewSet
 from .views import EquipeViewSet
 from .views import MaquinaDetailViewSet
 from .views import MaquinaViewSet
-from .views import MetaDetailViewSet
-from .views import MetaViewSet
 from .views import PessoaDetailViewSet
 from .views import PessoaViewSet
+from .views import ServicoDetailViewSet
+from .views import ServicoViewSet
 from .views import ValorCustoDetailViewSet
 from .views import ValorCustoViewSet
 
@@ -37,6 +37,16 @@ urlpatterns = [
         "configuracoes/disciplinas/<uuid:pk>/",
         DisciplinaDetailViewSet.as_view({"patch": "partial_update"}),
         name="configuracao-disciplina-detail",
+    ),
+    path(
+        "configuracoes/disciplinas/<uuid:disciplina_pk>/servicos/",
+        ServicoViewSet.as_view({"post": "create"}),
+        name="configuracao-disciplina-servicos",
+    ),
+    path(
+        "configuracoes/servicos/<uuid:pk>/",
+        ServicoDetailViewSet.as_view({"patch": "partial_update"}),
+        name="configuracao-servico-detail",
     ),
     path(
         "projetos/<uuid:projeto_pk>/configuracao/equipes/",
@@ -67,16 +77,6 @@ urlpatterns = [
         "configuracoes/maquinas/<uuid:pk>/",
         MaquinaDetailViewSet.as_view({"patch": "partial_update"}),
         name="configuracao-maquina-detail",
-    ),
-    path(
-        "projetos/<uuid:projeto_pk>/configuracao/metas/",
-        MetaViewSet.as_view({"get": "list", "post": "create"}),
-        name="configuracao-metas",
-    ),
-    path(
-        "configuracoes/metas/<uuid:pk>/",
-        MetaDetailViewSet.as_view({"patch": "partial_update"}),
-        name="configuracao-meta-detail",
     ),
     path(
         "projetos/<uuid:projeto_pk>/configuracao/valores/",

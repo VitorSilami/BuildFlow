@@ -11,10 +11,11 @@ from buildflow.registros_diarios.tests.factories import DisciplinaFactory
 from buildflow.registros_diarios.tests.factories import EquipeFactory
 from buildflow.registros_diarios.tests.factories import ProjetoParaRdoFactory
 from buildflow.registros_diarios.tests.factories import UnidadeFactory
+from buildflow.usuarios.models import PerfilChoices
 
 pytestmark = pytest.mark.django_db
 
-PESO_ESPERADO = 25.0
+SOMA_PESOS_ESPERADA = 25.0
 
 
 def _authenticated_client(usuario) -> APIClient:
@@ -90,65 +91,153 @@ def test_criar_equipe_com_pessoa_e_maquina():
     assert len(equipes[0]["maquinas"]) == 1
 
 
-def test_criar_meta_e_valor_de_custo():
+def test_criar_disciplina_com_peso_percentual():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    client = _authenticated_client(usuario)
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/disciplinas/",
+        {"nome": "Terraplenagem", "peso_percentual": "25.00"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.CREATED, response.data
+    assert response.json()["peso_percentual"] == "25.00"
+    assert response.json()["avanco_percentual"] is None
+
+
+def test_patch_disciplina_atualiza_peso_percentual():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/disciplinas/{disciplina.id}/",
+        {"peso_percentual": "40.00"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.data
+    assert response.json()["peso_percentual"] == "40.00"
+
+
+def test_criar_servico_no_catalogo_da_disciplina():
     usuario = UsuarioFactory()
     projeto = ProjetoParaRdoFactory(criado_por=usuario)
     disciplina = DisciplinaFactory(projeto=projeto)
     unidade = UnidadeFactory()
     client = _authenticated_client(usuario)
 
-    meta_response = client.post(
-        f"/api/v1/projetos/{projeto.id}/configuracao/metas/",
+    response = client.post(
+        f"/api/v1/configuracoes/disciplinas/{disciplina.id}/servicos/",
         {
-            "disciplina": str(disciplina.id),
+            "nome": "Corte",
             "unidade": unidade.id,
-            "valor_alvo": "1000.000",
-            "peso_percentual": "25.00",
+            "peso_percentual": "100.00",
+            "quantidade_planejada": "1000.000",
         },
         format="json",
     )
-    assert meta_response.status_code == HTTPStatus.CREATED, meta_response.data
 
-    valor_response = client.post(
-        f"/api/v1/projetos/{projeto.id}/configuracao/valores/",
-        {"tipo": "mao_de_obra", "descricao": "Ajudante", "valor": "2500.00"},
+    assert response.status_code == HTTPStatus.CREATED, response.data
+    body = response.json()
+    assert body["nome"] == "Corte"
+    assert body["peso_percentual"] == "100.00"
+    assert body["quantidade_planejada"] == "1000.000"
+    assert body["quantidade_executada"] == "0.000"
+    assert body["avanco_percentual"] == "0.00"
+
+
+def test_patch_servico_atualiza_peso_quantidade_e_recalcula_avanco():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    servico = CatalogoServicoFactory(disciplina=disciplina, unidade=UnidadeFactory())
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/servicos/{servico.id}/",
+        {"quantidade_planejada": "1000.000", "quantidade_executada": "250.000"},
         format="json",
     )
-    assert valor_response.status_code == HTTPStatus.CREATED, valor_response.data
+
+    assert response.status_code == HTTPStatus.OK, response.data
+    assert response.json()["avanco_percentual"] == "25.00"
+
+
+def test_configuracao_projeto_retorna_soma_pesos_disciplinas_e_avanco():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    unidade = UnidadeFactory()
+    client = _authenticated_client(usuario)
+
+    client.patch(
+        f"/api/v1/configuracoes/disciplinas/{disciplina.id}/",
+        {"peso_percentual": "25.00"},
+        format="json",
+    )
+    servico_response = client.post(
+        f"/api/v1/configuracoes/disciplinas/{disciplina.id}/servicos/",
+        {
+            "nome": "Corte",
+            "unidade": unidade.id,
+            "peso_percentual": "100.00",
+            "quantidade_planejada": "1000.000",
+            "quantidade_executada": "1000.000",
+        },
+        format="json",
+    )
+    assert servico_response.status_code == HTTPStatus.CREATED, servico_response.data
 
     configuracao = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
     body = configuracao.json()
-    assert len(body["metas"]) == 1
-    assert len(body["valores_custo"]) == 1
-    assert float(body["soma_pesos_metas"]) == PESO_ESPERADO
+
+    assert float(body["soma_pesos_disciplinas"]) == SOMA_PESOS_ESPERADA
+    assert "metas" not in body
+    assert body["disciplinas"][0]["avanco_percentual"] == "100.00"
 
 
-def test_editar_meta_existente():
-    usuario = UsuarioFactory()
+def test_auxiliar_administrativo_recebe_403_ao_criar_disciplina():
+    usuario = UsuarioFactory(perfil=PerfilChoices.AUXILIAR_ADMINISTRATIVO)
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    client = _authenticated_client(usuario)
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/disciplinas/",
+        {"nome": "Terraplenagem"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_auxiliar_administrativo_recebe_403_ao_criar_servico():
+    usuario = UsuarioFactory(perfil=PerfilChoices.AUXILIAR_ADMINISTRATIVO)
     projeto = ProjetoParaRdoFactory(criado_por=usuario)
     disciplina = DisciplinaFactory(projeto=projeto)
     unidade = UnidadeFactory()
     client = _authenticated_client(usuario)
 
-    meta_response = client.post(
-        f"/api/v1/projetos/{projeto.id}/configuracao/metas/",
-        {
-            "disciplina": str(disciplina.id),
-            "unidade": unidade.id,
-            "valor_alvo": "1000.000",
-        },
-        format="json",
-    )
-    meta_id = meta_response.json()["id"]
-
-    edit_response = client.patch(
-        f"/api/v1/configuracoes/metas/{meta_id}/",
-        {"valor_alvo": "1500.000"},
+    response = client.post(
+        f"/api/v1/configuracoes/disciplinas/{disciplina.id}/servicos/",
+        {"nome": "Corte", "unidade": unidade.id},
         format="json",
     )
 
-    assert edit_response.status_code == HTTPStatus.OK
-    assert edit_response.json()["valor_alvo"] == "1500.000"
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_auxiliar_administrativo_ainda_consegue_ler_configuracao():
+    usuario = UsuarioFactory(perfil=PerfilChoices.AUXILIAR_ADMINISTRATIVO)
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    assert response.status_code == HTTPStatus.OK
 
 
 def test_ignora_projeto_enviado_no_payload_de_equipe():

@@ -5,17 +5,27 @@ from rest_framework.exceptions import ValidationError
 
 
 def soma_pesos_disciplinas(projeto) -> Decimal:
-    """Soma dos pesos percentuais das metas de um projeto.
+    """Soma dos pesos percentuais das disciplinas de um projeto.
 
     Validacao informativa (nao bloqueante): o frontend usa isso so para
     alertar visualmente quando a soma nao fica proxima de 100%, sem impedir
-    o salvamento (H: a planilha de metas do prototipo so validava
+    o salvamento (H: a planilha de EAP do prototipo so validava
     visualmente, nunca travava o cadastro).
     """
     total = Decimal("0")
-    for meta in projeto.metas.all():
-        if meta.peso_percentual is not None:
-            total += meta.peso_percentual
+    for disciplina in projeto.disciplinas.all():
+        if disciplina.peso_percentual is not None:
+            total += disciplina.peso_percentual
+    return total
+
+
+def soma_pesos_servicos(disciplina) -> Decimal:
+    """Soma dos pesos percentuais dos servicos de uma disciplina (mesma
+    regra informativa/nao bloqueante de soma_pesos_disciplinas)."""
+    total = Decimal("0")
+    for servico in disciplina.servicos.all():
+        if servico.peso_percentual is not None:
+            total += servico.peso_percentual
     return total
 
 

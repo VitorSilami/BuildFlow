@@ -5,24 +5,25 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
 from buildflow.core.permissions import IsAuthenticatedWithEmpresa
+from buildflow.core.permissions import IsGerente
 from buildflow.core.permissions import TenantScopedViewSetMixin
 from buildflow.projetos.models import Projeto
 from buildflow.usuarios.api.serializers import UserSerializer
 from buildflow.usuarios.models import User
 
 from . import services
+from .models import CatalogoServico
 from .models import Disciplina
 from .models import Equipe
 from .models import Maquina
-from .models import MetaMensal
 from .models import MotivoParada
 from .models import Pessoa
 from .models import Unidade
 from .models import ValorCusto
+from .serializers import CatalogoServicoSerializer
 from .serializers import DisciplinaSerializer
 from .serializers import EquipeSerializer
 from .serializers import MaquinaSerializer
-from .serializers import MetaMensalSerializer
 from .serializers import MotivoParadaSerializer
 from .serializers import PessoaSerializer
 from .serializers import UnidadeSerializer
@@ -34,10 +35,6 @@ class ConfiguracaoRdoView(APIView):
     serviços), unidades, equipes (com pessoas/máquinas) e motivos de parada
     do projeto — usado para popular os seletores da etapa de produção/equipe/
     máquinas (FR-020).
-
-    Correção pós-design (mesma razão de Projeto/Equipe terem sido
-    adiantados): a UI de RDO (US4) precisa listar esses cadastros antes de a
-    gestão completa de Configurações (US5, CRUD) existir. Aqui só leitura.
     """
 
     permission_classes = (IsAuthenticatedWithEmpresa,)
@@ -67,16 +64,15 @@ class ConfiguracaoRdoView(APIView):
                     MotivoParada.objects.all(),
                     many=True,
                 ).data,
-                # Correcao pos-teste manual: o formulario de RDO exigia digitar um ID
-                # de usuario a mao para o fiscal, sem forma de descobri-lo na UI.
                 "fiscais": UserSerializer(fiscais, many=True).data,
             },
         )
 
 
 class ConfiguracaoProjetoView(APIView):
-    """Visão completa da Configuração de um projeto (FR-023): metas,
-    equipes (com pessoas/máquinas), valores de custo e disciplinas.
+    """Visão completa da Configuração de um projeto (FR-023): EAP
+    (disciplinas com peso/avanço), equipes (com pessoas/máquinas) e valores
+    de custo.
     """
 
     permission_classes = (IsAuthenticatedWithEmpresa,)
@@ -91,19 +87,17 @@ class ConfiguracaoProjetoView(APIView):
             "pessoas",
             "maquinas",
         )
-        metas = MetaMensal.objects.filter(projeto=projeto)
         valores = ValorCusto.objects.filter(projeto=projeto)
+        disciplinas = Disciplina.objects.filter(projeto=projeto).prefetch_related(
+            "servicos",
+        )
 
         return Response(
             {
-                "disciplinas": DisciplinaSerializer(
-                    Disciplina.objects.filter(projeto=projeto),
-                    many=True,
-                ).data,
+                "disciplinas": DisciplinaSerializer(disciplinas, many=True).data,
                 "equipes": EquipeSerializer(equipes, many=True).data,
-                "metas": MetaMensalSerializer(metas, many=True).data,
                 "valores_custo": ValorCustoSerializer(valores, many=True).data,
-                "soma_pesos_metas": services.soma_pesos_disciplinas(projeto),
+                "soma_pesos_disciplinas": services.soma_pesos_disciplinas(projeto),
             },
         )
 
@@ -128,7 +122,12 @@ class DisciplinaViewSet(
     GenericViewSet,
 ):
     serializer_class = DisciplinaSerializer
-    queryset = Disciplina.objects.all()
+    queryset = Disciplina.objects.all().prefetch_related("servicos")
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [IsAuthenticatedWithEmpresa(), IsGerente()]
+        return [IsAuthenticatedWithEmpresa()]
 
     def get_queryset(self):
         return super().get_queryset().filter(projeto_id=self.kwargs["projeto_pk"])
@@ -144,6 +143,37 @@ class DisciplinaDetailViewSet(
 ):
     serializer_class = DisciplinaSerializer
     queryset = Disciplina.objects.all()
+    permission_classes = (IsAuthenticatedWithEmpresa, IsGerente)
+
+
+class DisciplinaNestedMixin:
+    """Views aninhadas sob `/configuracoes/disciplinas/{disciplina_pk}/...`."""
+
+    permission_classes = (IsAuthenticatedWithEmpresa, IsGerente)
+
+    def _get_disciplina(self) -> Disciplina:
+        return get_object_or_404(
+            Disciplina.objects.for_empresa(self.request.user.empresa),
+            pk=self.kwargs["disciplina_pk"],
+        )
+
+
+class ServicoViewSet(DisciplinaNestedMixin, mixins.CreateModelMixin, GenericViewSet):
+    serializer_class = CatalogoServicoSerializer
+    queryset = CatalogoServico.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(disciplina=self._get_disciplina())
+
+
+class ServicoDetailViewSet(
+    TenantScopedViewSetMixin,
+    mixins.UpdateModelMixin,
+    GenericViewSet,
+):
+    serializer_class = CatalogoServicoSerializer
+    queryset = CatalogoServico.objects.all()
+    permission_classes = (IsAuthenticatedWithEmpresa, IsGerente)
 
 
 class EquipeViewSet(
@@ -215,31 +245,6 @@ class MaquinaDetailViewSet(
 ):
     serializer_class = MaquinaSerializer
     queryset = Maquina.objects.all()
-
-
-class MetaViewSet(
-    ProjetoNestedMixin,
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    GenericViewSet,
-):
-    serializer_class = MetaMensalSerializer
-    queryset = MetaMensal.objects.all()
-
-    def get_queryset(self):
-        return super().get_queryset().filter(projeto_id=self.kwargs["projeto_pk"])
-
-    def perform_create(self, serializer):
-        serializer.save(projeto=self._get_projeto())
-
-
-class MetaDetailViewSet(
-    TenantScopedViewSetMixin,
-    mixins.UpdateModelMixin,
-    GenericViewSet,
-):
-    serializer_class = MetaMensalSerializer
-    queryset = MetaMensal.objects.all()
 
 
 class ValorCustoViewSet(
