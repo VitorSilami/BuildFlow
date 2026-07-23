@@ -5,11 +5,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django.db.models import Count
-from django.db.models import Sum
 from django.utils import timezone
 
-from buildflow.configuracoes.models import MetaMensal
-from buildflow.registros_diarios.models import ProducaoDiaria
+from buildflow.configuracoes.models import CatalogoServico
+from buildflow.configuracoes.models import Disciplina
 from buildflow.registros_diarios.models import RegistroDiario
 
 from .models import Projeto
@@ -20,37 +19,53 @@ if TYPE_CHECKING:
 DIAS_JANELA_ATIVIDADE = 7
 
 
-def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
-    """Media ponderada (por MetaMensal.peso_percentual) do avanco de cada
-    disciplina do projeto: soma(ProducaoDiaria.quantidade) na mesma unidade
-    da meta, dividido pelo valor_alvo. Retorna None quando nao ha base real
-    para calcular (sem metas, ou nenhuma meta com peso definido) — nunca
-    inventa um numero.
+def calcular_avanco_servico(servico: CatalogoServico) -> Decimal | None:
+    """Percentual executado de um servico: quantidade_executada / quantidade_planejada.
+    Retorna None quando nao ha quantidade planejada — nunca inventa um numero.
     """
-    metas = MetaMensal.objects.filter(
-        projeto=projeto,
-        peso_percentual__isnull=False,
-    ).select_related("disciplina", "unidade")
+    if not servico.quantidade_planejada:
+        return None
+    return (servico.quantidade_executada / servico.quantidade_planejada * Decimal("100")).quantize(
+        Decimal("0.01"),
+    )
 
+
+def calcular_avanco_disciplina(disciplina: Disciplina) -> Decimal | None:
+    """Media ponderada (por CatalogoServico.peso_percentual) do avanco dos
+    servicos de uma disciplina. Servico sem peso definido nao conta. Retorna
+    None quando nenhum servico tem peso definido.
+    """
     soma_pesos = Decimal("0")
     soma_ponderada = Decimal("0")
 
-    for meta in metas:
-        peso = meta.peso_percentual
-        producao_total = ProducaoDiaria.objects.filter(
-            registro_diario__projeto=projeto,
-            disciplina=meta.disciplina,
-            unidade=meta.unidade,
-        ).aggregate(total=Sum("quantidade"))["total"] or Decimal("0")
+    for servico in disciplina.servicos.all():
+        if servico.peso_percentual is None:
+            continue
+        avanco = calcular_avanco_servico(servico) or Decimal("0")
+        soma_ponderada += avanco * servico.peso_percentual
+        soma_pesos += servico.peso_percentual
 
-        avanco_disciplina = (
-            (producao_total / meta.valor_alvo * Decimal("100"))
-            if meta.valor_alvo
-            else Decimal("0")
-        )
+    if soma_pesos == 0:
+        return None
 
-        soma_ponderada += avanco_disciplina * peso
-        soma_pesos += peso
+    return (soma_ponderada / soma_pesos).quantize(Decimal("0.01"))
+
+
+def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
+    """Media ponderada (por Disciplina.peso_percentual) do avanco de cada
+    disciplina do projeto. Disciplina sem peso definido nao conta. Retorna
+    None quando nao ha base real para calcular (sem disciplinas, ou nenhuma
+    disciplina com peso definido) — nunca inventa um numero.
+    """
+    soma_pesos = Decimal("0")
+    soma_ponderada = Decimal("0")
+
+    for disciplina in projeto.disciplinas.all():
+        if disciplina.peso_percentual is None:
+            continue
+        avanco = calcular_avanco_disciplina(disciplina) or Decimal("0")
+        soma_ponderada += avanco * disciplina.peso_percentual
+        soma_pesos += disciplina.peso_percentual
 
     if soma_pesos == 0:
         return None
