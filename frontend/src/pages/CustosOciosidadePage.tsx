@@ -66,11 +66,32 @@ function BarraHistograma({
   const pctSecundario = maximo > 0 ? (secundario / maximo) * 100 : 0
   return (
     <div className="mb-3">
-      <p className="mb-1 text-xs text-muted-foreground">{label}</p>
+      <div className="mb-1 flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="flex items-center gap-2 font-medium">
+          <span className="text-emerald-600">{formatMoeda(String(principal))}</span>
+          {secundario > 0 && <span className="text-red-600">{formatMoeda(String(secundario))}</span>}
+        </span>
+      </div>
       <div className="flex h-2 overflow-hidden rounded-full bg-muted">
         <div className="h-full bg-emerald-500" style={{ width: `${pctPrincipal}%` }} />
         <div className="h-full bg-red-500" style={{ width: `${pctSecundario}%` }} />
       </div>
+    </div>
+  )
+}
+
+function LegendaHistograma({ labelPrincipal, labelSecundario }: { labelPrincipal: string; labelSecundario: string }) {
+  return (
+    <div className="mb-3 flex items-center gap-4 text-xs text-muted-foreground">
+      <span className="flex items-center gap-1.5">
+        <span className="size-2 rounded-full bg-emerald-500" aria-hidden="true" />
+        {labelPrincipal}
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="size-2 rounded-full bg-red-500" aria-hidden="true" />
+        {labelSecundario}
+      </span>
     </div>
   )
 }
@@ -133,15 +154,18 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
           {dados.mao_de_obra_por_funcao.length === 0 ? (
             <EmptyState>Nenhuma presença registrada no mês.</EmptyState>
           ) : (
-            dados.mao_de_obra_por_funcao.map((item) => (
-              <BarraHistograma
-                key={item.funcao}
-                label={item.funcao}
-                principal={Number(item.custo)}
-                secundario={Number(item.deficit)}
-                maximo={maximoMaoDeObra}
-              />
-            ))
+            <>
+              <LegendaHistograma labelPrincipal="Custo trabalhado" labelSecundario="Déficit por falta" />
+              {dados.mao_de_obra_por_funcao.map((item) => (
+                <BarraHistograma
+                  key={item.funcao}
+                  label={item.funcao}
+                  principal={Number(item.custo)}
+                  secundario={Number(item.deficit)}
+                  maximo={maximoMaoDeObra}
+                />
+              ))}
+            </>
           )}
         </Card>
 
@@ -149,15 +173,18 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
           {dados.maquinas_por_equipamento.length === 0 ? (
             <EmptyState>Nenhum apontamento de máquina no mês.</EmptyState>
           ) : (
-            dados.maquinas_por_equipamento.map((item) => (
-              <BarraHistograma
-                key={item.maquina_id}
-                label={`${item.nome} (${item.codigo})`}
-                principal={Number(item.custo_produtivo)}
-                secundario={Number(item.custo_ocioso)}
-                maximo={maximoMaquinas}
-              />
-            ))
+            <>
+              <LegendaHistograma labelPrincipal="Custo produtivo" labelSecundario="Custo ocioso" />
+              {dados.maquinas_por_equipamento.map((item) => (
+                <BarraHistograma
+                  key={item.maquina_id}
+                  label={`${item.nome} (${item.codigo})`}
+                  principal={Number(item.custo_produtivo)}
+                  secundario={Number(item.custo_ocioso)}
+                  maximo={maximoMaquinas}
+                />
+              ))}
+            </>
           )}
         </Card>
       </div>

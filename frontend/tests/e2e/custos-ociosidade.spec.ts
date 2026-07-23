@@ -106,7 +106,7 @@ test('gerente ve custos e ociosidade do projeto no mes', async ({ page }) => {
   // Regex (nao string literal) porque Intl.NumberFormat pode render com
   // espaco normal ou nao-quebravel (U+00A0) entre "R$" e o valor, dependendo
   // da versao do ICU do Chromium — \s cobre os dois.
-  await expect(page.getByText(/R\$\s*5\.000,00/)).toBeVisible()
+  await expect(page.getByText(/R\$\s*5\.000,00/).first()).toBeVisible()
   await expect(page.getByText(/R\$\s*17\.000,00/)).toBeVisible()
   await expect(page.getByText('87%')).toBeVisible()
   await expect(page.getByText('José Ajudante (Ajudante)')).toBeVisible()
