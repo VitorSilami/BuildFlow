@@ -1,16 +1,18 @@
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 import { Card as ShadcnCard, CardContent, CardHeader, CardTitle } from './card'
 
 interface CardProps {
   title?: string
   eyebrow?: ReactNode
   actions?: ReactNode
+  className?: string
   children: ReactNode
 }
 
-export function Card({ title, eyebrow, actions, children }: CardProps) {
+export function Card({ title, eyebrow, actions, className, children }: CardProps) {
   return (
-    <ShadcnCard className="group/card mb-6">
+    <ShadcnCard className={cn('group/card mb-6', className)}>
       {(title || actions) && (
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>

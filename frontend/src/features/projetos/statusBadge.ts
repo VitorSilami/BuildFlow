@@ -28,3 +28,12 @@ export const STATUS_DOT_CLASS: Record<ProjetoStatus, string> = {
   pausado: 'bg-amber-500',
   concluido: 'bg-slate-400',
 }
+
+// Acento na borda esquerda do card de projeto — mesma paleta do badge, dando
+// leitura de status mesmo antes de ler o texto (reforca a hierarquia visual
+// do card sem precisar de um fundo colorido cheio).
+export const STATUS_ACCENT_CLASS: Record<ProjetoStatus, string> = {
+  ativo: 'border-l-4 border-l-emerald-500',
+  pausado: 'border-l-4 border-l-amber-500',
+  concluido: 'border-l-4 border-l-slate-400',
+}

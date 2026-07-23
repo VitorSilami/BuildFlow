@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Alert, Button, Card, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
+import { Alert, Button, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
 import { useAuth } from '../features/auth/AuthContext'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { CATEGORIA_LABELS } from '../features/rnc/categoriaItens'
@@ -129,13 +129,11 @@ export function RncListPage() {
             ))}
           </div>
 
-          <Card>
-            {lista.length === 0 ? (
-              <EmptyState>Nenhuma RNC encontrada.</EmptyState>
-            ) : (
-              lista.map((rnc) => <CardRnc key={rnc.id} rnc={rnc} projetoId={projetoId ?? ''} />)
-            )}
-          </Card>
+          {lista.length === 0 ? (
+            <EmptyState>Nenhuma RNC encontrada.</EmptyState>
+          ) : (
+            lista.map((rnc) => <CardRnc key={rnc.id} rnc={rnc} projetoId={projetoId ?? ''} />)
+          )}
         </>
       )}
     </main>

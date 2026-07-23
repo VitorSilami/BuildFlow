@@ -19,10 +19,11 @@ import {
   TabsList,
   TabsTrigger,
 } from '../components/ui'
+import { cn } from '../lib/utils'
 import { ProjetoForm } from '../features/projetos/ProjetoForm'
-import { STATUS_BADGE_CLASS, STATUS_LABEL } from '../features/projetos/statusBadge'
+import { STATUS_ACCENT_CLASS, STATUS_BADGE_CLASS, STATUS_LABEL } from '../features/projetos/statusBadge'
 import { useProjetos } from '../features/projetos/projetosApi'
-import { formatData, formatExecucao } from '../lib/format'
+import { execucaoCorClasse, formatData, formatExecucao } from '../lib/format'
 import type { Projeto, ProjetoStatus } from '../types/projeto'
 
 type FiltroStatus = 'todos' | ProjetoStatus
@@ -128,6 +129,10 @@ export function ProjetosListPage() {
                 <Card
                   key={projeto.id}
                   title={projeto.nome}
+                  className={cn(
+                    'transition-all hover:-translate-y-0.5 hover:shadow-md',
+                    STATUS_ACCENT_CLASS[projeto.status],
+                  )}
                   actions={
                     <div className="flex items-center gap-2">
                       {projeto.numero_contrato && (
@@ -174,10 +179,22 @@ export function ProjetosListPage() {
                   <div className="mb-4">
                     <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                       <span>Execução</span>
-                      <span className="font-medium text-ink">{formatExecucao(projeto.execucao_percentual)}</span>
+                      <span
+                        className={`font-medium ${
+                          projeto.execucao_percentual === null
+                            ? 'text-ink'
+                            : execucaoCorClasse(projeto.execucao_percentual).replace('bg-', 'text-')
+                        }`}
+                      >
+                        {formatExecucao(projeto.execucao_percentual)}
+                      </span>
                     </div>
                     {projeto.execucao_percentual !== null && (
-                      <Progress value={Number(projeto.execucao_percentual)} className="h-2" />
+                      <Progress
+                        value={Number(projeto.execucao_percentual)}
+                        className="h-2"
+                        indicatorClassName={execucaoCorClasse(projeto.execucao_percentual)}
+                      />
                     )}
                   </div>
 
