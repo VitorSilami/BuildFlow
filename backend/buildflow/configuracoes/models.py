@@ -228,57 +228,6 @@ class TipoValorCustoChoices(models.TextChoices):
     EQUIPAMENTO = "equipamento", _("Equipamento")
 
 
-class MetaMensal(models.Model):
-    """Meta de produção por disciplina (H — sub-aba "Metas").
-
-    Nome `MetaMensal` (em vez de `Meta`) para nao colidir com a classe
-    `Meta` de opcoes do proprio Django model.
-    """
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    projeto = models.ForeignKey(
-        Projeto,
-        verbose_name=_("projeto"),
-        on_delete=models.CASCADE,
-        related_name="metas",
-    )
-    disciplina = models.ForeignKey(
-        Disciplina,
-        verbose_name=_("disciplina"),
-        on_delete=models.CASCADE,
-        related_name="metas",
-    )
-    unidade = models.ForeignKey(
-        Unidade,
-        verbose_name=_("unidade"),
-        on_delete=models.PROTECT,
-    )
-    valor_alvo = models.DecimalField(_("valor alvo"), max_digits=12, decimal_places=3)
-    peso_percentual = models.DecimalField(
-        _("peso percentual"),
-        max_digits=5,
-        decimal_places=2,
-        null=True,
-        blank=True,
-    )
-
-    tenant_path = "projeto__empresa"
-    objects = TenantScopedManager()
-
-    class Meta:
-        verbose_name = _("meta")
-        verbose_name_plural = _("metas")
-        constraints = [
-            models.UniqueConstraint(
-                fields=["projeto", "disciplina"],
-                name="meta_unica_por_disciplina_e_projeto",
-            ),
-        ]
-
-    def __str__(self) -> str:
-        return f"Meta {self.disciplina.nome} — {self.valor_alvo}{self.unidade.sigla}"
-
-
 class ValorCusto(models.Model):
     """Valor de custo de mao de obra ou equipamento (H — sub-aba "Valores dos
     Contratos"), recorte simplificado sem o modulo completo de

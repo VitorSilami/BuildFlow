@@ -4,7 +4,6 @@ from .models import CatalogoServico
 from .models import Disciplina
 from .models import Equipe
 from .models import Maquina
-from .models import MetaMensal
 from .models import MotivoParada
 from .models import Pessoa
 from .models import Unidade
@@ -60,12 +59,6 @@ class EquipeAdmin(admin.ModelAdmin):
     list_filter = ["projeto"]
     search_fields = ["nome"]
     inlines = [PessoaInline, MaquinaInline]
-
-
-@admin.register(MetaMensal)
-class MetaMensalAdmin(admin.ModelAdmin):
-    list_display = ["disciplina", "projeto", "valor_alvo", "unidade", "peso_percentual"]
-    list_filter = ["projeto"]
 
 
 @admin.register(ValorCusto)
