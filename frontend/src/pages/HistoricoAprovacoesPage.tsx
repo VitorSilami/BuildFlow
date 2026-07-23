@@ -286,28 +286,26 @@ export function HistoricoAprovacoesPage() {
             ))}
           </div>
 
-          <Card>
-            {filtrados.length === 0 ? (
-              <EmptyState>Nenhum RDO encontrado para esse filtro.</EmptyState>
-            ) : (
-              filtrados.map((registro) => (
-                <CardRegistro
-                  key={registro.id}
-                  registro={registro}
-                  souFiscal={String(registro.fiscal) === String(user?.id)}
-                  expandido={expandidoId === registro.id}
-                  rejeitando={rejeitandoId === registro.id}
-                  motivoTexto={motivoTexto}
-                  onToggleExpandir={() => alternarExpandir(registro.id)}
-                  onIniciarRejeicao={() => iniciarRejeicao(registro.id)}
-                  onCancelarRejeicao={() => setRejeitandoId(null)}
-                  onMudarMotivo={setMotivoTexto}
-                  onAprovar={() => void aprovarRdo(registro.id)}
-                  onConfirmarRejeicao={() => void confirmarRejeicao(registro.id)}
-                />
-              ))
-            )}
-          </Card>
+          {filtrados.length === 0 ? (
+            <EmptyState>Nenhum RDO encontrado para esse filtro.</EmptyState>
+          ) : (
+            filtrados.map((registro) => (
+              <CardRegistro
+                key={registro.id}
+                registro={registro}
+                souFiscal={String(registro.fiscal) === String(user?.id)}
+                expandido={expandidoId === registro.id}
+                rejeitando={rejeitandoId === registro.id}
+                motivoTexto={motivoTexto}
+                onToggleExpandir={() => alternarExpandir(registro.id)}
+                onIniciarRejeicao={() => iniciarRejeicao(registro.id)}
+                onCancelarRejeicao={() => setRejeitandoId(null)}
+                onMudarMotivo={setMotivoTexto}
+                onAprovar={() => void aprovarRdo(registro.id)}
+                onConfirmarRejeicao={() => void confirmarRejeicao(registro.id)}
+              />
+            ))
+          )}
         </>
       )}
     </main>

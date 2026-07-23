@@ -117,8 +117,8 @@ test('dia com 2+ RDOs mostra lista inline em vez de navegar direto', async ({ pa
   await page.getByRole('button', { name: 'Dia 17, 2 registro(s)' }).click()
 
   await expect(page).toHaveURL(/\/registros-diarios$/)
-  await expect(page.getByRole('link', { name: /diurno — sol/ })).toBeVisible()
-  await expect(page.getByRole('link', { name: /noturno — nublado/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Diurno · Sol/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Noturno · Nublado/ })).toBeVisible()
 })
 
 test('navegar para o mes seguinte refaz a busca com o novo filtro', async ({ page }) => {

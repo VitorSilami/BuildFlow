@@ -2,13 +2,13 @@ import { Gauge, HardHat, MapPin, UserCheck } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Badge, Button, Card, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
-import { ICONE_CLIMA, LABEL_CLIMA } from '../features/registros-diarios/climaIcons'
+import { ICONE_CLIMA, LABEL_CLIMA, LABEL_TURNO } from '../features/registros-diarios/climaIcons'
 import { FotoUpload } from '../features/registros-diarios/FotoUpload'
 import { useRegistroDiario } from '../features/registros-diarios/registrosDiariosApi'
 import { STATUS_REGISTRO_COR_TEXTO, STATUS_REGISTRO_LABEL } from '../features/registros-diarios/statusRegistroBadge'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { execucaoCorClasse, formatData } from '../lib/format'
-import type { ApontamentoMaquina, Presenca, StatusPresenca, Turno } from '../types/registroDiario'
+import type { ApontamentoMaquina, Presenca, StatusPresenca } from '../types/registroDiario'
 
 function RegistroDiarioDetailSkeleton() {
   return (
@@ -25,11 +25,6 @@ function RegistroDiarioDetailSkeleton() {
       </div>
     </>
   )
-}
-
-const LABEL_TURNO: Record<Turno, string> = {
-  diurno: 'Diurno',
-  noturno: 'Noturno',
 }
 
 const LABEL_STATUS_PRESENCA: Record<StatusPresenca, string> = {

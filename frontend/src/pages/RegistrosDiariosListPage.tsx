@@ -7,8 +7,11 @@ import {
   type DiaCalendario,
   type MesAno,
 } from '../features/registros-diarios/CalendarioMensal'
+import { ICONE_CLIMA, LABEL_CLIMA, LABEL_TURNO } from '../features/registros-diarios/climaIcons'
 import { useRegistrosDiarios } from '../features/registros-diarios/registrosDiariosApi'
+import { STATUS_REGISTRO_COR_TEXTO, STATUS_REGISTRO_LABEL } from '../features/registros-diarios/statusRegistroBadge'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
+import { formatData } from '../lib/format'
 
 function mesAnoAtual(): MesAno {
   const hoje = new Date()
@@ -117,15 +120,23 @@ export function RegistrosDiariosListPage() {
           </Card>
 
           {diaSelecionado && (
-            <Card title={`Registros de ${diaSelecionado.data}`}>
+            <Card title={`Registros de ${formatData(diaSelecionado.data)}`}>
               <ul className="flex flex-col gap-2" aria-label="Registros do dia selecionado">
                 {diaSelecionado.registros.map((registro) => (
                   <li key={registro.id}>
                     <Link
                       to={`/projetos/${projetoId}/registros-diarios/${registro.id}`}
-                      className="font-medium text-primary hover:underline"
+                      className="flex items-center justify-between gap-4 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-surface"
                     >
-                      {registro.data_referencia} — {registro.turno} — {registro.clima}
+                      <span className="flex items-center gap-2 font-medium text-ink">
+                        {ICONE_CLIMA[registro.clima]}
+                        {LABEL_TURNO[registro.turno]} · {LABEL_CLIMA[registro.clima]}
+                      </span>
+                      <span
+                        className={`rounded-md border px-2.5 py-0.5 text-xs font-semibold ${STATUS_REGISTRO_COR_TEXTO[registro.status]}`}
+                      >
+                        {STATUS_REGISTRO_LABEL[registro.status]}
+                      </span>
                     </Link>
                   </li>
                 ))}

@@ -104,16 +104,6 @@ export function DashboardPage() {
             <AtividadeRdoChart dados={data.atividade_rdo} />
           </Card>
 
-          {data.projetos_ativos + data.projetos_pausados + data.projetos_concluidos > 0 && (
-            <Card title="Distribuição de status" eyebrow="Projetos">
-              <StatusDonutChart
-                ativos={data.projetos_ativos}
-                pausados={data.projetos_pausados}
-                concluidos={data.projetos_concluidos}
-              />
-            </Card>
-          )}
-
           {data.alertas.length > 0 && (
             <Card title="Alertas de RDO">
               <ul aria-label="Alertas de RDO atrasado" className="flex flex-col gap-3">
@@ -147,33 +137,48 @@ export function DashboardPage() {
               </Link>
             </EmptyState>
           ) : (
-            <Card title="Projetos ativos">
-              <ul aria-label="Lista de projetos ativos" className="flex flex-col gap-3">
-                {data.projetos.map((projeto) => (
-                  <li key={projeto.id} className="flex items-center justify-between gap-4">
-                    <Link
-                      to={`/projetos/${projeto.id}/registros-diarios`}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {projeto.nome}
-                    </Link>
-                    {projeto.execucao_percentual === null ? (
-                      <span className="text-sm text-muted-foreground">—</span>
-                    ) : (
-                      <div className="flex w-32 items-center gap-2">
-                        <Progress
-                          value={Number(projeto.execucao_percentual)}
-                          indicatorClassName={execucaoCorClasse(projeto.execucao_percentual)}
-                        />
-                        <span className="w-12 text-right text-sm text-muted-foreground">
-                          {formatExecucao(projeto.execucao_percentual)}
-                        </span>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </Card>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {data.projetos_ativos + data.projetos_pausados + data.projetos_concluidos > 0 && (
+                <Card title="Distribuição de status" eyebrow="Projetos">
+                  <StatusDonutChart
+                    ativos={data.projetos_ativos}
+                    pausados={data.projetos_pausados}
+                    concluidos={data.projetos_concluidos}
+                  />
+                </Card>
+              )}
+              <Card title="Projetos ativos">
+                <ul aria-label="Lista de projetos ativos" className="flex flex-col gap-2">
+                  {data.projetos.map((projeto) => (
+                    <li key={projeto.id}>
+                      <Link
+                        to={`/projetos/${projeto.id}/registros-diarios`}
+                        className="flex items-center justify-between gap-4 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-surface"
+                      >
+                        <span className="font-medium text-ink">{projeto.nome}</span>
+                        {projeto.execucao_percentual === null ? (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        ) : (
+                          <div className="flex w-28 items-center gap-2">
+                            <Progress
+                              value={Number(projeto.execucao_percentual)}
+                              indicatorClassName={execucaoCorClasse(projeto.execucao_percentual)}
+                            />
+                            <span
+                              className={`w-12 text-right text-sm font-semibold ${execucaoCorClasse(
+                                projeto.execucao_percentual,
+                              ).replace('bg-', 'text-')}`}
+                            >
+                              {formatExecucao(projeto.execucao_percentual)}
+                            </span>
+                          </div>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </div>
           )}
         </>
       )}
