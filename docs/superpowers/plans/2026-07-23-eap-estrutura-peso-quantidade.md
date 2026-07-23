@@ -462,13 +462,13 @@ from typing import TYPE_CHECKING
 from django.db.models import Count
 from django.utils import timezone
 
-from buildflow.configuracoes.models import CatalogoServico
-from buildflow.configuracoes.models import Disciplina
 from buildflow.registros_diarios.models import RegistroDiario
 
 from .models import Projeto
 
 if TYPE_CHECKING:
+    from buildflow.configuracoes.models import CatalogoServico
+    from buildflow.configuracoes.models import Disciplina
     from buildflow.empresas.models import Empresa
 
 DIAS_JANELA_ATIVIDADE = 7
@@ -480,15 +480,15 @@ def calcular_avanco_servico(servico: CatalogoServico) -> Decimal | None:
     """
     if not servico.quantidade_planejada:
         return None
-    return (servico.quantidade_executada / servico.quantidade_planejada * Decimal("100")).quantize(
-        Decimal("0.01"),
-    )
+    proporcao = servico.quantidade_executada / servico.quantidade_planejada
+    return (proporcao * Decimal("100")).quantize(Decimal("0.01"))
 
 
 def calcular_avanco_disciplina(disciplina: Disciplina) -> Decimal | None:
     """Media ponderada (por CatalogoServico.peso_percentual) do avanco dos
-    servicos de uma disciplina. Servico sem peso definido nao conta. Retorna
-    None quando nenhum servico tem peso definido.
+    servicos de uma disciplina. Servico sem peso definido, ou cujo avanco nao
+    pode ser calculado (None), nao conta. Retorna None quando nenhum servico
+    contribui com peso e avanco definidos.
     """
     soma_pesos = Decimal("0")
     soma_ponderada = Decimal("0")
@@ -496,7 +496,9 @@ def calcular_avanco_disciplina(disciplina: Disciplina) -> Decimal | None:
     for servico in disciplina.servicos.all():
         if servico.peso_percentual is None:
             continue
-        avanco = calcular_avanco_servico(servico) or Decimal("0")
+        avanco = calcular_avanco_servico(servico)
+        if avanco is None:
+            continue
         soma_ponderada += avanco * servico.peso_percentual
         soma_pesos += servico.peso_percentual
 
@@ -508,9 +510,11 @@ def calcular_avanco_disciplina(disciplina: Disciplina) -> Decimal | None:
 
 def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
     """Media ponderada (por Disciplina.peso_percentual) do avanco de cada
-    disciplina do projeto. Disciplina sem peso definido nao conta. Retorna
-    None quando nao ha base real para calcular (sem disciplinas, ou nenhuma
-    disciplina com peso definido) — nunca inventa um numero.
+    disciplina do projeto. Disciplina sem peso definido, ou cujo avanco nao
+    pode ser calculado (None), nao conta — uma disciplina com peso mas sem
+    avanco calculavel tem progresso desconhecido, nao zero, entao NAO deve
+    ser contada com avanco 0 na media do projeto (isso seria inventar um
+    numero). Retorna None quando nao ha base real para calcular.
     """
     soma_pesos = Decimal("0")
     soma_ponderada = Decimal("0")
@@ -518,7 +522,9 @@ def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
     for disciplina in projeto.disciplinas.all():
         if disciplina.peso_percentual is None:
             continue
-        avanco = calcular_avanco_disciplina(disciplina) or Decimal("0")
+        avanco = calcular_avanco_disciplina(disciplina)
+        if avanco is None:
+            continue
         soma_ponderada += avanco * disciplina.peso_percentual
         soma_pesos += disciplina.peso_percentual
 
@@ -531,6 +537,8 @@ def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
 def decimal_para_str_ou_none(valor: Decimal | None) -> str | None:
     return str(valor) if valor is not None else None
 ```
+
+**Nota pós-implementação:** a versão original deste passo usava `avanco = calcular_avanco_disciplina(disciplina) or Decimal("0")` (e o equivalente em `calcular_avanco_disciplina`), o que fazia um filho com avanço indefinido (`None`) contar como 0% na média do pai — violando a própria regra "nunca inventa número" do filho para cima. Corrigido durante a execução da Task 2 (`test_servico_sem_peso_nao_conta_na_disciplina` pegou o caso) para excluir explicitamente filhos com avanço `None`, igual ao tratamento já dado a peso `None`. O código acima já reflete a versão corrigida.
 
 O restante do arquivo (`obter_ultima_data_rdo` e `obter_atividade_rdo_semana`, hoje nas linhas 65-111) permanece exatamente como está — apenas os imports não usados (`Sum`, `MetaMensal`, `ProducaoDiaria`) somem porque já não aparecem no bloco acima.
 
@@ -1288,8 +1296,7 @@ git commit -m "feat: endpoints de Servico e peso/avanco em Disciplina, escrita r
 - Modify: `backend/buildflow/configuracoes/admin.py` (remove `MetaMensalAdmin`)
 - Create: `backend/buildflow/configuracoes/migrations/0007_copiar_peso_metamensal_para_disciplina.py`
 - Create: `backend/buildflow/configuracoes/migrations/0008_remove_metamensal.py`
-- Modify: `backend/buildflow/projetos/tests/test_dashboard.py:95-138`
-- Modify: `backend/buildflow/projetos/tests/test_api.py:142-192`
+- (`backend/buildflow/projetos/tests/test_dashboard.py` e `test_api.py` já foram atualizados durante a Task 2 — ver Step 4)
 
 **Interfaces:**
 - Consumes: nada de tasks futuras — esta task fecha o ciclo de vida do `MetaMensal` (o serializer/views/urls já pararam de referenciá-lo na Task 3).
@@ -1372,85 +1379,9 @@ Expected: `Applying configuracoes.0008_remove_metamensal... OK`
 Run: `cd backend && python manage.py makemigrations --check --dry-run`
 Expected: `No changes detected` (confirma que o model e a migração ficaram consistentes).
 
-- [ ] **Step 4: Corrigir fixtures de `projetos/tests` que criavam `MetaMensal`**
+- [x] **Step 4 (já feito na Task 2): fixtures de `projetos/tests` que criavam `MetaMensal`**
 
-Em `backend/buildflow/projetos/tests/test_dashboard.py`, remover a linha `from buildflow.configuracoes.models import MetaMensal` e a linha `from buildflow.registros_diarios.models import ProducaoDiaria` (ambos os imports ficam sem uso após este diff). Substituir a função `test_execucao_media_calculada_entre_projetos_ativos` (linhas 95-143) por:
-
-```python
-def test_execucao_media_calculada_entre_projetos_ativos():
-    empresa = EmpresaFactory()
-    usuario = UsuarioFactory(empresa=empresa)
-    unidade = Unidade.objects.create(sigla="m³", descricao="metro cúbico")
-
-    projeto = Projeto.objects.create(
-        empresa=empresa,
-        nome="Com Meta",
-        criado_por=usuario,
-    )
-    disciplina = Disciplina.objects.create(
-        projeto=projeto,
-        nome="Terraplenagem",
-        peso_percentual=Decimal("100"),
-    )
-    CatalogoServico.objects.create(
-        disciplina=disciplina,
-        nome="Corte",
-        unidade=unidade,
-        peso_percentual=Decimal("100"),
-        quantidade_planejada=Decimal("1000"),
-        quantidade_executada=Decimal("400"),
-    )
-    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
-    RegistroDiario.objects.create(
-        projeto=projeto,
-        data_referencia="2026-07-01",
-        turno="diurno",
-        clima="sol",
-        equipe=equipe,
-        fiscal=usuario,
-        autor=usuario,
-    )
-
-    response = _authenticated_client(usuario).get(DASHBOARD_URL)
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()["execucao_media"] == "40.00"
-```
-
-Em `backend/buildflow/projetos/tests/test_api.py`, remover a linha `from buildflow.configuracoes.models import MetaMensal` e a linha `from buildflow.registros_diarios.models import ProducaoDiaria`. Substituir a função `test_lista_projetos_inclui_execucao_percentual_calculada` (linhas 142-192) por:
-
-```python
-def test_lista_projetos_inclui_execucao_percentual_calculada():
-    empresa = EmpresaFactory()
-    usuario = UsuarioFactory(empresa=empresa)
-    projeto = Projeto.objects.create(
-        empresa=empresa,
-        nome="Projeto Com Meta",
-        criado_por=usuario,
-    )
-    unidade = Unidade.objects.create(sigla="m³", descricao="metro cúbico")
-    disciplina = Disciplina.objects.create(
-        projeto=projeto,
-        nome="Terraplenagem",
-        peso_percentual=Decimal("100"),
-    )
-    CatalogoServico.objects.create(
-        disciplina=disciplina,
-        nome="Corte",
-        unidade=unidade,
-        peso_percentual=Decimal("100"),
-        quantidade_planejada=Decimal("1000"),
-        quantidade_executada=Decimal("250"),
-    )
-
-    response = _authenticated_client(usuario).get(PROJETOS_URL)
-
-    assert response.status_code == HTTPStatus.OK
-    item = next(
-        r for r in response.json()["results"] if r["nome"] == "Projeto Com Meta"
-    )
-    assert item["execucao_percentual"] == "25.00"
-```
+Este passo foi antecipado durante a execução da Task 2: a reescrita de `calcular_execucao_percentual` já quebrava `test_dashboard.py::test_execucao_media_calculada_entre_projetos_ativos` e `test_api.py::test_lista_projetos_inclui_execucao_percentual_calculada` (ambos criavam `MetaMensal` + `ProducaoDiaria` para popular a execução), então as duas fixtures já foram atualizadas para usar `Disciplina.peso_percentual`/`CatalogoServico.peso_percentual/quantidade_planejada/quantidade_executada` diretamente, sem esperar por esta task. Nada a fazer aqui — pular para o Step 5.
 
 - [ ] **Step 5: Rodar a suíte completa do backend**
 
