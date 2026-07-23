@@ -153,6 +153,51 @@ def test_filtro_mes_formato_invalido_retorna_400(cenario):
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
+def test_filtro_intervalo_retorna_apenas_rdos_do_periodo(cenario):
+    url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
+    client = _authenticated_client(cenario["usuario"])
+    client.post(url, _payload(cenario, data_referencia="2026-07-05"), format="json")
+    client.post(url, _payload(cenario, data_referencia="2026-07-17"), format="json")
+    client.post(url, _payload(cenario, data_referencia="2026-08-01"), format="json")
+
+    response = client.get(url, {"data_inicio": "2026-07-01", "data_fim": "2026-07-31"})
+
+    assert response.status_code == HTTPStatus.OK
+    corpo = response.json()
+    assert isinstance(corpo, list)
+    assert {item["data_referencia"] for item in corpo} == {"2026-07-05", "2026-07-17"}
+
+
+def test_filtro_intervalo_so_data_inicio_retorna_400(cenario):
+    url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
+
+    response = _authenticated_client(cenario["usuario"]).get(url, {"data_inicio": "2026-07-01"})
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_filtro_intervalo_fim_antes_do_inicio_retorna_400(cenario):
+    url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
+
+    response = _authenticated_client(cenario["usuario"]).get(
+        url,
+        {"data_inicio": "2026-07-31", "data_fim": "2026-07-01"},
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_filtro_intervalo_formato_invalido_retorna_400(cenario):
+    url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
+
+    response = _authenticated_client(cenario["usuario"]).get(
+        url,
+        {"data_inicio": "invalido", "data_fim": "2026-07-31"},
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
 def test_sem_filtro_mes_mantem_paginacao(cenario):
     url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
     client = _authenticated_client(cenario["usuario"])

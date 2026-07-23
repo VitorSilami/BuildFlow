@@ -27,7 +27,7 @@ export interface HorasOciosasPorCausa {
 }
 
 export interface FaltaPorPessoa {
-  pessoa_id: string
+  pessoa_id: string | null
   nome: string
   funcao: string
   faltas: number

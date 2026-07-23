@@ -1,3 +1,5 @@
+import datetime
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins
@@ -38,6 +40,15 @@ class RegistroDiarioViewSet(
         queryset = super().get_queryset()
         queryset = queryset.filter(projeto_id=self.kwargs["projeto_pk"])
 
+        data_inicio = self.request.query_params.get("data_inicio")
+        data_fim = self.request.query_params.get("data_fim")
+        if data_inicio or data_fim:
+            if not (data_inicio and data_fim):
+                raise ValidationError(
+                    {"data_inicio": "Informe data_inicio e data_fim juntos."},
+                )
+            return queryset.filter(**self._filtro_intervalo(data_inicio, data_fim))
+
         mes = self.request.query_params.get("mes")
         if mes:
             ano, mes_numero = self._parse_filtro_mes(mes)
@@ -55,6 +66,21 @@ class RegistroDiarioViewSet(
         except ValueError as erro:
             raise ValidationError({"mes": "Use o formato YYYY-MM."}) from erro
 
+    @staticmethod
+    def _filtro_intervalo(data_inicio: str, data_fim: str) -> dict:
+        try:
+            inicio = datetime.date.fromisoformat(data_inicio)
+            fim = datetime.date.fromisoformat(data_fim)
+        except ValueError as erro:
+            raise ValidationError(
+                {"data_inicio": "Use o formato YYYY-MM-DD."},
+            ) from erro
+        if inicio > fim:
+            raise ValidationError(
+                {"data_fim": "data_fim deve ser maior ou igual a data_inicio."},
+            )
+        return {"data_referencia__gte": inicio, "data_referencia__lte": fim}
+
     def _get_projeto(self) -> Projeto:
         # Principio I: o projeto so e valido se pertencer a empresa do
         # usuario autenticado — senao, 404 (nunca 403, FR-013).
@@ -69,7 +95,7 @@ class RegistroDiarioViewSet(
 
     def list(self, request, *args, **kwargs):
         self._get_projeto()  # 404 antecipado se o projeto nao existe/nao e da empresa
-        if request.query_params.get("mes"):
+        if request.query_params.get("mes") or request.query_params.get("data_inicio"):
             self.pagination_class = None
         return super().list(request, *args, **kwargs)
 

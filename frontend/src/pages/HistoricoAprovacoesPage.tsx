@@ -14,8 +14,21 @@ import { toast } from '../hooks/use-toast'
 import { formatData, formatDataHora } from '../lib/format'
 import type { RegistroDiario, StatusRegistro } from '../types/registroDiario'
 
-function mesAtualFiltro(): string {
-  return new Date().toISOString().slice(0, 7)
+function formatarDataLocal(data: Date): string {
+  const ano = data.getFullYear()
+  const mes = String(data.getMonth() + 1).padStart(2, '0')
+  const dia = String(data.getDate()).padStart(2, '0')
+  return `${ano}-${mes}-${dia}`
+}
+
+function primeiroDiaDoMesAtual(): string {
+  const hoje = new Date()
+  return formatarDataLocal(new Date(hoje.getFullYear(), hoje.getMonth(), 1))
+}
+
+function ultimoDiaDoMesAtual(): string {
+  const hoje = new Date()
+  return formatarDataLocal(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0))
 }
 
 const FILTROS_STATUS = ['', 'aguardando_aprovacao', 'aprovado', 'rejeitado'] as const
@@ -171,13 +184,14 @@ export function HistoricoAprovacoesPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
   const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'Histórico & Aprovações' }])
   const { user } = useAuth()
-  const [mes, setMes] = useState(mesAtualFiltro())
+  const [dataInicio, setDataInicio] = useState(primeiroDiaDoMesAtual)
+  const [dataFim, setDataFim] = useState(ultimoDiaDoMesAtual)
   const [filtroStatus, setFiltroStatus] = useState<StatusRegistro | ''>('')
   const [expandidoId, setExpandidoId] = useState<string | null>(null)
   const [rejeitandoId, setRejeitandoId] = useState<string | null>(null)
   const [motivoTexto, setMotivoTexto] = useState('')
 
-  const registros = useRegistrosDiarios(projetoId ?? '', { mes })
+  const registros = useRegistrosDiarios(projetoId ?? '', { dataInicio, dataFim })
   const aprovar = useAprovarRegistroDiario(projetoId ?? '')
   const rejeitar = useRejeitarRegistroDiario(projetoId ?? '')
 
@@ -223,13 +237,34 @@ export function HistoricoAprovacoesPage() {
         title="Histórico & Aprovações"
         breadcrumbs={breadcrumbs}
         actions={
-          <input
-            type="month"
-            aria-label="Mês de referência"
-            value={mes}
-            onChange={(event) => setMes(event.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-          />
+          <div className="flex items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="historico-data-inicio" className="text-xs text-muted-foreground">
+                De
+              </label>
+              <input
+                id="historico-data-inicio"
+                type="date"
+                value={dataInicio}
+                max={dataFim}
+                onChange={(event) => setDataInicio(event.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="historico-data-fim" className="text-xs text-muted-foreground">
+                Até
+              </label>
+              <input
+                id="historico-data-fim"
+                type="date"
+                value={dataFim}
+                min={dataInicio}
+                onChange={(event) => setDataFim(event.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+          </div>
         }
       />
 

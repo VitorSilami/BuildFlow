@@ -16,16 +16,24 @@ export function useConfiguracaoRdo(projetoId: string) {
 
 interface UseRegistrosDiariosOptions {
   mes?: string
+  dataInicio?: string
+  dataFim?: string
 }
 
 export function useRegistrosDiarios(
   projetoId: string,
   options: UseRegistrosDiariosOptions = {},
 ) {
-  const { mes } = options
+  const { mes, dataInicio, dataFim } = options
   return useQuery({
-    queryKey: ['registros-diarios', projetoId, mes ?? null],
+    queryKey: ['registros-diarios', projetoId, mes ?? null, dataInicio ?? null, dataFim ?? null],
     queryFn: async () => {
+      if (dataInicio && dataFim) {
+        const resultados = await apiClient.get<RegistroDiario[]>(
+          `/api/v1/projetos/${projetoId}/registros-diarios/?data_inicio=${dataInicio}&data_fim=${dataFim}`,
+        )
+        return { results: resultados }
+      }
       if (mes) {
         const resultados = await apiClient.get<RegistroDiario[]>(
           `/api/v1/projetos/${projetoId}/registros-diarios/?mes=${mes}`,

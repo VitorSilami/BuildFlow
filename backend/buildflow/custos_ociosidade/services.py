@@ -186,15 +186,25 @@ def _montar_payload_maquinas(
 
 
 def _montar_payload_faltas_por_pessoa(presencas, diarias: dict[str, Decimal]):
+    # Presencas avulsas (sem pessoa cadastrada) tambem contam faltas — agrupadas
+    # pelo nome digitado, ja que e a unica identidade estavel disponivel pra
+    # elas. Excluir essas linhas fazia reforcos com faltas reais sumirem desta
+    # lista (bug real reportado: 3 pessoas marcadas com falta, so 1 aparecia).
     agrupado: dict[str, dict] = {}
     for presenca in presencas:
-        if not presenca.pessoa_id:
-            continue
+        if presenca.pessoa_id:
+            chave = f"pessoa:{presenca.pessoa_id}"
+            pessoa_id = str(presenca.pessoa_id)
+            nome = presenca.pessoa.nome
+        else:
+            nome = presenca.nome_avulso.strip()
+            chave = f"avulso:{nome.lower()}"
+            pessoa_id = None
         registro = agrupado.setdefault(
-            str(presenca.pessoa_id),
+            chave,
             {
-                "pessoa_id": str(presenca.pessoa_id),
-                "nome": presenca.pessoa.nome,
+                "pessoa_id": pessoa_id,
+                "nome": nome,
                 "funcao": presenca.funcao,
                 "faltas": 0,
                 "atestados": 0,

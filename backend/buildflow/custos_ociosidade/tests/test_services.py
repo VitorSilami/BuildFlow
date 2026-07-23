@@ -188,7 +188,7 @@ def test_reincidencia_de_faltas_por_pessoa():
     assert falta["reincidente"] is True
 
 
-def test_pessoa_avulsa_nunca_aparece_em_faltas_por_pessoa():
+def test_pessoa_avulsa_com_falta_aparece_em_faltas_por_pessoa():
     usuario = UsuarioFactory()
     projeto = ProjetoParaRdoFactory(criado_por=usuario)
     equipe = EquipeFactory(projeto=projeto)
@@ -203,4 +203,29 @@ def test_pessoa_avulsa_nunca_aparece_em_faltas_por_pessoa():
 
     resultado = calcular_custos_ociosidade(projeto, ANO, MES)
 
-    assert resultado["faltas_por_pessoa"] == []
+    falta = resultado["faltas_por_pessoa"][0]
+    assert falta["pessoa_id"] is None
+    assert falta["nome"] == "Trabalhador Avulso"
+    assert falta["faltas"] == 1
+
+
+def test_pessoas_avulsas_com_mesmo_nome_em_dias_diferentes_agrupam_faltas():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    equipe = EquipeFactory(projeto=projeto)
+    for dia in (1, 2, 3):
+        rdo = _criar_rdo(projeto, equipe, usuario, dia=dia)
+        Presenca.objects.create(
+            registro_diario=rdo,
+            nome_avulso="Trabalhador Avulso",
+            funcao="Ajudante",
+            status="falta",
+            origem="avulso",
+        )
+
+    resultado = calcular_custos_ociosidade(projeto, ANO, MES)
+
+    assert len(resultado["faltas_por_pessoa"]) == 1
+    falta = resultado["faltas_por_pessoa"][0]
+    assert falta["faltas"] == 3  # noqa: PLR2004
+    assert falta["reincidente"] is True

@@ -1,6 +1,8 @@
+import { MapPin } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
 import { Button, FormField, Input } from '../../../components/ui'
 import type { Disciplina, ProducaoDiariaInput, Unidade } from '../../../types/registroDiario'
+import { GrupoBotoes } from './GrupoBotoes'
 import { NATIVE_SELECT_CLASSNAME } from './nativeSelectClassName'
 import { PRODUCAO_VAZIA } from './valoresVazios'
 
@@ -16,7 +18,11 @@ export function RdoStepProducao({ producoes, onProducoesChange, disciplinas, uni
     <div aria-label="Produção do dia">
       {producoes.map((producao, index) => (
         <fieldset key={index} className="mb-4 rounded-md border border-border p-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="mb-4 flex items-center gap-1.5 text-sm font-medium text-ink">
+            <MapPin size={15} className="text-primary" aria-hidden="true" />
+            Localização
+          </div>
+          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
             <FormField id={`producao-rodovia-${index}`} label="Rodovia">
               <Input
                 id={`producao-rodovia-${index}`}
@@ -28,6 +34,61 @@ export function RdoStepProducao({ producoes, onProducoesChange, disciplinas, uni
                 }
               />
             </FormField>
+            <GrupoBotoes
+              id={`producao-sentido-${index}`}
+              label="Sentido"
+              value={producao.sentido}
+              onChange={(valor) =>
+                onProducoesChange((current) =>
+                  current.map((item, i) => (i === index ? { ...item, sentido: valor } : item)),
+                )
+              }
+              options={[
+                { value: 'crescente', label: 'Crescente' },
+                { value: 'decrescente', label: 'Decrescente' },
+              ]}
+            />
+            <FormField id={`producao-km-inicial-${index}`} label="Km inicial">
+              <div className="relative">
+                <MapPin
+                  size={14}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  id={`producao-km-inicial-${index}`}
+                  value={producao.km_inicial}
+                  className="pl-8"
+                  onChange={(event) =>
+                    onProducoesChange((current) =>
+                      current.map((item, i) => (i === index ? { ...item, km_inicial: event.target.value } : item)),
+                    )
+                  }
+                />
+              </div>
+            </FormField>
+            <FormField id={`producao-km-final-${index}`} label="Km final">
+              <div className="relative">
+                <MapPin
+                  size={14}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  id={`producao-km-final-${index}`}
+                  value={producao.km_final}
+                  className="pl-8"
+                  onChange={(event) =>
+                    onProducoesChange((current) =>
+                      current.map((item, i) => (i === index ? { ...item, km_final: event.target.value } : item)),
+                    )
+                  }
+                />
+              </div>
+            </FormField>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <FormField id={`producao-disciplina-${index}`} label="Disciplina">
               <select
                 id={`producao-disciplina-${index}`}
@@ -67,28 +128,6 @@ export function RdoStepProducao({ producoes, onProducoesChange, disciplinas, uni
                   </option>
                 ))}
               </select>
-            </FormField>
-            <FormField id={`producao-km-inicial-${index}`} label="Km inicial">
-              <Input
-                id={`producao-km-inicial-${index}`}
-                value={producao.km_inicial}
-                onChange={(event) =>
-                  onProducoesChange((current) =>
-                    current.map((item, i) => (i === index ? { ...item, km_inicial: event.target.value } : item)),
-                  )
-                }
-              />
-            </FormField>
-            <FormField id={`producao-km-final-${index}`} label="Km final">
-              <Input
-                id={`producao-km-final-${index}`}
-                value={producao.km_final}
-                onChange={(event) =>
-                  onProducoesChange((current) =>
-                    current.map((item, i) => (i === index ? { ...item, km_final: event.target.value } : item)),
-                  )
-                }
-              />
             </FormField>
             <FormField id={`producao-quantidade-${index}`} label="Quantidade">
               <Input

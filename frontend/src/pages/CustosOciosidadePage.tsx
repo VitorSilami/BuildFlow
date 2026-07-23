@@ -224,7 +224,7 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
                 1,
               )
               return dados.faltas_por_pessoa.map((item) => (
-                <div key={item.pessoa_id} className="mb-3">
+                <div key={item.pessoa_id ?? item.nome} className="mb-3">
                   <p className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
                     <span>
                       {item.nome} ({item.funcao}) — {item.faltas} falta(s) — {formatMoeda(item.valor_perdido)}
