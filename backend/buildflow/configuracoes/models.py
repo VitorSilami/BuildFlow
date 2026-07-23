@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -51,6 +52,13 @@ class Disciplina(models.Model):
         related_name="disciplinas",
     )
     nome = models.CharField(_("nome"), max_length=255)
+    peso_percentual = models.DecimalField(
+        _("peso percentual"),
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
 
     tenant_path = "projeto__empresa"
     objects = TenantScopedManager()
@@ -85,6 +93,26 @@ class CatalogoServico(models.Model):
         Unidade,
         verbose_name=_("unidade"),
         on_delete=models.PROTECT,
+    )
+    peso_percentual = models.DecimalField(
+        _("peso percentual"),
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    quantidade_planejada = models.DecimalField(
+        _("quantidade planejada"),
+        max_digits=12,
+        decimal_places=3,
+        null=True,
+        blank=True,
+    )
+    quantidade_executada = models.DecimalField(
+        _("quantidade executada"),
+        max_digits=12,
+        decimal_places=3,
+        default=Decimal("0"),
     )
 
     tenant_path = "disciplina__projeto__empresa"

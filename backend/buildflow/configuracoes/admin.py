@@ -26,11 +26,12 @@ class MotivoParadaAdmin(admin.ModelAdmin):
 class CatalogoServicoInline(admin.TabularInline):
     model = CatalogoServico
     extra = 1
+    fields = ["nome", "unidade", "peso_percentual", "quantidade_planejada", "quantidade_executada"]
 
 
 @admin.register(Disciplina)
 class DisciplinaAdmin(admin.ModelAdmin):
-    list_display = ["nome", "projeto"]
+    list_display = ["nome", "projeto", "peso_percentual"]
     list_filter = ["projeto"]
     search_fields = ["nome"]
     inlines = [CatalogoServicoInline]
