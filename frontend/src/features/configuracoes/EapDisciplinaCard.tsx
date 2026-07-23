@@ -1,0 +1,220 @@
+import { ChevronDown, ChevronRight, ListChecks } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from '../../hooks/use-toast'
+import { execucaoCorClasse, formatExecucao } from '../../lib/format'
+import type { CatalogoServico, Disciplina } from '../../types/configuracao'
+import type { Unidade } from '../../types/registroDiario'
+import { Button, FormField, Input, Progress, SelectField } from '../../components/ui'
+import { useAtualizarDisciplina, useAtualizarServico, useCriarServico } from './configuracaoApi'
+
+const TOLERANCIA_SOMA_PESOS = 0.01
+
+function somaPesosServicos(disciplina: Disciplina): number {
+  return disciplina.servicos.reduce(
+    (total, servico) => total + (servico.peso_percentual ? Number(servico.peso_percentual) : 0),
+    0,
+  )
+}
+
+interface EapDisciplinaCardProps {
+  projetoId: string
+  disciplina: Disciplina
+  unidades: Unidade[]
+}
+
+export function EapDisciplinaCard({ projetoId, disciplina, unidades }: EapDisciplinaCardProps) {
+  const [expandido, setExpandido] = useState(false)
+  const [peso, setPeso] = useState(disciplina.peso_percentual ?? '')
+  const [novoServicoNome, setNovoServicoNome] = useState('')
+  const [novoServicoUnidade, setNovoServicoUnidade] = useState('')
+  const [novoServicoPeso, setNovoServicoPeso] = useState('')
+  const [novoServicoQuantidade, setNovoServicoQuantidade] = useState('')
+
+  const atualizarDisciplina = useAtualizarDisciplina(projetoId)
+  const criarServico = useCriarServico(projetoId)
+
+  const somaServicos = somaPesosServicos(disciplina)
+  const somaServicosForaDoAlvo =
+    disciplina.servicos.length > 0 && Math.abs(somaServicos - 100) > TOLERANCIA_SOMA_PESOS
+
+  function salvarPesoDisciplina() {
+    if (peso === (disciplina.peso_percentual ?? '')) return
+    atualizarDisciplina.mutate(
+      { disciplinaId: disciplina.id, peso_percentual: peso },
+      { onError: () => toast({ title: 'Não foi possível atualizar o peso da disciplina.', variant: 'destructive' }) },
+    )
+  }
+
+  return (
+    <li className="rounded-lg border border-border p-3 text-sm text-ink">
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setExpandido((valor) => !valor)}
+          aria-expanded={expandido}
+          aria-label={expandido ? `Recolher ${disciplina.nome}` : `Expandir ${disciplina.nome}`}
+          className="text-muted-foreground hover:text-ink"
+        >
+          {expandido ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}
+        </button>
+        <ListChecks size={14} className="text-primary" aria-hidden="true" />
+        <span className="flex-1 font-display font-semibold">{disciplina.nome}</span>
+        <div className="flex w-40 items-center gap-2">
+          <Progress
+            value={disciplina.avanco_percentual ? Number(disciplina.avanco_percentual) : 0}
+            indicatorClassName={execucaoCorClasse(disciplina.avanco_percentual)}
+          />
+          <span className="w-12 text-right text-xs text-muted-foreground">
+            {formatExecucao(disciplina.avanco_percentual)}
+          </span>
+        </div>
+        <FormField id={`peso-disciplina-${disciplina.id}`} label="Peso (%)" className="mb-0 w-24">
+          <Input
+            id={`peso-disciplina-${disciplina.id}`}
+            value={peso}
+            onChange={(event) => setPeso(event.target.value)}
+            onBlur={salvarPesoDisciplina}
+          />
+        </FormField>
+      </div>
+
+      {expandido && (
+        <div className="mt-3 pl-7">
+          {disciplina.servicos.length === 0 && (
+            <p className="mb-3 text-xs text-muted-foreground">Nenhum serviço cadastrado nesta disciplina ainda.</p>
+          )}
+          <ul className="mb-3 flex flex-col gap-2">
+            {disciplina.servicos.map((servico) => (
+              <EapServicoRow key={servico.id} projetoId={projetoId} servico={servico} />
+            ))}
+          </ul>
+          {somaServicosForaDoAlvo && (
+            <p className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-xs text-amber-700">
+              Atenção: a soma dos pesos dos serviços desta disciplina não fecha 100% ({somaServicos}%).
+            </p>
+          )}
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+            <SelectField
+              id={`novo-servico-unidade-${disciplina.id}`}
+              label="Unidade"
+              value={novoServicoUnidade}
+              onChange={setNovoServicoUnidade}
+              options={unidades.map((unidade) => ({ value: String(unidade.id), label: unidade.sigla }))}
+            />
+            <FormField id={`novo-servico-nome-${disciplina.id}`} label="Novo serviço">
+              <Input
+                id={`novo-servico-nome-${disciplina.id}`}
+                value={novoServicoNome}
+                onChange={(event) => setNovoServicoNome(event.target.value)}
+              />
+            </FormField>
+            <FormField id={`novo-servico-peso-${disciplina.id}`} label="Peso (%)">
+              <Input
+                id={`novo-servico-peso-${disciplina.id}`}
+                value={novoServicoPeso}
+                onChange={(event) => setNovoServicoPeso(event.target.value)}
+              />
+            </FormField>
+            <FormField id={`novo-servico-quantidade-${disciplina.id}`} label="Quantidade planejada">
+              <Input
+                id={`novo-servico-quantidade-${disciplina.id}`}
+                value={novoServicoQuantidade}
+                onChange={(event) => setNovoServicoQuantidade(event.target.value)}
+              />
+            </FormField>
+            <div className="flex items-end">
+              <Button
+                className="w-full"
+                disabled={!novoServicoNome.trim() || !novoServicoUnidade || criarServico.isPending}
+                onClick={() =>
+                  criarServico.mutate(
+                    {
+                      disciplinaId: disciplina.id,
+                      nome: novoServicoNome,
+                      unidade: Number(novoServicoUnidade),
+                      peso_percentual: novoServicoPeso || undefined,
+                      quantidade_planejada: novoServicoQuantidade || undefined,
+                    },
+                    {
+                      onSuccess: () => {
+                        setNovoServicoNome('')
+                        setNovoServicoPeso('')
+                        setNovoServicoQuantidade('')
+                      },
+                      onError: () => toast({ title: 'Não foi possível adicionar o serviço.', variant: 'destructive' }),
+                    },
+                  )
+                }
+              >
+                Adicionar serviço
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </li>
+  )
+}
+
+interface EapServicoRowProps {
+  projetoId: string
+  servico: CatalogoServico
+}
+
+function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
+  const [peso, setPeso] = useState(servico.peso_percentual ?? '')
+  const [quantidadePlanejada, setQuantidadePlanejada] = useState(servico.quantidade_planejada ?? '')
+  const [quantidadeExecutada, setQuantidadeExecutada] = useState(servico.quantidade_executada)
+
+  const atualizarServico = useAtualizarServico(projetoId)
+
+  function salvar(
+    campo: 'peso_percentual' | 'quantidade_planejada' | 'quantidade_executada',
+    valor: string,
+    valorOriginal: string,
+  ) {
+    if (valor === valorOriginal) return
+    atualizarServico.mutate(
+      { servicoId: servico.id, [campo]: valor },
+      { onError: () => toast({ title: 'Não foi possível atualizar o serviço.', variant: 'destructive' }) },
+    )
+  }
+
+  return (
+    <li className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-2 text-xs">
+      <span className="flex-1 font-medium text-ink">{servico.nome}</span>
+      <div className="flex w-32 items-center gap-2">
+        <Progress
+          value={servico.avanco_percentual ? Number(servico.avanco_percentual) : 0}
+          indicatorClassName={execucaoCorClasse(servico.avanco_percentual)}
+        />
+        <span className="w-10 text-right text-muted-foreground">{formatExecucao(servico.avanco_percentual)}</span>
+      </div>
+      <FormField id={`servico-peso-${servico.id}`} label="Peso (%)" className="mb-0 w-20">
+        <Input
+          id={`servico-peso-${servico.id}`}
+          value={peso}
+          onChange={(event) => setPeso(event.target.value)}
+          onBlur={() => salvar('peso_percentual', peso, servico.peso_percentual ?? '')}
+        />
+      </FormField>
+      <FormField id={`servico-planejada-${servico.id}`} label="Planejada" className="mb-0 w-24">
+        <Input
+          id={`servico-planejada-${servico.id}`}
+          value={quantidadePlanejada}
+          onChange={(event) => setQuantidadePlanejada(event.target.value)}
+          onBlur={() => salvar('quantidade_planejada', quantidadePlanejada, servico.quantidade_planejada ?? '')}
+        />
+      </FormField>
+      <FormField id={`servico-executada-${servico.id}`} label="Executada" className="mb-0 w-24">
+        <Input
+          id={`servico-executada-${servico.id}`}
+          value={quantidadeExecutada}
+          onChange={(event) => setQuantidadeExecutada(event.target.value)}
+          onBlur={() => salvar('quantidade_executada', quantidadeExecutada, servico.quantidade_executada)}
+        />
+      </FormField>
+    </li>
+  )
+}

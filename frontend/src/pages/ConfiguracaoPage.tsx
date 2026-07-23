@@ -1,15 +1,16 @@
-import { BookOpen, DollarSign, HardHat, Target, Truck, Users } from 'lucide-react'
+import { BookOpen, DollarSign, HardHat, Truck, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useConfiguracaoRdo } from '../features/registros-diarios/registrosDiariosApi'
 import {
   useConfiguracaoProjeto,
   useCriarDisciplina,
   useCriarEquipe,
   useCriarMaquina,
-  useCriarMeta,
   useCriarPessoa,
   useCriarValorCusto,
 } from '../features/configuracoes/configuracaoApi'
+import { EapDisciplinaCard } from '../features/configuracoes/EapDisciplinaCard'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import {
   Button,
@@ -47,13 +48,13 @@ function ConfiguracaoSkeleton() {
 export function ConfiguracaoPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
   const configuracao = useConfiguracaoProjeto(projetoId ?? '')
+  const configuracaoRdo = useConfiguracaoRdo(projetoId ?? '')
   const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'Configurações' }])
 
   const criarDisciplina = useCriarDisciplina(projetoId ?? '')
   const criarEquipe = useCriarEquipe(projetoId ?? '')
   const criarPessoa = useCriarPessoa(projetoId ?? '')
   const criarMaquina = useCriarMaquina(projetoId ?? '')
-  const criarMeta = useCriarMeta(projetoId ?? '')
   const criarValorCusto = useCriarValorCusto(projetoId ?? '')
 
   const [nomeDisciplina, setNomeDisciplina] = useState('')
@@ -64,9 +65,6 @@ export function ConfiguracaoPage() {
   const [maquinaCodigo, setMaquinaCodigo] = useState('')
   const [maquinaNome, setMaquinaNome] = useState('')
   const [maquinaEquipeId, setMaquinaEquipeId] = useState('')
-  const [metaDisciplinaId, setMetaDisciplinaId] = useState('')
-  const [metaValorAlvo, setMetaValorAlvo] = useState('')
-  const [metaPeso, setMetaPeso] = useState('')
   const [valorTipo, setValorTipo] = useState<'mao_de_obra' | 'equipamento'>('mao_de_obra')
   const [valorDescricao, setValorDescricao] = useState('')
   const [valorValor, setValorValor] = useState('')
@@ -83,7 +81,7 @@ export function ConfiguracaoPage() {
     )
   }
 
-  const { disciplinas, equipes, metas, valores_custo: valoresCusto, soma_pesos_metas: somaPesos } =
+  const { disciplinas, equipes, valores_custo: valoresCusto, soma_pesos_disciplinas: somaPesos } =
     configuracao.data
 
   return (
@@ -93,7 +91,7 @@ export function ConfiguracaoPage() {
       <Tabs defaultValue="disciplinas">
         <TabsList aria-label="Seções de configuração">
           <TabsTrigger value="disciplinas">Disciplinas</TabsTrigger>
-          <TabsTrigger value="metas">Metas</TabsTrigger>
+          <TabsTrigger value="eap">EAP</TabsTrigger>
           <TabsTrigger value="equipes">Equipes</TabsTrigger>
           <TabsTrigger value="valores">Valores</TabsTrigger>
         </TabsList>
@@ -119,10 +117,13 @@ export function ConfiguracaoPage() {
                 </FormField>
                 <Button
                   onClick={() =>
-                    criarDisciplina.mutate(nomeDisciplina, {
-                      onSuccess: () => setNomeDisciplina(''),
-                      onError: () => toast({ title: 'Não foi possível criar a disciplina.', variant: 'destructive' }),
-                    })
+                    criarDisciplina.mutate(
+                      { nome: nomeDisciplina },
+                      {
+                        onSuccess: () => setNomeDisciplina(''),
+                        onError: () => toast({ title: 'Não foi possível criar a disciplina.', variant: 'destructive' }),
+                      },
+                    )
                   }
                   disabled={!nomeDisciplina.trim() || criarDisciplina.isPending}
                 >
@@ -133,72 +134,28 @@ export function ConfiguracaoPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="metas">
-          <Card title="Metas">
-            <div aria-label="Metas">
-              {metas.length === 0 && <EmptyState>Nenhuma meta cadastrada ainda.</EmptyState>}
-              <ul className="mb-4 flex flex-col gap-2">
-                {metas.map((meta) => (
-                  <li
-                    key={meta.id}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm text-ink"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Target size={14} className="text-primary" aria-hidden="true" />
-                      {disciplinas.find((d) => d.id === meta.disciplina)?.nome ?? meta.disciplina}: {meta.valor_alvo}
-                    </span>
-                    {meta.peso_percentual && (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                        {meta.peso_percentual}%
-                      </span>
-                    )}
-                  </li>
+        <TabsContent value="eap">
+          <Card title="EAP">
+            <div aria-label="EAP">
+              {disciplinas.length === 0 && (
+                <EmptyState>Cadastre uma disciplina na aba Disciplinas para começar a EAP.</EmptyState>
+              )}
+              <ul className="mb-4 flex flex-col gap-3">
+                {disciplinas.map((disciplina) => (
+                  <EapDisciplinaCard
+                    key={disciplina.id}
+                    projetoId={projetoId ?? ''}
+                    disciplina={disciplina}
+                    unidades={configuracaoRdo.data?.unidades ?? []}
+                  />
                 ))}
               </ul>
-              <p className="mb-4 text-sm text-muted-foreground">Soma dos pesos: {somaPesos}%</p>
+              <p className="text-sm text-muted-foreground">Soma dos pesos das disciplinas: {somaPesos}%</p>
               {Math.abs(somaPesos - 100) > 0.01 && somaPesos > 0 && (
-                <p className="mb-4 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-700">
-                  Atenção: a soma dos pesos das metas não fecha 100%.
+                <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-700">
+                  Atenção: a soma dos pesos das disciplinas não fecha 100%.
                 </p>
               )}
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <SelectField
-                  id="meta-disciplina"
-                  label="Disciplina"
-                  value={metaDisciplinaId}
-                  onChange={setMetaDisciplinaId}
-                  options={disciplinas.map((disciplina) => ({ value: disciplina.id, label: disciplina.nome }))}
-                />
-                <FormField id="meta-valor" label="Valor alvo">
-                  <Input id="meta-valor" value={metaValorAlvo} onChange={(event) => setMetaValorAlvo(event.target.value)} />
-                </FormField>
-                <FormField id="meta-peso" label="Peso (%)">
-                  <Input id="meta-peso" value={metaPeso} onChange={(event) => setMetaPeso(event.target.value)} />
-                </FormField>
-                <div className="flex items-end">
-                  <Button
-                    className="w-full"
-                    disabled={!metaDisciplinaId || !metaValorAlvo || criarMeta.isPending}
-                    onClick={() =>
-                      criarMeta.mutate(
-                        {
-                          disciplina: metaDisciplinaId,
-                          unidade: disciplinas.find((d) => d.id === metaDisciplinaId)?.servicos[0]?.unidade ?? 0,
-                          valor_alvo: metaValorAlvo,
-                          peso_percentual: metaPeso || undefined,
-                        },
-                        {
-                          onSuccess: () => { setMetaValorAlvo(''); setMetaPeso('') },
-                          onError: () => toast({ title: 'Não foi possível criar a meta.', variant: 'destructive' }),
-                        },
-                      )
-                    }
-                  >
-                    Adicionar meta
-                  </Button>
-                </div>
-              </div>
             </div>
           </Card>
         </TabsContent>
