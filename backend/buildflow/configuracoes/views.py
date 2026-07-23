@@ -116,6 +116,7 @@ class ProjetoNestedMixin:
 
 
 class DisciplinaViewSet(
+    TenantScopedViewSetMixin,
     ProjetoNestedMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -177,6 +178,7 @@ class ServicoDetailViewSet(
 
 
 class EquipeViewSet(
+    TenantScopedViewSetMixin,
     ProjetoNestedMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -248,6 +250,7 @@ class MaquinaDetailViewSet(
 
 
 class ValorCustoViewSet(
+    TenantScopedViewSetMixin,
     ProjetoNestedMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
