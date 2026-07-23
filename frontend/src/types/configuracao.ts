@@ -1,17 +1,21 @@
 import type { Equipe } from './registroDiario'
 
+export interface CatalogoServico {
+  id: string
+  nome: string
+  unidade: number
+  peso_percentual: string | null
+  quantidade_planejada: string | null
+  quantidade_executada: string
+  avanco_percentual: string | null
+}
+
 export interface Disciplina {
   id: string
   nome: string
-  servicos: { id: string; nome: string; unidade: number }[]
-}
-
-export interface MetaMensal {
-  id: string
-  disciplina: string
-  unidade: number
-  valor_alvo: string
   peso_percentual: string | null
+  servicos: CatalogoServico[]
+  avanco_percentual: string | null
 }
 
 export interface ValorCusto {
@@ -26,7 +30,6 @@ export interface ValorCusto {
 export interface ConfiguracaoProjeto {
   disciplinas: Disciplina[]
   equipes: Equipe[]
-  metas: MetaMensal[]
   valores_custo: ValorCusto[]
-  soma_pesos_metas: number
+  soma_pesos_disciplinas: number
 }
