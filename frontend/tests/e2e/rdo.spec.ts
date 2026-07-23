@@ -119,20 +119,20 @@ test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ p
   await page.getByLabel('Unidade').selectOption('1')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
-  // Passo 3: Equipe
-  await page.getByLabel('Nome (avulso)').fill('João Ajudante')
-  await page.getByLabel('Função').fill('Ajudante')
+  // Passo 3: Equipe — Joao ja vem carregado do pool, marcado presente
   await page.getByRole('button', { name: 'Próximo' }).click()
 
-  // Passo 4: Máquinas
-  await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
+  // Passo 4: Máquinas — Escavadeira ja vem carregada do pool, so ajusta as horas
   await page.getByLabel('Horas produtivas', { exact: true }).fill('6')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
   // Passo 5: Ocorrências (nenhuma)
   await page.getByRole('button', { name: 'Próximo' }).click()
 
-  // Passo 6: Revisão
+  // Passo 6: Fotos (nenhuma nesta etapa — anexada depois de salvar, abaixo)
+  await page.getByRole('button', { name: 'Próximo' }).click()
+
+  // Passo 7: Revisão
   await page.getByRole('button', { name: 'Salvar registro diário' }).click()
 
   // Apos salvar, navega para a tela de detalhe do RDO (nao fica so numa
@@ -162,10 +162,11 @@ test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ p
   await page.getByRole('button', { name: 'Anexar foto' }).click()
 })
 
-test('trocar de nome avulso para pessoa cadastrada limpa o campo avulso', async ({ page }) => {
-  // Regressao: digitar um nome avulso e depois escolher uma pessoa cadastrada
-  // deixava os dois campos preenchidos, violando a regra XOR (bug real
-  // encontrado em teste manual, 2026-07-17).
+test('reforco adicionado na frente envia nome_avulso e nao mexe na pessoa do pool', async ({ page }) => {
+  // Regressao: a equipe do pool (Joao) precisa continuar indo como `pessoa`
+  // no payload mesmo depois de um reforco avulso ser adicionado ao lado —
+  // os dois tipos de linha nao podem se confundir (bug real da versao com
+  // dropdown, agora coberto pelo fluxo de cartoes).
   await mockRotasBasicas(page)
 
   let payloadRecebido: Record<string, unknown> | null = null
@@ -191,17 +192,16 @@ test('trocar de nome avulso para pessoa cadastrada limpa o campo avulso', async 
   await page.getByLabel('Unidade').selectOption('1')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
-  // Digita um nome avulso primeiro...
-  await page.getByLabel('Nome (avulso)').fill('Nome Digitado Errado')
-  // ...depois muda de ideia e escolhe a pessoa cadastrada.
-  await page.getByLabel('Pessoa cadastrada').selectOption('pessoa-1')
+  // Joao (do pool) ja vem marcado presente. Adiciona um reforco avulso do lado.
+  await page.getByRole('button', { name: 'Adicionar pessoa na frente' }).click()
+  await page.getByLabel('Nome (avulso)').fill('Reforço Extra')
   await page.getByLabel('Função').fill('Ajudante')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
-  await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
   await page.getByLabel('Horas produtivas', { exact: true }).fill('6')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
+  await page.getByRole('button', { name: 'Próximo' }).click()
   await page.getByRole('button', { name: 'Próximo' }).click()
 
   await page.getByRole('button', { name: 'Salvar registro diário' }).click()
@@ -209,8 +209,9 @@ test('trocar de nome avulso para pessoa cadastrada limpa o campo avulso', async 
   await expect(page).toHaveURL(/\/registros-diarios\/rdo-1$/)
   const presencas = (payloadRecebido as { presencas: { pessoa?: string; nome_avulso?: string }[] })
     .presencas
-  expect(presencas[0].pessoa).toBe('pessoa-1')
-  expect(presencas[0].nome_avulso).toBeFalsy()
+  expect(presencas.some((presenca) => presenca.pessoa === 'pessoa-1')).toBe(true)
+  const reforco = presencas.find((presenca) => presenca.nome_avulso === 'Reforço Extra')
+  expect(reforco?.pessoa).toBeFalsy()
 })
 
 test('grupos de botões de turno e clima atualizam a seleção e enviam no payload', async ({ page }) => {
@@ -241,14 +242,12 @@ test('grupos de botões de turno e clima atualizam a seleção e enviam no paylo
   await page.getByLabel('Unidade').selectOption('1')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
-  await page.getByLabel('Nome (avulso)').fill('João Ajudante')
-  await page.getByLabel('Função').fill('Ajudante')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
-  await page.getByLabel('Identificação (avulsa)').fill('Escavadeira 01')
   await page.getByLabel('Horas produtivas', { exact: true }).fill('6')
   await page.getByRole('button', { name: 'Próximo' }).click()
 
+  await page.getByRole('button', { name: 'Próximo' }).click()
   await page.getByRole('button', { name: 'Próximo' }).click()
 
   await page.getByRole('button', { name: 'Salvar registro diário' }).click()

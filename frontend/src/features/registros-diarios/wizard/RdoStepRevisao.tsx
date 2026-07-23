@@ -18,6 +18,7 @@ interface RdoStepRevisaoProps {
   presencas: PresencaInput[]
   maquinas: ApontamentoMaquinaInput[]
   ocorrencias: OcorrenciaInput[]
+  totalFotos: number
   erro: string | null
   salvando: boolean
   onSalvar: () => void
@@ -40,6 +41,7 @@ export function RdoStepRevisao({
   presencas,
   maquinas,
   ocorrencias,
+  totalFotos,
   erro,
   salvando,
   onSalvar,
@@ -71,11 +73,14 @@ export function RdoStepRevisao({
         <LinhaChecklist>{presencas.length} pessoa(s) na equipe</LinhaChecklist>
         <LinhaChecklist>{maquinas.length} máquina(s) apontada(s)</LinhaChecklist>
         <LinhaChecklist>{ocorrencias.length} ocorrência(s)</LinhaChecklist>
+        <LinhaChecklist>{totalFotos} foto(s) anexada(s)</LinhaChecklist>
       </ul>
 
       <p className="mb-4 flex items-center gap-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-3 text-sm text-muted-foreground">
         <Camera size={16} className="shrink-0 text-primary" aria-hidden="true" />
-        Fotos podem ser anexadas na próxima tela, depois de salvar este registro diário.
+        {totalFotos > 0
+          ? 'As fotos serão enviadas assim que o registro for salvo.'
+          : 'Você ainda pode anexar fotos depois de salvar este registro diário.'}
       </p>
 
       {erro && <Alert>{erro}</Alert>}

@@ -1,4 +1,5 @@
 export { Alert } from './app-alert'
+export { Avatar, AvatarImage, AvatarFallback } from './avatar'
 export { Spinner } from './app-spinner'
 export { Card } from './app-card'
 export { PageHeader } from './page-header'

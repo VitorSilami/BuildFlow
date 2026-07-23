@@ -2,18 +2,14 @@ import { ChevronDown, Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Input } from '../../components/ui'
-import { useAuth } from '../../features/auth/AuthContext'
 import { useBuscaProjetos } from '../../features/projetos/useBuscaProjetos'
 import { useProjeto } from '../../features/projetos/projetosApi'
-import { STATUS_DOT_CLASS, STATUS_LABEL } from '../../features/projetos/statusBadge'
-import { formatData, formatExecucao } from '../../lib/format'
 
 interface ProjectContextCardProps {
   projetoId: string
 }
 
 export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
-  const { user } = useAuth()
   const projeto = useProjeto(projetoId)
   const [aberto, setAberto] = useState(false)
   const { termo, setTermo, resultados } = useBuscaProjetos()
@@ -41,28 +37,16 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
   const dados = projeto.data
 
   return (
-    <div ref={painelRef} className="relative border-b border-border pb-2">
+    <div ref={painelRef} className="relative py-2">
       <button
         type="button"
         onClick={() => setAberto((atual) => !atual)}
         aria-expanded={aberto}
         aria-label="Trocar de projeto"
-        className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-surface"
+        className="flex w-full items-center gap-1.5 rounded-md px-3 py-1.5 text-left hover:bg-surface"
       >
-        <p className="truncate font-display text-sm font-bold text-ink">{dados.nome}</p>
-        {user?.empresa_nome && (
-          <p className="truncate text-xs text-muted-foreground">{user.empresa_nome}</p>
-        )}
-        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT_CLASS[dados.status]}`} aria-hidden="true" />
-          <span>{STATUS_LABEL[dados.status]}</span>
-          <span aria-hidden="true">·</span>
-          <span>{formatExecucao(dados.execucao_percentual)}</span>
-          <ChevronDown size={12} aria-hidden="true" className="ml-auto shrink-0" />
-        </div>
-        <p className="mt-1 text-[11px] text-muted-foreground/70">
-          Último RDO: {formatData(dados.ultimo_rdo_data)}
-        </p>
+        <span className="truncate font-display text-sm font-bold text-ink">{dados.nome}</span>
+        <ChevronDown size={13} aria-hidden="true" className="ml-auto shrink-0 text-muted-foreground" />
       </button>
 
       {aberto && (

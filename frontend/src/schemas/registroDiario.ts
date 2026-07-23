@@ -55,6 +55,7 @@ export const registroDiarioFormSchema = z.object({
         tipo: z.string().min(1),
         recurso_afetado: z.string().min(1),
         descricao: z.string().min(1),
+        km: z.string().optional(),
       }),
     )
     .default([]),

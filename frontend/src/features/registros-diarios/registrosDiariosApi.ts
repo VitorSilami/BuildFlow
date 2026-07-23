@@ -58,29 +58,33 @@ export function useCriarRegistroDiario(projetoId: string) {
   })
 }
 
+export async function enviarFotoRequest(
+  registroId: string,
+  { arquivo, km }: { arquivo: File; km?: string },
+): Promise<Foto> {
+  const formData = new FormData()
+  formData.append('arquivo', arquivo)
+  if (km) formData.append('km', km)
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'}/api/v1/registros-diarios/${registroId}/fotos/`,
+    {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': document.cookie.match(/(?:^|; )csrftoken=([^;]*)/)?.[1] ?? '',
+      },
+    },
+  )
+  if (!response.ok) throw new Error('Falha ao enviar foto.')
+  return (await response.json()) as Foto
+}
+
 export function useEnviarFoto(registroId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ arquivo, km }: { arquivo: File; km?: string }) => {
-      const formData = new FormData()
-      formData.append('arquivo', arquivo)
-      if (km) formData.append('km', km)
-
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'}/api/v1/registros-diarios/${registroId}/fotos/`,
-        {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-          headers: {
-            'X-CSRFToken':
-              document.cookie.match(/(?:^|; )csrftoken=([^;]*)/)?.[1] ?? '',
-          },
-        },
-      )
-      if (!response.ok) throw new Error('Falha ao enviar foto.')
-      return (await response.json()) as Foto
-    },
+    mutationFn: (params: { arquivo: File; km?: string }) => enviarFotoRequest(registroId, params),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['registro-diario', registroId] })
     },

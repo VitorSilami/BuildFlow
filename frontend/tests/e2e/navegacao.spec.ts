@@ -119,7 +119,7 @@ test('clicar no titulo do grupo colapsa e expande os itens', async ({ page }) =>
   await expect(itemRegistros).toBeVisible()
 })
 
-test('card de contexto mostra nome, status, execucao e ultimo rdo do projeto', async ({ page }) => {
+test('card de contexto e minimalista, mostrando so o nome do projeto', async ({ page }) => {
   await mockSessao(page, GERENTE)
   await mockProjetos(page)
   await page.route('**/api/v1/projetos/projeto-1/registros-diarios/**', (route) =>
@@ -130,9 +130,8 @@ test('card de contexto mostra nome, status, execucao e ultimo rdo do projeto', a
 
   const card = page.getByRole('button', { name: 'Trocar de projeto' })
   await expect(card).toContainText('Duplicação BR-365')
-  await expect(card).toContainText('Ativo')
-  await expect(card).toContainText('52%')
-  await expect(card).toContainText('17/07/2026')
+  await expect(card).not.toContainText('Ativo')
+  await expect(card).not.toContainText('52%')
 })
 
 test('switcher busca outro projeto e navega sem sair da tela', async ({ page }) => {

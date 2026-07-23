@@ -25,46 +25,48 @@ export function SidebarNav() {
         <>
           <ProjectContextCard projetoId={projetoId} />
 
-          <SidebarGroup title="Operação">
-            <SidebarNavItem
-              to={`/projetos/${projetoId}/registros-diarios`}
-              icon={<FileText size={18} aria-hidden="true" />}
-            >
-              Registros diários
-            </SidebarNavItem>
-            <SidebarNavItem
-              to={`/projetos/${projetoId}/historico-aprovacoes`}
-              icon={<History size={18} aria-hidden="true" />}
-            >
-              Histórico & Aprovações
-            </SidebarNavItem>
-          </SidebarGroup>
-
-          {user?.perfil === 'gerente' && (
-            <SidebarGroup title="Gestão">
+          <div className="relative ml-4 flex flex-col gap-1 border-l-2 border-dashed border-primary/25 pl-3">
+            <SidebarGroup title="Operação">
               <SidebarNavItem
-                to={`/projetos/${projetoId}/rncs`}
-                icon={<AlertTriangle size={18} aria-hidden="true" />}
+                to={`/projetos/${projetoId}/registros-diarios`}
+                icon={<FileText size={18} aria-hidden="true" />}
               >
-                RNCs
+                Registros diários
               </SidebarNavItem>
               <SidebarNavItem
-                to={`/projetos/${projetoId}/custos-ociosidade`}
-                icon={<DollarSign size={18} aria-hidden="true" />}
+                to={`/projetos/${projetoId}/historico-aprovacoes`}
+                icon={<History size={18} aria-hidden="true" />}
               >
-                Custos & Ociosidade
+                Histórico & Aprovações
               </SidebarNavItem>
             </SidebarGroup>
-          )}
 
-          <SidebarGroup title="Administração">
-            <SidebarNavItem
-              to={`/projetos/${projetoId}/configuracoes`}
-              icon={<Settings size={18} aria-hidden="true" />}
-            >
-              Configurações
-            </SidebarNavItem>
-          </SidebarGroup>
+            {user?.perfil === 'gerente' && (
+              <SidebarGroup title="Gestão">
+                <SidebarNavItem
+                  to={`/projetos/${projetoId}/rncs`}
+                  icon={<AlertTriangle size={18} aria-hidden="true" />}
+                >
+                  RNCs
+                </SidebarNavItem>
+                <SidebarNavItem
+                  to={`/projetos/${projetoId}/custos-ociosidade`}
+                  icon={<DollarSign size={18} aria-hidden="true" />}
+                >
+                  Custos & Ociosidade
+                </SidebarNavItem>
+              </SidebarGroup>
+            )}
+
+            <SidebarGroup title="Administração">
+              <SidebarNavItem
+                to={`/projetos/${projetoId}/configuracoes`}
+                icon={<Settings size={18} aria-hidden="true" />}
+              >
+                Configurações
+              </SidebarNavItem>
+            </SidebarGroup>
+          </div>
         </>
       )}
     </nav>

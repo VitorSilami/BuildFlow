@@ -1,7 +1,15 @@
 import { Check } from 'lucide-react'
 import { Button } from '../../../components/ui'
 
-export const NOMES_PASSOS = ['Gerais', 'Produção', 'Equipe', 'Máquinas', 'Ocorrências', 'Revisão'] as const
+export const NOMES_PASSOS = [
+  'Gerais',
+  'Produção',
+  'Equipe',
+  'Máquinas',
+  'Ocorrências',
+  'Fotos',
+  'Revisão',
+] as const
 
 interface RdoWizardNavProps {
   passoAtual: number

@@ -2,22 +2,20 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
 import {
+  enviarFotoRequest,
   useConfiguracaoRdo,
   useCriarRegistroDiario,
   useRegistrosDiarios,
 } from '../features/registros-diarios/registrosDiariosApi'
 import { RdoStepEquipe } from '../features/registros-diarios/wizard/RdoStepEquipe'
+import { RdoStepFotos, type FotoStaged } from '../features/registros-diarios/wizard/RdoStepFotos'
 import { RdoStepGerais } from '../features/registros-diarios/wizard/RdoStepGerais'
 import { RdoStepMaquinas } from '../features/registros-diarios/wizard/RdoStepMaquinas'
 import { RdoStepOcorrencias } from '../features/registros-diarios/wizard/RdoStepOcorrencias'
 import { RdoStepProducao } from '../features/registros-diarios/wizard/RdoStepProducao'
 import { RdoStepRevisao } from '../features/registros-diarios/wizard/RdoStepRevisao'
 import { NOMES_PASSOS, RdoWizardNav } from '../features/registros-diarios/wizard/RdoWizardNav'
-import {
-  MAQUINA_VAZIA,
-  PRESENCA_VAZIA,
-  PRODUCAO_VAZIA,
-} from '../features/registros-diarios/wizard/valoresVazios'
+import { PRODUCAO_VAZIA } from '../features/registros-diarios/wizard/valoresVazios'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { formatData } from '../lib/format'
 import { toast } from '../hooks/use-toast'
@@ -78,9 +76,31 @@ export function RdoPage() {
   }, [user, fiscal])
 
   const [producoes, setProducoes] = useState<ProducaoDiariaInput[]>([PRODUCAO_VAZIA])
-  const [presencas, setPresencas] = useState<PresencaInput[]>([PRESENCA_VAZIA])
-  const [maquinas, setMaquinas] = useState<ApontamentoMaquinaInput[]>([MAQUINA_VAZIA])
+  const [presencas, setPresencas] = useState<PresencaInput[]>([])
+  const [maquinas, setMaquinas] = useState<ApontamentoMaquinaInput[]>([])
   const [ocorrencias, setOcorrencias] = useState<OcorrenciaInput[]>([])
+  const [fotos, setFotos] = useState<FotoStaged[]>([])
+
+  // Frente e equipe ja vem carregadas do pool da equipe (menos digitacao,
+  // usuario so ajusta o que for diferente do dia a dia).
+  useEffect(() => {
+    const encontrada = configuracao.data?.equipes.find((item) => item.id === equipe)
+    if (!encontrada) return
+    setPresencas(
+      encontrada.pessoas.map((pessoa) => ({
+        pessoa: pessoa.id,
+        funcao: pessoa.funcao,
+        status: 'presente' as const,
+      })),
+    )
+    setMaquinas(
+      encontrada.maquinas.map((maquina) => ({
+        maquina: maquina.id,
+        horas_produtivas: '8',
+        horas_paradas: '0',
+      })),
+    )
+  }, [equipe, configuracao.data])
 
   const [erro, setErro] = useState<string | null>(null)
 
@@ -127,7 +147,20 @@ export function RdoPage() {
     }
 
     criarRegistro.mutate(result.data, {
-      onSuccess: (registro) => {
+      onSuccess: async (registro) => {
+        if (fotos.length > 0) {
+          const resultados = await Promise.allSettled(
+            fotos.map((foto) => enviarFotoRequest(registro.id, { arquivo: foto.arquivo, km: foto.km || undefined })),
+          )
+          const falhas = resultados.filter((resultado) => resultado.status === 'rejected').length
+          if (falhas > 0) {
+            toast({
+              title: 'Algumas fotos não foram enviadas',
+              description: `${falhas} de ${fotos.length} foto(s) falharam. Você pode reenviá-las na tela do registro.`,
+              variant: 'destructive',
+            })
+          }
+        }
         toast({
           title: 'Registro diário salvo',
           description: `Registro de ${formatData(registro.data_referencia)} salvo com sucesso.`,
@@ -197,7 +230,8 @@ export function RdoPage() {
         {passoAtual === 4 && (
           <RdoStepOcorrencias ocorrencias={ocorrencias} onOcorrenciasChange={setOcorrencias} />
         )}
-        {passoAtual === 5 && (
+        {passoAtual === 5 && <RdoStepFotos fotos={fotos} onFotosChange={setFotos} />}
+        {passoAtual === 6 && (
           <RdoStepRevisao
             dataReferencia={dataReferencia}
             equipeSelecionada={equipeSelecionada}
@@ -206,6 +240,7 @@ export function RdoPage() {
             presencas={presencas}
             maquinas={maquinas}
             ocorrencias={ocorrencias}
+            totalFotos={fotos.length}
             erro={erro}
             salvando={criarRegistro.isPending}
             onSalvar={handleSubmit}
