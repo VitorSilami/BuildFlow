@@ -8,12 +8,10 @@ from rest_framework.test import APIClient
 from buildflow.configuracoes.models import CatalogoServico
 from buildflow.configuracoes.models import Disciplina
 from buildflow.configuracoes.models import Equipe
-from buildflow.configuracoes.models import MetaMensal
 from buildflow.configuracoes.models import Unidade
 from buildflow.core.tests.factories import EmpresaFactory
 from buildflow.core.tests.factories import UsuarioFactory
 from buildflow.projetos.models import Projeto
-from buildflow.registros_diarios.models import ProducaoDiaria
 from buildflow.registros_diarios.models import RegistroDiario
 
 pytestmark = pytest.mark.django_db
@@ -102,21 +100,21 @@ def test_execucao_media_calculada_entre_projetos_ativos():
         nome="Com Meta",
         criado_por=usuario,
     )
-    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
-    servico = CatalogoServico.objects.create(
+    disciplina = Disciplina.objects.create(
+        projeto=projeto,
+        nome="Terraplenagem",
+        peso_percentual=Decimal("100"),
+    )
+    CatalogoServico.objects.create(
         disciplina=disciplina,
         nome="Corte",
         unidade=unidade,
-    )
-    MetaMensal.objects.create(
-        projeto=projeto,
-        disciplina=disciplina,
-        unidade=unidade,
-        valor_alvo=Decimal("1000"),
         peso_percentual=Decimal("100"),
+        quantidade_planejada=Decimal("1000"),
+        quantidade_executada=Decimal("400"),
     )
     equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
-    registro = RegistroDiario.objects.create(
+    RegistroDiario.objects.create(
         projeto=projeto,
         data_referencia="2026-07-01",
         turno="diurno",
@@ -124,17 +122,6 @@ def test_execucao_media_calculada_entre_projetos_ativos():
         equipe=equipe,
         fiscal=usuario,
         autor=usuario,
-    )
-    ProducaoDiaria.objects.create(
-        registro_diario=registro,
-        rodovia="BR-365",
-        sentido="crescente",
-        disciplina=disciplina,
-        servico=servico,
-        km_inicial="0.000",
-        km_final="1.000",
-        quantidade=Decimal("400"),
-        unidade=unidade,
     )
 
     response = _authenticated_client(usuario).get(DASHBOARD_URL)

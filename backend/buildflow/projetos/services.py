@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING
 from django.db.models import Count
 from django.utils import timezone
 
-from buildflow.configuracoes.models import CatalogoServico
-from buildflow.configuracoes.models import Disciplina
 from buildflow.registros_diarios.models import RegistroDiario
 
 from .models import Projeto
 
 if TYPE_CHECKING:
+    from buildflow.configuracoes.models import CatalogoServico
+    from buildflow.configuracoes.models import Disciplina
     from buildflow.empresas.models import Empresa
 
 DIAS_JANELA_ATIVIDADE = 7
@@ -25,9 +25,8 @@ def calcular_avanco_servico(servico: CatalogoServico) -> Decimal | None:
     """
     if not servico.quantidade_planejada:
         return None
-    return (servico.quantidade_executada / servico.quantidade_planejada * Decimal("100")).quantize(
-        Decimal("0.01"),
-    )
+    proporcao = servico.quantidade_executada / servico.quantidade_planejada
+    return (proporcao * Decimal("100")).quantize(Decimal("0.01"))
 
 
 def calcular_avanco_disciplina(disciplina: Disciplina) -> Decimal | None:
@@ -41,7 +40,9 @@ def calcular_avanco_disciplina(disciplina: Disciplina) -> Decimal | None:
     for servico in disciplina.servicos.all():
         if servico.peso_percentual is None:
             continue
-        avanco = calcular_avanco_servico(servico) or Decimal("0")
+        avanco = calcular_avanco_servico(servico)
+        if avanco is None:
+            continue
         soma_ponderada += avanco * servico.peso_percentual
         soma_pesos += servico.peso_percentual
 
@@ -63,7 +64,9 @@ def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
     for disciplina in projeto.disciplinas.all():
         if disciplina.peso_percentual is None:
             continue
-        avanco = calcular_avanco_disciplina(disciplina) or Decimal("0")
+        avanco = calcular_avanco_disciplina(disciplina)
+        if avanco is None:
+            continue
         soma_ponderada += avanco * disciplina.peso_percentual
         soma_pesos += disciplina.peso_percentual
 

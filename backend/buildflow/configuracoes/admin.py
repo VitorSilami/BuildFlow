@@ -26,7 +26,13 @@ class MotivoParadaAdmin(admin.ModelAdmin):
 class CatalogoServicoInline(admin.TabularInline):
     model = CatalogoServico
     extra = 1
-    fields = ["nome", "unidade", "peso_percentual", "quantidade_planejada", "quantidade_executada"]
+    fields = [
+        "nome",
+        "unidade",
+        "peso_percentual",
+        "quantidade_planejada",
+        "quantidade_executada",
+    ]
 
 
 @admin.register(Disciplina)
