@@ -7,7 +7,6 @@ from buildflow.configuracoes.models import CatalogoServico
 from buildflow.configuracoes.models import Disciplina
 from buildflow.configuracoes.models import Equipe
 from buildflow.configuracoes.models import Maquina
-from buildflow.configuracoes.models import MetaMensal
 from buildflow.configuracoes.models import MotivoParada
 from buildflow.configuracoes.models import Pessoa
 from buildflow.configuracoes.models import Unidade
@@ -84,19 +83,18 @@ class Command(BaseCommand):
             defaults={"descricao": "metro cúbico"},
         )
 
-        disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+        disciplina = Disciplina.objects.create(
+            projeto=projeto,
+            nome="Terraplenagem",
+            peso_percentual=100,
+        )
         servico = CatalogoServico.objects.create(
             disciplina=disciplina,
             nome="Corte",
             unidade=unidade,
-        )
-
-        MetaMensal.objects.create(
-            projeto=projeto,
-            disciplina=disciplina,
-            unidade=unidade,
-            valor_alvo=1000,
             peso_percentual=100,
+            quantidade_planejada=1000,
+            quantidade_executada=500,
         )
 
         equipe = Equipe.objects.create(projeto=projeto, nome="Equipe 1")

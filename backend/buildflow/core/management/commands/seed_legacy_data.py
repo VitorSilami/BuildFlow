@@ -1,4 +1,3 @@
-from collections import defaultdict
 from pathlib import Path
 
 import openpyxl
@@ -9,7 +8,6 @@ from django.db import transaction
 
 from buildflow.configuracoes.models import CatalogoServico
 from buildflow.configuracoes.models import Disciplina
-from buildflow.configuracoes.models import MetaMensal
 from buildflow.configuracoes.models import Unidade
 from buildflow.empresas.models import Empresa
 from buildflow.projetos.models import Projeto
@@ -24,9 +22,9 @@ LINHA_CABECALHO = 4  # CHAVE | EAP | DISCIPLINA | ATIVIDADE | UN | TOTAL
 class Command(BaseCommand):
     help = (
         "Importa BASE_QTD_L2 da planilha MODELO IMPORT SOFT como Disciplina/"
-        "CatalogoServico/MetaMensal de um projeto de demonstracao (dado legado usado "
-        "so para carga inicial — ver decisao registrada em memoria de projeto, nao "
-        "define schema)."
+        "CatalogoServico (com peso/quantidade) de um projeto de demonstracao "
+        "(dado legado usado so para carga inicial — ver decisao registrada em "
+        "memoria de projeto, nao define schema)."
     )
 
     def add_arguments(self, parser):
@@ -52,7 +50,7 @@ class Command(BaseCommand):
         with transaction.atomic():
             projeto = self._get_or_create_projeto_legado()
             linhas = self._ler_linhas(workbook[ABA_QUANTIDADES])
-            self._importar_disciplinas_e_metas(projeto, linhas)
+            self._importar_disciplinas_e_servicos(projeto, linhas)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -108,35 +106,22 @@ class Command(BaseCommand):
             )
         return linhas
 
-    def _importar_disciplinas_e_metas(
+    def _importar_disciplinas_e_servicos(
         self,
         projeto: Projeto,
         linhas: list[dict],
     ) -> None:
-        totais_por_disciplina: dict[str, float] = defaultdict(float)
-        unidade_por_disciplina: dict[str, str] = {}
-
         for linha in linhas:
             unidade, _ = Unidade.objects.get_or_create(sigla=linha["unidade"])
             disciplina, _ = Disciplina.objects.get_or_create(
                 projeto=projeto,
                 nome=linha["disciplina"],
             )
-            CatalogoServico.objects.get_or_create(
+            CatalogoServico.objects.update_or_create(
                 disciplina=disciplina,
                 nome=linha["atividade"],
-                defaults={"unidade": unidade},
-            )
-            totais_por_disciplina[linha["disciplina"]] += linha["total"]
-            unidade_por_disciplina[linha["disciplina"]] = linha["unidade"]
-
-        for nome_disciplina, total in totais_por_disciplina.items():
-            disciplina = Disciplina.objects.get(projeto=projeto, nome=nome_disciplina)
-            unidade, _ = Unidade.objects.get_or_create(
-                sigla=unidade_por_disciplina[nome_disciplina],
-            )
-            MetaMensal.objects.get_or_create(
-                projeto=projeto,
-                disciplina=disciplina,
-                defaults={"unidade": unidade, "valor_alvo": total},
+                defaults={
+                    "unidade": unidade,
+                    "quantidade_planejada": linha["total"],
+                },
             )
