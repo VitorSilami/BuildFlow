@@ -1,3 +1,4 @@
+import { BookOpen, DollarSign, HardHat, Target, Truck, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
@@ -25,6 +26,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '../components/ui'
+import { toast } from '../hooks/use-toast'
 
 function ConfiguracaoSkeleton() {
   return (
@@ -100,9 +102,15 @@ export function ConfiguracaoPage() {
           <Card title="Disciplinas">
             <div aria-label="Disciplinas">
               {disciplinas.length === 0 && <EmptyState>Nenhuma disciplina cadastrada ainda.</EmptyState>}
-              <ul className="mb-4 divide-y divide-border">
+              <ul className="mb-4 flex flex-col gap-2">
                 {disciplinas.map((disciplina) => (
-                  <li className="py-2 text-sm" key={disciplina.id}>{disciplina.nome}</li>
+                  <li
+                    className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm text-ink"
+                    key={disciplina.id}
+                  >
+                    <BookOpen size={14} className="text-primary" aria-hidden="true" />
+                    {disciplina.nome}
+                  </li>
                 ))}
               </ul>
               <div className="flex flex-wrap items-end gap-3">
@@ -110,7 +118,12 @@ export function ConfiguracaoPage() {
                   <Input id="nova-disciplina" value={nomeDisciplina} onChange={(event) => setNomeDisciplina(event.target.value)} />
                 </FormField>
                 <Button
-                  onClick={() => criarDisciplina.mutate(nomeDisciplina, { onSuccess: () => setNomeDisciplina('') })}
+                  onClick={() =>
+                    criarDisciplina.mutate(nomeDisciplina, {
+                      onSuccess: () => setNomeDisciplina(''),
+                      onError: () => toast({ title: 'Não foi possível criar a disciplina.', variant: 'destructive' }),
+                    })
+                  }
                   disabled={!nomeDisciplina.trim() || criarDisciplina.isPending}
                 >
                   Adicionar disciplina
@@ -124,18 +137,30 @@ export function ConfiguracaoPage() {
           <Card title="Metas">
             <div aria-label="Metas">
               {metas.length === 0 && <EmptyState>Nenhuma meta cadastrada ainda.</EmptyState>}
-              <ul className="mb-4 divide-y divide-border">
+              <ul className="mb-4 flex flex-col gap-2">
                 {metas.map((meta) => (
-                  <li className="py-2 text-sm" key={meta.id}>
-                    {disciplinas.find((d) => d.id === meta.disciplina)?.nome ?? meta.disciplina}: {meta.valor_alvo}
-                    {meta.peso_percentual ? ` (${meta.peso_percentual}%)` : ''}
+                  <li
+                    key={meta.id}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm text-ink"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Target size={14} className="text-primary" aria-hidden="true" />
+                      {disciplinas.find((d) => d.id === meta.disciplina)?.nome ?? meta.disciplina}: {meta.valor_alvo}
+                    </span>
+                    {meta.peso_percentual && (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                        {meta.peso_percentual}%
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Soma dos pesos: {somaPesos}%{' '}
-                {Math.abs(somaPesos - 100) > 0.01 && somaPesos > 0 && '(atenção: não fecha 100%)'}
-              </p>
+              <p className="mb-4 text-sm text-muted-foreground">Soma dos pesos: {somaPesos}%</p>
+              {Math.abs(somaPesos - 100) > 0.01 && somaPesos > 0 && (
+                <p className="mb-4 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-700">
+                  Atenção: a soma dos pesos das metas não fecha 100%.
+                </p>
+              )}
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <SelectField
@@ -163,7 +188,10 @@ export function ConfiguracaoPage() {
                           valor_alvo: metaValorAlvo,
                           peso_percentual: metaPeso || undefined,
                         },
-                        { onSuccess: () => { setMetaValorAlvo(''); setMetaPeso('') } },
+                        {
+                          onSuccess: () => { setMetaValorAlvo(''); setMetaPeso('') },
+                          onError: () => toast({ title: 'Não foi possível criar a meta.', variant: 'destructive' }),
+                        },
                       )
                     }
                   >
@@ -179,18 +207,31 @@ export function ConfiguracaoPage() {
           <Card title="Equipes">
             <div aria-label="Equipes">
               {equipes.length === 0 && <EmptyState>Nenhuma equipe cadastrada ainda.</EmptyState>}
-              <ul className="mb-4 divide-y divide-border">
+              <ul className="mb-4 flex flex-col gap-2">
                 {equipes.map((equipe) => (
-                  <li className="py-2 text-sm" key={equipe.id}>
-                    <strong className="text-ink">{equipe.nome}</strong>
-                    <ul className="mt-1 pl-4 text-muted-foreground">
-                      {equipe.pessoas.map((pessoa) => (
-                        <li key={pessoa.id}>{pessoa.nome} — {pessoa.funcao}</li>
-                      ))}
-                      {equipe.maquinas.map((maquina) => (
-                        <li key={maquina.id}>{maquina.nome} ({maquina.codigo})</li>
-                      ))}
-                    </ul>
+                  <li className="rounded-lg border border-border p-3 text-sm" key={equipe.id}>
+                    <p className="mb-2 flex items-center gap-2 font-display font-bold text-ink">
+                      <HardHat size={14} className="text-primary" aria-hidden="true" />
+                      {equipe.nome}
+                    </p>
+                    {equipe.pessoas.length === 0 && equipe.maquinas.length === 0 ? (
+                      <p className="pl-5 text-xs text-muted-foreground">Sem pessoas ou máquinas ainda.</p>
+                    ) : (
+                      <ul className="flex flex-col gap-1 pl-5 text-muted-foreground">
+                        {equipe.pessoas.map((pessoa) => (
+                          <li key={pessoa.id} className="flex items-center gap-2">
+                            <Users size={12} aria-hidden="true" />
+                            {pessoa.nome} — {pessoa.funcao}
+                          </li>
+                        ))}
+                        {equipe.maquinas.map((maquina) => (
+                          <li key={maquina.id} className="flex items-center gap-2">
+                            <Truck size={12} aria-hidden="true" />
+                            {maquina.nome} ({maquina.codigo})
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -201,7 +242,12 @@ export function ConfiguracaoPage() {
                 </FormField>
                 <Button
                   disabled={!nomeEquipe.trim() || criarEquipe.isPending}
-                  onClick={() => criarEquipe.mutate(nomeEquipe, { onSuccess: () => setNomeEquipe('') })}
+                  onClick={() =>
+                    criarEquipe.mutate(nomeEquipe, {
+                      onSuccess: () => setNomeEquipe(''),
+                      onError: () => toast({ title: 'Não foi possível criar a equipe.', variant: 'destructive' }),
+                    })
+                  }
                 >
                   Adicionar equipe
                 </Button>
@@ -229,7 +275,10 @@ export function ConfiguracaoPage() {
                     onClick={() =>
                       criarPessoa.mutate(
                         { equipeId: pessoaEquipeId, nome: pessoaNome, funcao: pessoaFuncao },
-                        { onSuccess: () => { setPessoaNome(''); setPessoaFuncao('') } },
+                        {
+                          onSuccess: () => { setPessoaNome(''); setPessoaFuncao('') },
+                          onError: () => toast({ title: 'Não foi possível adicionar a pessoa.', variant: 'destructive' }),
+                        },
                       )
                     }
                   >
@@ -260,7 +309,10 @@ export function ConfiguracaoPage() {
                     onClick={() =>
                       criarMaquina.mutate(
                         { equipeId: maquinaEquipeId, codigo: maquinaCodigo, nome: maquinaNome },
-                        { onSuccess: () => { setMaquinaCodigo(''); setMaquinaNome('') } },
+                        {
+                          onSuccess: () => { setMaquinaCodigo(''); setMaquinaNome('') },
+                          onError: () => toast({ title: 'Não foi possível adicionar a máquina.', variant: 'destructive' }),
+                        },
                       )
                     }
                   >
@@ -276,11 +328,25 @@ export function ConfiguracaoPage() {
           <Card title="Valores">
             <div aria-label="Valores de custo">
               {valoresCusto.length === 0 && <EmptyState>Nenhum valor cadastrado ainda.</EmptyState>}
-              <ul className="mb-4 divide-y divide-border">
+              <ul className="mb-4 flex flex-col gap-2">
                 {valoresCusto.map((valor) => (
-                  <li className="py-2 text-sm" key={valor.id}>
-                    {valor.descricao} ({valor.tipo === 'mao_de_obra' ? 'Mão de obra' : 'Equipamento'})
-                    {valor.funcao && ` — ${valor.funcao}`}: {valor.valor}
+                  <li
+                    key={valor.id}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm text-ink"
+                  >
+                    <span className="flex items-center gap-2">
+                      {valor.tipo === 'mao_de_obra' ? (
+                        <Users size={14} className="text-primary" aria-hidden="true" />
+                      ) : (
+                        <Truck size={14} className="text-primary" aria-hidden="true" />
+                      )}
+                      {valor.descricao}
+                      {valor.funcao && ` — ${valor.funcao}`}
+                    </span>
+                    <span className="flex items-center gap-1 font-mono text-xs font-semibold text-ink">
+                      <DollarSign size={12} className="text-emerald-600" aria-hidden="true" />
+                      {valor.valor}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -350,6 +416,7 @@ export function ConfiguracaoPage() {
                             setValorFuncao('')
                             setValorMaquinaId('')
                           },
+                          onError: () => toast({ title: 'Não foi possível criar o valor.', variant: 'destructive' }),
                         },
                       )
                     }
