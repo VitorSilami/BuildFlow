@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../services/apiClient'
-import type { ConfiguracaoProjeto, Disciplina, MetaMensal, ValorCusto } from '../../types/configuracao'
+import type { CatalogoServico, ConfiguracaoProjeto, Disciplina, ValorCusto } from '../../types/configuracao'
 import type { Equipe, Maquina, Pessoa } from '../../types/registroDiario'
 
 export function useConfiguracaoProjeto(projetoId: string) {
@@ -21,8 +21,59 @@ function useInvalidarConfiguracao(projetoId: string) {
 export function useCriarDisciplina(projetoId: string) {
   const invalidar = useInvalidarConfiguracao(projetoId)
   return useMutation({
-    mutationFn: (nome: string) =>
-      apiClient.post<Disciplina>(`/api/v1/projetos/${projetoId}/configuracao/disciplinas/`, { nome }),
+    mutationFn: (values: { nome: string; peso_percentual?: string }) =>
+      apiClient.post<Disciplina>(`/api/v1/projetos/${projetoId}/configuracao/disciplinas/`, values),
+    onSuccess: invalidar,
+  })
+}
+
+export function useAtualizarDisciplina(projetoId: string) {
+  const invalidar = useInvalidarConfiguracao(projetoId)
+  return useMutation({
+    mutationFn: ({ disciplinaId, peso_percentual }: { disciplinaId: string; peso_percentual: string }) =>
+      apiClient.patch<Disciplina>(`/api/v1/configuracoes/disciplinas/${disciplinaId}/`, { peso_percentual }),
+    onSuccess: invalidar,
+  })
+}
+
+export function useCriarServico(projetoId: string) {
+  const invalidar = useInvalidarConfiguracao(projetoId)
+  return useMutation({
+    mutationFn: ({
+      disciplinaId,
+      nome,
+      unidade,
+      peso_percentual,
+      quantidade_planejada,
+    }: {
+      disciplinaId: string
+      nome: string
+      unidade: number
+      peso_percentual?: string
+      quantidade_planejada?: string
+    }) =>
+      apiClient.post<CatalogoServico>(`/api/v1/configuracoes/disciplinas/${disciplinaId}/servicos/`, {
+        nome,
+        unidade,
+        peso_percentual,
+        quantidade_planejada,
+      }),
+    onSuccess: invalidar,
+  })
+}
+
+export function useAtualizarServico(projetoId: string) {
+  const invalidar = useInvalidarConfiguracao(projetoId)
+  return useMutation({
+    mutationFn: ({
+      servicoId,
+      ...values
+    }: {
+      servicoId: string
+      peso_percentual?: string
+      quantidade_planejada?: string
+      quantidade_executada?: string
+    }) => apiClient.patch<CatalogoServico>(`/api/v1/configuracoes/servicos/${servicoId}/`, values),
     onSuccess: invalidar,
   })
 }
@@ -50,15 +101,6 @@ export function useCriarMaquina(projetoId: string) {
   return useMutation({
     mutationFn: ({ equipeId, codigo, nome }: { equipeId: string; codigo: string; nome: string }) =>
       apiClient.post<Maquina>(`/api/v1/configuracoes/equipes/${equipeId}/maquinas/`, { codigo, nome }),
-    onSuccess: invalidar,
-  })
-}
-
-export function useCriarMeta(projetoId: string) {
-  const invalidar = useInvalidarConfiguracao(projetoId)
-  return useMutation({
-    mutationFn: (values: { disciplina: string; unidade: number; valor_alvo: string; peso_percentual?: string }) =>
-      apiClient.post<MetaMensal>(`/api/v1/projetos/${projetoId}/configuracao/metas/`, values),
     onSuccess: invalidar,
   })
 }
