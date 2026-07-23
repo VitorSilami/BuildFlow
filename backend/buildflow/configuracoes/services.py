@@ -19,16 +19,6 @@ def soma_pesos_disciplinas(projeto) -> Decimal:
     return total
 
 
-def soma_pesos_servicos(disciplina) -> Decimal:
-    """Soma dos pesos percentuais dos servicos de uma disciplina (mesma
-    regra informativa/nao bloqueante de soma_pesos_disciplinas)."""
-    total = Decimal("0")
-    for servico in disciplina.servicos.all():
-        if servico.peso_percentual is not None:
-            total += servico.peso_percentual
-    return total
-
-
 def validar_valor_custo(*, tipo: str, funcao: str, maquina) -> None:
     if tipo == "mao_de_obra" and maquina is not None:
         msg = _("Máquina só pode ser informada quando o tipo é Equipamento.")

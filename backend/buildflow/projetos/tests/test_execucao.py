@@ -31,7 +31,9 @@ def test_servico_sem_quantidade_planejada_retorna_none():
     projeto = _criar_projeto()
     disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
     servico = CatalogoServico.objects.create(
-        disciplina=disciplina, nome="Corte", unidade=_criar_unidade(),
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
     )
 
     assert calcular_avanco_servico(servico) is None
@@ -60,7 +62,9 @@ def test_sem_disciplinas_retorna_none():
 def test_disciplina_sem_peso_percentual_nao_conta_e_retorna_none():
     projeto = _criar_projeto()
     disciplina = Disciplina.objects.create(
-        projeto=projeto, nome="Terraplenagem", peso_percentual=None,
+        projeto=projeto,
+        nome="Terraplenagem",
+        peso_percentual=None,
     )
     CatalogoServico.objects.create(
         disciplina=disciplina,
@@ -77,7 +81,9 @@ def test_disciplina_sem_peso_percentual_nao_conta_e_retorna_none():
 def test_servico_sem_peso_nao_conta_na_disciplina():
     projeto = _criar_projeto()
     disciplina = Disciplina.objects.create(
-        projeto=projeto, nome="Terraplenagem", peso_percentual=Decimal("100.00"),
+        projeto=projeto,
+        nome="Terraplenagem",
+        peso_percentual=Decimal("100.00"),
     )
     CatalogoServico.objects.create(
         disciplina=disciplina,
@@ -92,10 +98,29 @@ def test_servico_sem_peso_nao_conta_na_disciplina():
     assert calcular_execucao_percentual(projeto) is None
 
 
+def test_servico_com_peso_mas_sem_quantidade_planejada_nao_conta_na_disciplina():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(
+        projeto=projeto,
+        nome="Terraplenagem",
+        peso_percentual=Decimal("100.00"),
+    )
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+        peso_percentual=Decimal("100.00"),
+    )
+
+    assert calcular_avanco_disciplina(disciplina) is None
+
+
 def test_uma_disciplina_um_servico_com_peso_calcula_percentual_direto():
     projeto = _criar_projeto()
     disciplina = Disciplina.objects.create(
-        projeto=projeto, nome="Terraplenagem", peso_percentual=Decimal("100.00"),
+        projeto=projeto,
+        nome="Terraplenagem",
+        peso_percentual=Decimal("100.00"),
     )
     CatalogoServico.objects.create(
         disciplina=disciplina,
@@ -115,7 +140,9 @@ def test_duas_disciplinas_pesos_diferentes_media_ponderada():
     unidade = _criar_unidade()
 
     disc_a = Disciplina.objects.create(
-        projeto=projeto, nome="Terraplenagem", peso_percentual=Decimal("75.00"),
+        projeto=projeto,
+        nome="Terraplenagem",
+        peso_percentual=Decimal("75.00"),
     )
     CatalogoServico.objects.create(
         disciplina=disc_a,
@@ -127,7 +154,9 @@ def test_duas_disciplinas_pesos_diferentes_media_ponderada():
     )
 
     disc_b = Disciplina.objects.create(
-        projeto=projeto, nome="Pavimentação", peso_percentual=Decimal("25.00"),
+        projeto=projeto,
+        nome="Pavimentação",
+        peso_percentual=Decimal("25.00"),
     )
     CatalogoServico.objects.create(
         disciplina=disc_b,
@@ -146,7 +175,9 @@ def test_dois_servicos_pesos_diferentes_dentro_da_disciplina():
     projeto = _criar_projeto()
     unidade = _criar_unidade()
     disciplina = Disciplina.objects.create(
-        projeto=projeto, nome="Terraplenagem", peso_percentual=Decimal("100.00"),
+        projeto=projeto,
+        nome="Terraplenagem",
+        peso_percentual=Decimal("100.00"),
     )
 
     CatalogoServico.objects.create(
