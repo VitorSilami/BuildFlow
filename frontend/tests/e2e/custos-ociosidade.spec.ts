@@ -143,7 +143,7 @@ test('auxiliar administrativo nao ve o item no menu e recebe acesso restrito na 
     route.fulfill({ json: { status: 200, data: { user: AUXILIAR }, meta: { is_authenticated: true } } }),
   )
   await page.route(CONFIG_URL, (route) =>
-    route.fulfill({ json: { disciplinas: [], equipes: [], metas: [], valores_custo: [], soma_pesos_metas: 0 } }),
+    route.fulfill({ json: { disciplinas: [], equipes: [], valores_custo: [], soma_pesos_disciplinas: 0 } }),
   )
 
   await page.goto('/projetos/projeto-1/configuracoes')

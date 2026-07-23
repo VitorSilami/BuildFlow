@@ -208,6 +208,10 @@ test('define peso da disciplina e adiciona serviço na aba EAP', async ({ page }
   })
 
   await page.route('**/api/v1/configuracoes/disciplinas/disc-1/', (route) => {
+    const payload = route.request().postDataJSON() as { peso_percentual?: string }
+    if (payload.peso_percentual !== '100') {
+      return route.fulfill({ status: 400, json: { detail: 'peso_percentual inesperado no payload' } })
+    }
     pesoDisciplina = '100.00'
     return route.fulfill({
       json: {
