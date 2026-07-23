@@ -1,3 +1,13 @@
+import {
+  CalendarClock,
+  Gauge,
+  Leaf,
+  Package,
+  Truck,
+  User as UserIcon,
+  Users,
+  Workflow,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -20,7 +30,14 @@ import { NATIVE_SELECT_CLASSNAME } from '../features/rnc/nativeSelectClassName'
 import { useAtualizarRnc, useConcluirRnc, useCriarRnc, useRnc } from '../features/rnc/rncApi'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { toast } from '../hooks/use-toast'
+import { cn } from '../lib/utils'
 import type { Categoria, Gravidade, Origem, RncInput, TipoRnc } from '../types/rnc'
+
+const GRAVIDADE_BOTAO_ATIVO: Record<Gravidade, string> = {
+  alta: 'border-red-500 bg-red-500/10 text-red-600',
+  media: 'border-amber-500 bg-amber-500/10 text-amber-600',
+  baixa: 'border-emerald-500 bg-emerald-500/10 text-emerald-600',
+}
 
 const CAMPOS_VAZIOS: RncInput = {
   data_emissao: '',
@@ -256,21 +273,30 @@ export function RncFormPage() {
               ))}
             </select>
           </FormField>
-          <FormField id="rnc-gravidade" label="Gravidade">
-            <select
-              id="rnc-gravidade"
-              className={NATIVE_SELECT_CLASSNAME}
-              value={form.gravidade}
-              disabled={somenteLeitura}
-              onChange={(event) => atualizarCampo('gravidade', event.target.value as Gravidade)}
-            >
-              {Object.entries(GRAVIDADE_LABELS).map(([valor, label]) => (
-                <option key={valor} value={valor}>
+          <div>
+            <p id="rnc-gravidade-label" className="mb-1.5 text-sm font-medium text-ink">
+              Gravidade
+            </p>
+            <div role="group" aria-labelledby="rnc-gravidade-label" className="flex gap-2">
+              {(Object.entries(GRAVIDADE_LABELS) as [Gravidade, string][]).map(([valor, label]) => (
+                <button
+                  key={valor}
+                  type="button"
+                  disabled={somenteLeitura}
+                  aria-pressed={form.gravidade === valor}
+                  onClick={() => atualizarCampo('gravidade', valor)}
+                  className={cn(
+                    'flex-1 rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                    form.gravidade === valor
+                      ? GRAVIDADE_BOTAO_ATIVO[valor]
+                      : 'border-border text-muted-foreground hover:bg-surface',
+                  )}
+                >
                   {label}
-                </option>
+                </button>
               ))}
-            </select>
-          </FormField>
+            </div>
+          </div>
           <FormField id="rnc-tipo" label="Tipo">
             <select
               id="rnc-tipo"
@@ -371,7 +397,10 @@ export function RncFormPage() {
               disabled={somenteLeitura}
               onCheckedChange={(checked) => atualizarCampo('causa_metodo', checked === true)}
             />
-            <Label htmlFor="rnc-causa-metodo">Método (processo)</Label>
+            <Label htmlFor="rnc-causa-metodo" className="flex items-center gap-1.5">
+              <Workflow size={14} className="text-muted-foreground" aria-hidden="true" />
+              Método (processo)
+            </Label>
           </div>
           {form.causa_metodo && (
             <Input
@@ -392,7 +421,10 @@ export function RncFormPage() {
               disabled={somenteLeitura}
               onCheckedChange={(checked) => atualizarCampo('causa_material', checked === true)}
             />
-            <Label htmlFor="rnc-causa-material">Material</Label>
+            <Label htmlFor="rnc-causa-material" className="flex items-center gap-1.5">
+              <Package size={14} className="text-muted-foreground" aria-hidden="true" />
+              Material
+            </Label>
           </div>
           {form.causa_material && (
             <Input
@@ -413,7 +445,10 @@ export function RncFormPage() {
               disabled={somenteLeitura}
               onCheckedChange={(checked) => atualizarCampo('causa_mao_de_obra', checked === true)}
             />
-            <Label htmlFor="rnc-causa-mao-de-obra">Mão de obra</Label>
+            <Label htmlFor="rnc-causa-mao-de-obra" className="flex items-center gap-1.5">
+              <Users size={14} className="text-muted-foreground" aria-hidden="true" />
+              Mão de obra
+            </Label>
           </div>
           {form.causa_mao_de_obra && (
             <Input
@@ -434,7 +469,10 @@ export function RncFormPage() {
               disabled={somenteLeitura}
               onCheckedChange={(checked) => atualizarCampo('causa_maquina', checked === true)}
             />
-            <Label htmlFor="rnc-causa-maquina">Máquina</Label>
+            <Label htmlFor="rnc-causa-maquina" className="flex items-center gap-1.5">
+              <Truck size={14} className="text-muted-foreground" aria-hidden="true" />
+              Máquina
+            </Label>
           </div>
           {form.causa_maquina && (
             <Input
@@ -455,7 +493,10 @@ export function RncFormPage() {
               disabled={somenteLeitura}
               onCheckedChange={(checked) => atualizarCampo('causa_medicao', checked === true)}
             />
-            <Label htmlFor="rnc-causa-medicao">Medição</Label>
+            <Label htmlFor="rnc-causa-medicao" className="flex items-center gap-1.5">
+              <Gauge size={14} className="text-muted-foreground" aria-hidden="true" />
+              Medição
+            </Label>
           </div>
           {form.causa_medicao && (
             <Input
@@ -476,7 +517,10 @@ export function RncFormPage() {
               disabled={somenteLeitura}
               onCheckedChange={(checked) => atualizarCampo('causa_meio_ambiente', checked === true)}
             />
-            <Label htmlFor="rnc-causa-meio-ambiente">Meio ambiente</Label>
+            <Label htmlFor="rnc-causa-meio-ambiente" className="flex items-center gap-1.5">
+              <Leaf size={14} className="text-muted-foreground" aria-hidden="true" />
+              Meio ambiente
+            </Label>
           </div>
           {form.causa_meio_ambiente && (
             <Input
@@ -492,10 +536,20 @@ export function RncFormPage() {
 
       <Card title="Ações corretivas">
         {ehEdicao && rnc.data && rnc.data.acoes_corretivas.length > 0 && (
-          <ul className="mb-4 divide-y divide-border" aria-label="Ações corretivas cadastradas">
+          <ul className="mb-4 flex flex-col gap-2" aria-label="Ações corretivas cadastradas">
             {rnc.data.acoes_corretivas.map((acao) => (
-              <li className="py-2 text-sm" key={acao.id}>
-                {acao.descricao} — {acao.responsavel} (até {acao.data_limite})
+              <li key={acao.id} className="rounded-lg border border-border p-3">
+                <p className="text-sm font-medium text-ink">{acao.descricao}</p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <UserIcon size={12} aria-hidden="true" />
+                    {acao.responsavel}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CalendarClock size={12} aria-hidden="true" />
+                    até {acao.data_limite}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>
