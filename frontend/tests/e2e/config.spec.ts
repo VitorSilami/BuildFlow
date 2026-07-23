@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const SESSION_URL = '**/_allauth/browser/v1/auth/session'
 const CONFIG_URL = '**/api/v1/projetos/*/configuracao/'
+const CONFIG_RDO_URL = '**/api/v1/projetos/*/configuracao-rdo/'
 const DISCIPLINAS_URL = '**/api/v1/projetos/*/configuracao/disciplinas/'
 const EQUIPES_URL = '**/api/v1/projetos/*/configuracao/equipes/'
 
@@ -32,6 +33,17 @@ const PROJETO_MOCK = {
 
 test.beforeEach(async ({ page }) => {
   await page.route(PROJETO_DETALHE_URL, (route) => route.fulfill({ json: PROJETO_MOCK }))
+  await page.route(CONFIG_RDO_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [],
+        unidades: [{ id: 1, sigla: 'm³', descricao: 'metro cúbico' }],
+        equipes: [],
+        motivos_parada: [],
+        fiscais: [],
+      },
+    }),
+  )
 })
 
 test('criar disciplina e equipe na configuração do projeto', async ({ page }) => {
@@ -44,19 +56,22 @@ test('criar disciplina e equipe na configuração do projeto', async ({ page }) 
 
   await page.route(CONFIG_URL, (route) => {
     const disciplinas = disciplinaCriada
-      ? [{ id: 'disc-1', nome: 'Terraplenagem', servicos: [] }]
+      ? [{ id: 'disc-1', nome: 'Terraplenagem', peso_percentual: null, avanco_percentual: null, servicos: [] }]
       : []
     const equipes = equipeCriada
       ? [{ id: 'equipe-1', nome: 'Equipe A', pessoas: [], maquinas: [] }]
       : []
     return route.fulfill({
-      json: { disciplinas, equipes, metas: [], valores_custo: [], soma_pesos_metas: 0 },
+      json: { disciplinas, equipes, valores_custo: [], soma_pesos_disciplinas: 0 },
     })
   })
 
   await page.route(DISCIPLINAS_URL, (route) => {
     disciplinaCriada = true
-    return route.fulfill({ status: 201, json: { id: 'disc-1', nome: 'Terraplenagem', servicos: [] } })
+    return route.fulfill({
+      status: 201,
+      json: { id: 'disc-1', nome: 'Terraplenagem', peso_percentual: null, avanco_percentual: null, servicos: [] },
+    })
   })
 
   await page.route(EQUIPES_URL, (route) => {
@@ -89,11 +104,12 @@ test('trocar de aba mantém a seção anterior preenchida ao voltar', async ({ p
   await page.route(CONFIG_URL, (route) =>
     route.fulfill({
       json: {
-        disciplinas: [{ id: 'disc-1', nome: 'Terraplenagem', servicos: [] }],
+        disciplinas: [
+          { id: 'disc-1', nome: 'Terraplenagem', peso_percentual: null, avanco_percentual: null, servicos: [] },
+        ],
         equipes: [],
-        metas: [],
         valores_custo: [],
-        soma_pesos_metas: 0,
+        soma_pesos_disciplinas: 0,
       },
     }),
   )
@@ -128,9 +144,8 @@ test('tipo equipamento mostra seletor de máquina cadastrada em vez de função'
             maquinas: [{ id: 'maquina-1', codigo: 'ESC-01', nome: 'Escavadeira 320D' }],
           },
         ],
-        metas: [],
         valores_custo: [],
-        soma_pesos_metas: 0,
+        soma_pesos_disciplinas: 0,
       },
     }),
   )
@@ -152,4 +167,88 @@ test('tipo equipamento mostra seletor de máquina cadastrada em vez de função'
 
   await page.getByLabel('Máquina').click()
   await expect(page.getByRole('option', { name: 'Escavadeira 320D (ESC-01)' })).toBeVisible()
+})
+
+test('define peso da disciplina e adiciona serviço na aba EAP', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  let pesoDisciplina: string | null = null
+  let servicoCriado = false
+
+  await page.route(CONFIG_URL, (route) => {
+    const disciplina = {
+      id: 'disc-1',
+      nome: 'Terraplenagem',
+      peso_percentual: pesoDisciplina,
+      avanco_percentual: null,
+      servicos: servicoCriado
+        ? [
+            {
+              id: 'serv-1',
+              nome: 'Corte',
+              unidade: 1,
+              peso_percentual: null,
+              quantidade_planejada: null,
+              quantidade_executada: '0.000',
+              avanco_percentual: null,
+            },
+          ]
+        : [],
+    }
+    return route.fulfill({
+      json: {
+        disciplinas: [disciplina],
+        equipes: [],
+        valores_custo: [],
+        soma_pesos_disciplinas: pesoDisciplina ? Number(pesoDisciplina) : 0,
+      },
+    })
+  })
+
+  await page.route('**/api/v1/configuracoes/disciplinas/disc-1/', (route) => {
+    pesoDisciplina = '100.00'
+    return route.fulfill({
+      json: {
+        id: 'disc-1',
+        nome: 'Terraplenagem',
+        peso_percentual: '100.00',
+        avanco_percentual: null,
+        servicos: [],
+      },
+    })
+  })
+
+  await page.route('**/api/v1/configuracoes/disciplinas/disc-1/servicos/', (route) => {
+    servicoCriado = true
+    return route.fulfill({
+      status: 201,
+      json: {
+        id: 'serv-1',
+        nome: 'Corte',
+        unidade: 1,
+        peso_percentual: null,
+        quantidade_planejada: null,
+        quantidade_executada: '0.000',
+        avanco_percentual: null,
+      },
+    })
+  })
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+
+  await page.getByLabel('Peso (%)').first().fill('100')
+  await page.getByLabel('Peso (%)').first().blur()
+  await expect.poll(() => pesoDisciplina).toBe('100.00')
+
+  await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
+
+  await page.getByLabel('Unidade').click()
+  await page.getByRole('option', { name: 'm³' }).click()
+  await page.getByLabel('Novo serviço').fill('Corte')
+  await page.getByRole('button', { name: 'Adicionar serviço' }).click()
+
+  await expect(page.getByText('Corte')).toBeVisible()
 })
