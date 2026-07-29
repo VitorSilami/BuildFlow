@@ -4,12 +4,16 @@ import pytest
 
 from buildflow.configuracoes.models import CatalogoServico
 from buildflow.configuracoes.models import Disciplina
+from buildflow.configuracoes.models import Equipe
 from buildflow.configuracoes.models import Unidade
 from buildflow.core.tests.factories import UsuarioFactory
 from buildflow.projetos.models import Projeto
 from buildflow.projetos.services import calcular_avanco_disciplina
 from buildflow.projetos.services import calcular_avanco_servico
 from buildflow.projetos.services import calcular_execucao_percentual
+from buildflow.projetos.services import calcular_quantidade_executada_total
+from buildflow.registros_diarios.models import ProducaoDiaria
+from buildflow.registros_diarios.models import RegistroDiario
 
 pytestmark = pytest.mark.django_db
 
@@ -47,7 +51,7 @@ def test_servico_com_quantidade_calcula_percentual():
         nome="Corte",
         unidade=_criar_unidade(),
         quantidade_planejada=Decimal("1000.000"),
-        quantidade_executada=Decimal("500.000"),
+        quantidade_executada_manual=Decimal("500.000"),
     )
 
     assert calcular_avanco_servico(servico) == Decimal("50.00")
@@ -71,7 +75,7 @@ def test_disciplina_sem_peso_percentual_nao_conta_e_retorna_none():
         nome="Corte",
         unidade=_criar_unidade(),
         quantidade_planejada=Decimal("1000.000"),
-        quantidade_executada=Decimal("500.000"),
+        quantidade_executada_manual=Decimal("500.000"),
         peso_percentual=Decimal("100.00"),
     )
 
@@ -90,7 +94,7 @@ def test_servico_sem_peso_nao_conta_na_disciplina():
         nome="Corte",
         unidade=_criar_unidade(),
         quantidade_planejada=Decimal("1000.000"),
-        quantidade_executada=Decimal("500.000"),
+        quantidade_executada_manual=Decimal("500.000"),
         peso_percentual=None,
     )
 
@@ -127,7 +131,7 @@ def test_uma_disciplina_um_servico_com_peso_calcula_percentual_direto():
         nome="Corte",
         unidade=_criar_unidade(),
         quantidade_planejada=Decimal("1000.000"),
-        quantidade_executada=Decimal("500.000"),
+        quantidade_executada_manual=Decimal("500.000"),
         peso_percentual=Decimal("100.00"),
     )
 
@@ -149,7 +153,7 @@ def test_duas_disciplinas_pesos_diferentes_media_ponderada():
         nome="Corte",
         unidade=unidade,
         quantidade_planejada=Decimal("1000.000"),
-        quantidade_executada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("1000.000"),
         peso_percentual=Decimal("100.00"),
     )
 
@@ -163,7 +167,7 @@ def test_duas_disciplinas_pesos_diferentes_media_ponderada():
         nome="Base",
         unidade=unidade,
         quantidade_planejada=Decimal("200.000"),
-        quantidade_executada=Decimal("100.000"),
+        quantidade_executada_manual=Decimal("100.000"),
         peso_percentual=Decimal("100.00"),
     )
 
@@ -185,7 +189,7 @@ def test_dois_servicos_pesos_diferentes_dentro_da_disciplina():
         nome="Corte",
         unidade=unidade,
         quantidade_planejada=Decimal("1000.000"),
-        quantidade_executada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("1000.000"),
         peso_percentual=Decimal("60.00"),
     )
     CatalogoServico.objects.create(
@@ -193,10 +197,153 @@ def test_dois_servicos_pesos_diferentes_dentro_da_disciplina():
         nome="Aterro",
         unidade=unidade,
         quantidade_planejada=Decimal("500.000"),
-        quantidade_executada=Decimal("0.000"),
+        quantidade_executada_manual=Decimal("0.000"),
         peso_percentual=Decimal("40.00"),
     )
 
     # (100% * 60 + 0% * 40) / (60 + 40) = 60%
     assert calcular_avanco_disciplina(disciplina) == Decimal("60.00")
     assert calcular_execucao_percentual(projeto) == Decimal("60.00")
+
+
+def test_quantidade_executada_total_soma_producoes_diarias_do_servico():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        quantidade_planejada=Decimal("1000.000"),
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    usuario = projeto.criado_por
+    registro_1 = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    registro_2 = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-02",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_1,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.000"),
+        km_final=Decimal("1.000"),
+        quantidade=Decimal("100.000"),
+        unidade=unidade,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_2,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("1.000"),
+        km_final=Decimal("2.000"),
+        quantidade=Decimal("150.000"),
+        unidade=unidade,
+    )
+
+    assert calcular_quantidade_executada_total(servico) == Decimal("250.000")
+
+
+def test_quantidade_executada_total_soma_ajuste_manual_e_producoes_diarias():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("300.000"),
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    usuario = projeto.criado_por
+    registro = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.000"),
+        km_final=Decimal("1.000"),
+        quantidade=Decimal("100.000"),
+        unidade=unidade,
+    )
+
+    assert calcular_quantidade_executada_total(servico) == Decimal("400.000")
+
+
+def test_quantidade_executada_total_sem_producoes_usa_so_ajuste_manual():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("500.000"),
+    )
+
+    assert calcular_quantidade_executada_total(servico) == Decimal("500.000")
+
+
+def test_avanco_servico_usa_soma_de_producoes_diarias():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        quantidade_planejada=Decimal("1000.000"),
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    usuario = projeto.criado_por
+    registro = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.000"),
+        km_final=Decimal("1.000"),
+        quantidade=Decimal("400.000"),
+        unidade=unidade,
+    )
+
+    assert calcular_avanco_servico(servico) == Decimal("40.00")

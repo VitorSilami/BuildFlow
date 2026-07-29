@@ -146,7 +146,7 @@ def test_criar_servico_no_catalogo_da_disciplina():
     assert body["nome"] == "Corte"
     assert body["peso_percentual"] == "100.00"
     assert body["quantidade_planejada"] == "1000.000"
-    assert body["quantidade_executada"] == "0.000"
+    assert body["quantidade_executada_manual"] == "0.000"
     assert body["avanco_percentual"] == "0.00"
 
 
@@ -159,7 +159,7 @@ def test_patch_servico_atualiza_peso_quantidade_e_recalcula_avanco():
 
     response = client.patch(
         f"/api/v1/configuracoes/servicos/{servico.id}/",
-        {"quantidade_planejada": "1000.000", "quantidade_executada": "250.000"},
+        {"quantidade_planejada": "1000.000", "quantidade_executada_manual": "250.000"},
         format="json",
     )
 
@@ -186,7 +186,7 @@ def test_configuracao_projeto_retorna_soma_pesos_disciplinas_e_avanco():
             "unidade": unidade.id,
             "peso_percentual": "100.00",
             "quantidade_planejada": "1000.000",
-            "quantidade_executada": "1000.000",
+            "quantidade_executada_manual": "1000.000",
         },
         format="json",
     )

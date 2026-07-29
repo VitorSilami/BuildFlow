@@ -30,7 +30,7 @@ class CatalogoServicoInline(admin.TabularInline):
         "unidade",
         "peso_percentual",
         "quantidade_planejada",
-        "quantidade_executada",
+        "quantidade_executada_manual",
     ]
 
 

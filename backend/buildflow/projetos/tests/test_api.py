@@ -157,7 +157,7 @@ def test_lista_projetos_inclui_execucao_percentual_calculada():
         unidade=unidade,
         peso_percentual=Decimal("100"),
         quantidade_planejada=Decimal("1000"),
-        quantidade_executada=Decimal("250"),
+        quantidade_executada_manual=Decimal("250"),
     )
 
     response = _authenticated_client(usuario).get(PROJETOS_URL)

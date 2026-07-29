@@ -38,7 +38,7 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
             "unidade",
             "peso_percentual",
             "quantidade_planejada",
-            "quantidade_executada",
+            "quantidade_executada_manual",
             "avanco_percentual",
         ]
 

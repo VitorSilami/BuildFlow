@@ -111,7 +111,7 @@ def test_execucao_media_calculada_entre_projetos_ativos():
         unidade=unidade,
         peso_percentual=Decimal("100"),
         quantidade_planejada=Decimal("1000"),
-        quantidade_executada=Decimal("400"),
+        quantidade_executada_manual=Decimal("400"),
     )
     equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
     RegistroDiario.objects.create(

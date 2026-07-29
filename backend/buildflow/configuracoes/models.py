@@ -108,8 +108,8 @@ class CatalogoServico(models.Model):
         null=True,
         blank=True,
     )
-    quantidade_executada = models.DecimalField(
-        _("quantidade executada"),
+    quantidade_executada_manual = models.DecimalField(
+        _("quantidade executada (ajuste manual)"),
         max_digits=12,
         decimal_places=3,
         default=Decimal("0"),

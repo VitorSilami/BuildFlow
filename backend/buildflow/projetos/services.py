@@ -5,8 +5,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django.db.models import Count
+from django.db.models import Sum
 from django.utils import timezone
 
+from buildflow.registros_diarios.models import ProducaoDiaria
 from buildflow.registros_diarios.models import RegistroDiario
 
 from .models import Projeto
@@ -19,13 +21,25 @@ if TYPE_CHECKING:
 DIAS_JANELA_ATIVIDADE = 7
 
 
+def calcular_quantidade_executada_total(servico: CatalogoServico) -> Decimal:
+    """Quantidade executada de um servico: soma dos lancamentos de ProducaoDiaria
+    vinculados a ele, mais o ajuste manual (producao anterior ao uso do sistema
+    ou correcoes pontuais). Sempre recalculada, nunca armazenada.
+    """
+    soma_rdo = ProducaoDiaria.objects.filter(servico=servico).aggregate(
+        total=Sum("quantidade"),
+    )["total"] or Decimal("0")
+    return servico.quantidade_executada_manual + soma_rdo
+
+
 def calcular_avanco_servico(servico: CatalogoServico) -> Decimal | None:
     """Percentual executado de um servico: quantidade_executada / quantidade_planejada.
     Retorna None quando nao ha quantidade planejada — nunca inventa um numero.
     """
     if not servico.quantidade_planejada:
         return None
-    proporcao = servico.quantidade_executada / servico.quantidade_planejada
+    quantidade_executada = calcular_quantidade_executada_total(servico)
+    proporcao = quantidade_executada / servico.quantidade_planejada
     return (proporcao * Decimal("100")).quantize(Decimal("0.01"))
 
 

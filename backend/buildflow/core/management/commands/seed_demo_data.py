@@ -94,7 +94,6 @@ class Command(BaseCommand):
             unidade=unidade,
             peso_percentual=100,
             quantidade_planejada=1000,
-            quantidade_executada=500,
         )
 
         equipe = Equipe.objects.create(projeto=projeto, nome="Equipe 1")

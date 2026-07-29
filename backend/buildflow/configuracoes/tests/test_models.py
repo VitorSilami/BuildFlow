@@ -45,7 +45,7 @@ def test_catalogo_servico_quantidade_executada_default_zero():
         disciplina=disciplina, nome="Corte", unidade=unidade,
     )
 
-    assert servico.quantidade_executada == Decimal("0")
+    assert servico.quantidade_executada_manual == Decimal("0")
     assert servico.quantidade_planejada is None
     assert servico.peso_percentual is None
 
@@ -61,9 +61,9 @@ def test_catalogo_servico_aceita_peso_e_quantidades():
         unidade=unidade,
         peso_percentual=Decimal("60.00"),
         quantidade_planejada=Decimal("1000.000"),
-        quantidade_executada=Decimal("250.000"),
+        quantidade_executada_manual=Decimal("250.000"),
     )
 
     assert servico.peso_percentual == Decimal("60.00")
     assert servico.quantidade_planejada == Decimal("1000.000")
-    assert servico.quantidade_executada == Decimal("250.000")
+    assert servico.quantidade_executada_manual == Decimal("250.000")
