@@ -18,11 +18,6 @@ export function execucaoCorClasse(valor: string | null): string {
   const numero = Number(valor)
   if (numero < LIMITE_EXECUCAO_BAIXA) return 'bg-red-500'
   if (numero < LIMITE_EXECUCAO_MEDIA) return 'bg-amber-500'
-  // A barra (componente Progress) trava visualmente em 100% de largura, mas o
-  // rótulo numérico ao lado continua mostrando o valor real (ex.: 277%) — sem
-  // uma cor própria pra "acima da meta", a barra cheia parece idêntica a uma
-  // execução de exatos 100%, e os dois pareciam discordar.
-  if (numero > 100) return 'bg-sky-500'
   return 'bg-emerald-500'
 }
 
