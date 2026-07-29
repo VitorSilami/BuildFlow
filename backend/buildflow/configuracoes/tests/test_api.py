@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 from http import HTTPStatus
 
@@ -450,3 +451,81 @@ def test_servico_expoe_producoes_vinculadas_ordenadas_por_data_recente():
         {"data_referencia": "2026-07-10", "quantidade": "150.000"},
         {"data_referencia": "2026-07-01", "quantidade": "100.000"},
     ]
+
+
+def test_servico_expoe_carta_controle_com_amostra_suficiente():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    unidade = UnidadeFactory()
+    servico = CatalogoServicoFactory(disciplina=disciplina, unidade=unidade)
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    for indice, valor in enumerate(
+        [
+            Decimal("100.000"),
+            Decimal("110.000"),
+            Decimal("90.000"),
+            Decimal("105.000"),
+            Decimal("95.000"),
+        ],
+    ):
+        registro = RegistroDiario.objects.create(
+            projeto=projeto,
+            data_referencia=datetime.date(2026, 7, 1) + datetime.timedelta(days=indice),
+            turno="diurno",
+            clima="sol",
+            equipe=equipe,
+            fiscal=usuario,
+            autor=usuario,
+            status="aprovado",
+        )
+        ProducaoDiaria.objects.create(
+            registro_diario=registro,
+            rodovia="BR-365",
+            sentido="crescente",
+            disciplina=disciplina,
+            servico=servico,
+            km_inicial=Decimal("0.000"),
+            km_final=Decimal("1.000"),
+            quantidade=valor,
+            unidade=unidade,
+        )
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    servico_body = response.json()["disciplinas"][0]["servicos"][0]
+    cc = servico_body["carta_controle"]
+    assert cc["media"] == "100.000"
+    assert cc["desvio_padrao"] == "7.906"
+    assert cc["lsc"] == "123.718"
+    assert cc["lic"] == "76.282"
+    assert cc["pontos"][0]["data_referencia"] == "2026-07-01"
+    assert cc["pontos"][-1]["data_referencia"] == "2026-07-05"
+    assert all(p["fora_de_controle"] is False for p in cc["pontos"])
+
+
+def test_servico_expoe_carta_controle_nula_com_amostra_insuficiente():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    CatalogoServicoFactory(disciplina=disciplina, unidade=UnidadeFactory())
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    servico_body = response.json()["disciplinas"][0]["servicos"][0]
+    assert servico_body["carta_controle"] is None
+
+
+def test_configuracao_rdo_servico_nao_expoe_carta_controle():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    CatalogoServicoFactory(disciplina=disciplina, unidade=UnidadeFactory())
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao-rdo/")
+
+    servico_body = response.json()["disciplinas"][0]["servicos"][0]
+    assert "carta_controle" not in servico_body

@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from buildflow.projetos.services import calcular_avanco_disciplina
 from buildflow.projetos.services import calcular_avanco_servico
+from buildflow.projetos.services import calcular_carta_controle
 from buildflow.projetos.services import calcular_quantidade_executada_total
 from buildflow.projetos.services import decimal_para_str_ou_none
 from buildflow.projetos.services import listar_producoes_vinculadas
@@ -49,6 +50,7 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
     avanco_percentual = serializers.SerializerMethodField()
     quantidade_executada = serializers.SerializerMethodField()
     producoes_vinculadas = serializers.SerializerMethodField()
+    carta_controle = serializers.SerializerMethodField()
 
     class Meta:
         model = CatalogoServico
@@ -61,6 +63,7 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
             "quantidade_executada_manual",
             "quantidade_executada",
             "producoes_vinculadas",
+            "carta_controle",
             "avanco_percentual",
         ]
 
@@ -79,6 +82,25 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
             }
             for producao in listar_producoes_vinculadas(obj)
         ]
+
+    def get_carta_controle(self, obj: CatalogoServico) -> dict | None:
+        cc = calcular_carta_controle(obj)
+        if cc is None:
+            return None
+        return {
+            "media": str(cc.media),
+            "desvio_padrao": str(cc.desvio_padrao),
+            "lsc": str(cc.lsc),
+            "lic": str(cc.lic),
+            "pontos": [
+                {
+                    "data_referencia": p.data_referencia.isoformat(),
+                    "quantidade": str(p.quantidade),
+                    "fora_de_controle": p.fora_de_controle,
+                }
+                for p in cc.pontos
+            ],
+        }
 
 
 class DisciplinaSerializer(serializers.ModelSerializer):
