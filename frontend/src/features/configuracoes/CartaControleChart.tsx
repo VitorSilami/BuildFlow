@@ -47,9 +47,11 @@ export function CartaControleChart({ cartaControle }: CartaControleChartProps) {
             strokeDasharray="5 4"
             label="LIC"
           />
-          <Line type="monotone" dataKey="valor" stroke="var(--color-primary)" strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="valor" name="Produção diária" stroke="var(--color-primary)" strokeWidth={2} dot={{ r: 3 }} />
           <Line
+            type="monotone"
             dataKey="valorForaDeControle"
+            name="Fora de controle"
             stroke="none"
             dot={{ r: 5, fill: 'var(--color-destructive)', stroke: 'var(--color-destructive)' }}
           />
