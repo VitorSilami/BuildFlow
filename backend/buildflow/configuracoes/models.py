@@ -114,6 +114,16 @@ class CatalogoServico(models.Model):
         decimal_places=3,
         default=Decimal("0"),
     )
+    data_inicio_prevista = models.DateField(
+        _("data de início prevista"),
+        null=True,
+        blank=True,
+    )
+    data_fim_prevista = models.DateField(
+        _("data de fim prevista"),
+        null=True,
+        blank=True,
+    )
 
     tenant_path = "disciplina__projeto__empresa"
     objects = TenantScopedManager()

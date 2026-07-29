@@ -6,9 +6,11 @@ from decimal import Decimal
 from statistics import stdev
 from typing import TYPE_CHECKING
 
+from django.db import models
 from django.db.models import Count
 from django.db.models import Sum
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from buildflow.registros_diarios.models import ProducaoDiaria
 from buildflow.registros_diarios.models import RegistroDiario
@@ -23,6 +25,19 @@ if TYPE_CHECKING:
 
 DIAS_JANELA_ATIVIDADE = 7
 AMOSTRA_MINIMA_CARTA_CONTROLE = 5
+LIMIAR_CONCLUIDO = Decimal("99.95")
+LIMIAR_NAO_INICIADO = Decimal("0.01")
+DESVIO_CRITICO = Decimal("-8")
+DESVIO_ATENCAO = Decimal("-3")
+
+
+class StatusEapChoices(models.TextChoices):
+    CONCLUIDO = "concluido", _("Concluído")
+    NO_PRAZO = "no_prazo", _("No prazo")
+    ATENCAO = "atencao", _("Atenção")
+    CRITICO = "critico", _("Crítico")
+    NAO_INICIADO = "nao_iniciado", _("Não iniciado")
+    PLANEJADO = "planejado", _("Planejado")
 
 
 @dataclass
@@ -143,6 +158,70 @@ def calcular_avanco_disciplina(disciplina: Disciplina) -> Decimal | None:
         return None
 
     return (soma_ponderada / soma_pesos).quantize(Decimal("0.01"))
+
+
+def calcular_avanco_previsto_servico(
+    servico: CatalogoServico,
+    hoje: datetime.date | None = None,
+) -> Decimal | None:
+    """Avanco previsto de um servico por interpolacao linear entre
+    data_inicio_prevista e data_fim_prevista ate hoje. Sem as duas datas
+    definidas, retorna None — nao ha base pra prever nada.
+    """
+    if servico.data_inicio_prevista is None or servico.data_fim_prevista is None:
+        return None
+    hoje = hoje or timezone.now().date()
+    inicio, fim = servico.data_inicio_prevista, servico.data_fim_prevista
+    if hoje <= inicio:
+        return Decimal("0")
+    if hoje >= fim:
+        return Decimal("100")
+    dias_totais = (fim - inicio).days
+    dias_decorridos = (hoje - inicio).days
+    return (Decimal(dias_decorridos) / Decimal(dias_totais) * Decimal("100")).quantize(Decimal("0.01"))
+
+
+def calcular_avanco_previsto_disciplina(
+    disciplina: Disciplina,
+    hoje: datetime.date | None = None,
+) -> Decimal | None:
+    """Media ponderada (por peso_percentual) do avanco previsto dos servicos
+    da disciplina. Servico sem peso ou sem previsto (datas ausentes) nao conta.
+    """
+    soma_pesos = Decimal("0")
+    soma_ponderada = Decimal("0")
+    for servico in disciplina.servicos.all():
+        if servico.peso_percentual is None:
+            continue
+        previsto = calcular_avanco_previsto_servico(servico, hoje)
+        if previsto is None:
+            continue
+        soma_ponderada += previsto * servico.peso_percentual
+        soma_pesos += servico.peso_percentual
+    if soma_pesos == 0:
+        return None
+    return (soma_ponderada / soma_pesos).quantize(Decimal("0.01"))
+
+
+def classificar_status_eap(real: Decimal | None, previsto: Decimal | None) -> str | None:
+    """Status do item (servico ou disciplina) a partir do avanco real vs
+    previsto. Sem avanco real (sem quantidade_planejada), nao ha o que
+    classificar — retorna None.
+    """
+    if real is None:
+        return None
+    if real >= LIMIAR_CONCLUIDO:
+        return StatusEapChoices.CONCLUIDO
+    if previsto is None:
+        return StatusEapChoices.PLANEJADO
+    if previsto <= LIMIAR_NAO_INICIADO and real <= LIMIAR_NAO_INICIADO:
+        return StatusEapChoices.NAO_INICIADO
+    desvio = real - previsto
+    if desvio <= DESVIO_CRITICO:
+        return StatusEapChoices.CRITICO
+    if desvio <= DESVIO_ATENCAO:
+        return StatusEapChoices.ATENCAO
+    return StatusEapChoices.NO_PRAZO
 
 
 def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:

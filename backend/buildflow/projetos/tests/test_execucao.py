@@ -696,3 +696,160 @@ def test_carta_controle_marca_ponto_abaixo_do_lic_como_fora_de_controle():
     assert cc.lsc == Decimal("170.086")
     assert cc.lic == Decimal("16.714")
     assert [p.fora_de_controle for p in cc.pontos] == [False] * 14 + [True]
+
+
+from buildflow.projetos.services import StatusEapChoices
+from buildflow.projetos.services import calcular_avanco_previsto_disciplina
+from buildflow.projetos.services import calcular_avanco_previsto_servico
+from buildflow.projetos.services import classificar_status_eap
+
+
+def test_avanco_previsto_servico_sem_datas_retorna_none():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+    )
+
+    assert calcular_avanco_previsto_servico(servico) is None
+
+
+def test_avanco_previsto_servico_antes_do_inicio_retorna_zero():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+        data_inicio_prevista=datetime.date(2026, 8, 1),
+        data_fim_prevista=datetime.date(2026, 8, 31),
+    )
+
+    previsto = calcular_avanco_previsto_servico(servico, hoje=datetime.date(2026, 7, 15))
+
+    assert previsto == Decimal("0")
+
+
+def test_avanco_previsto_servico_depois_do_fim_retorna_cem():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 1, 31),
+    )
+
+    previsto = calcular_avanco_previsto_servico(servico, hoje=datetime.date(2026, 3, 1))
+
+    assert previsto == Decimal("100")
+
+
+def test_avanco_previsto_servico_no_meio_interpola_linearmente():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 1, 11),
+    )
+
+    # 3 de 10 dias decorridos = 30%
+    previsto = calcular_avanco_previsto_servico(servico, hoje=datetime.date(2026, 1, 4))
+
+    assert previsto == Decimal("30.00")
+
+
+def test_avanco_previsto_disciplina_ignora_servico_sem_data():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        peso_percentual=Decimal("60.00"),
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 2, 1),
+    )
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Aterro",
+        unidade=unidade,
+        peso_percentual=Decimal("40.00"),
+    )
+
+    # Aterro nao tem data, entao nao entra na conta — sobra so o Corte (100% previsto)
+    previsto = calcular_avanco_previsto_disciplina(disciplina, hoje=datetime.date(2026, 6, 1))
+
+    assert previsto == Decimal("100.00")
+
+
+def test_avanco_previsto_disciplina_pondera_por_peso():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        peso_percentual=Decimal("60.00"),
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 2, 1),
+    )
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Aterro",
+        unidade=unidade,
+        peso_percentual=Decimal("40.00"),
+        data_inicio_prevista=datetime.date(2026, 12, 1),
+        data_fim_prevista=datetime.date(2027, 1, 1),
+    )
+
+    # Corte: hoje depois do fim => 100% previsto. Aterro: hoje antes do inicio => 0% previsto.
+    # (100*60 + 0*40) / 100 = 60.00
+    previsto = calcular_avanco_previsto_disciplina(disciplina, hoje=datetime.date(2026, 6, 1))
+
+    assert previsto == Decimal("60.00")
+
+
+def test_status_eap_concluido_quando_real_maior_ou_igual_ao_limiar():
+    assert classificar_status_eap(Decimal("99.95"), Decimal("10.00")) == StatusEapChoices.CONCLUIDO
+    assert classificar_status_eap(Decimal("100.00"), None) == StatusEapChoices.CONCLUIDO
+
+
+def test_status_eap_sem_previsto_retorna_planejado():
+    assert classificar_status_eap(Decimal("40.00"), None) == StatusEapChoices.PLANEJADO
+
+
+def test_status_eap_nao_iniciado_quando_real_e_previsto_proximos_de_zero():
+    assert classificar_status_eap(Decimal("0.00"), Decimal("0.01")) == StatusEapChoices.NAO_INICIADO
+    assert classificar_status_eap(Decimal("0.01"), Decimal("0.00")) == StatusEapChoices.NAO_INICIADO
+
+
+def test_status_eap_critico_no_limiar_exato_de_desvio():
+    # desvio = 10 - 18 = -8.00 (limiar exato, inclusivo)
+    assert classificar_status_eap(Decimal("10.00"), Decimal("18.00")) == StatusEapChoices.CRITICO
+
+
+def test_status_eap_atencao_entre_os_dois_limiares():
+    # desvio = 10 - 17.99 = -7.99 (nao chega no critico)
+    assert classificar_status_eap(Decimal("10.00"), Decimal("17.99")) == StatusEapChoices.ATENCAO
+    # desvio = 10 - 13 = -3.00 (limiar exato do atencao, inclusivo)
+    assert classificar_status_eap(Decimal("10.00"), Decimal("13.00")) == StatusEapChoices.ATENCAO
+
+
+def test_status_eap_no_prazo_quando_desvio_acima_do_limiar_de_atencao():
+    # desvio = 10 - 12.99 = -2.99 (nao chega no atencao)
+    assert classificar_status_eap(Decimal("10.00"), Decimal("12.99")) == StatusEapChoices.NO_PRAZO
+    # real acima do previsto tambem e No prazo
+    assert classificar_status_eap(Decimal("50.00"), Decimal("40.00")) == StatusEapChoices.NO_PRAZO
+
+
+def test_status_eap_sem_avanco_real_retorna_none():
+    assert classificar_status_eap(None, Decimal("50.00")) is None
