@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import datetime
+from dataclasses import dataclass
 from decimal import Decimal
+from statistics import stdev
 from typing import TYPE_CHECKING
 
 from django.db.models import Count
@@ -20,6 +22,64 @@ if TYPE_CHECKING:
     from buildflow.empresas.models import Empresa
 
 DIAS_JANELA_ATIVIDADE = 7
+AMOSTRA_MINIMA_CARTA_CONTROLE = 5
+
+
+@dataclass
+class PontoCartaControle:
+    data_referencia: datetime.date
+    quantidade: Decimal
+    fora_de_controle: bool
+
+
+@dataclass
+class CartaControle:
+    media: Decimal
+    desvio_padrao: Decimal
+    lsc: Decimal
+    lic: Decimal
+    pontos: list[PontoCartaControle]
+
+
+def calcular_carta_controle(servico: CatalogoServico) -> CartaControle | None:
+    """Carta de controle (SPC) da produtividade diaria de um servico: soma as
+    ProducaoDiaria aprovadas por dia (um RDO pode ter mais de um lancamento do
+    mesmo servico no mesmo dia), calcula media/desvio padrao amostral e limites
+    de controle (LSC/LIC = media +/- 3 desvios) a partir dos totais diarios
+    reais. Com menos de AMOSTRA_MINIMA_CARTA_CONTROLE dias distintos, retorna
+    None — nunca inventa estatistica com amostra pequena demais.
+    """
+    totais_por_dia = (
+        ProducaoDiaria.objects.filter(
+            servico=servico,
+            registro_diario__status=StatusRegistroChoices.APROVADO,
+        )
+        .values("registro_diario__data_referencia")
+        .annotate(total=Sum("quantidade"))
+        .order_by("registro_diario__data_referencia")
+    )
+
+    if len(totais_por_dia) < AMOSTRA_MINIMA_CARTA_CONTROLE:
+        return None
+
+    valores = [linha["total"] for linha in totais_por_dia]
+    media = (sum(valores) / len(valores)).quantize(Decimal("0.001"))
+    desvio = stdev(valores).quantize(Decimal("0.001"))
+    lsc = media + 3 * desvio
+    lic = max(Decimal("0"), media - 3 * desvio)
+
+    pontos = [
+        PontoCartaControle(
+            data_referencia=linha["registro_diario__data_referencia"],
+            quantidade=linha["total"],
+            fora_de_controle=linha["total"] > lsc or linha["total"] < lic,
+        )
+        for linha in totais_por_dia
+    ]
+
+    return CartaControle(
+        media=media, desvio_padrao=desvio, lsc=lsc, lic=lic, pontos=pontos,
+    )
 
 
 def calcular_quantidade_executada_total(servico: CatalogoServico) -> Decimal:

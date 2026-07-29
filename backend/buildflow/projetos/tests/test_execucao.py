@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 
 import pytest
@@ -10,6 +11,7 @@ from buildflow.core.tests.factories import UsuarioFactory
 from buildflow.projetos.models import Projeto
 from buildflow.projetos.services import calcular_avanco_disciplina
 from buildflow.projetos.services import calcular_avanco_servico
+from buildflow.projetos.services import calcular_carta_controle
 from buildflow.projetos.services import calcular_execucao_percentual
 from buildflow.projetos.services import calcular_quantidade_executada_total
 from buildflow.projetos.services import listar_producoes_vinculadas
@@ -487,3 +489,210 @@ def test_quantidade_executada_total_exclui_producao_de_rdo_aguardando_aprovacao(
 
     assert calcular_quantidade_executada_total(servico) == Decimal("0")
     assert calcular_avanco_servico(servico) == Decimal("0.00")
+
+
+def _criar_producoes_diarias(
+    servico: CatalogoServico,
+    valores_por_dia: list[Decimal],
+) -> None:
+    """Cria um RegistroDiario aprovado + uma ProducaoDiaria por dia, um dia
+    apos o outro a partir de 2026-07-01 — usado para popular a amostra da
+    carta de controle nos testes."""
+    disciplina = servico.disciplina
+    projeto = disciplina.projeto
+    unidade = servico.unidade
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    usuario = projeto.criado_por
+    for indice, valor in enumerate(valores_por_dia):
+        registro = RegistroDiario.objects.create(
+            projeto=projeto,
+            data_referencia=datetime.date(2026, 7, 1) + datetime.timedelta(days=indice),
+            turno="diurno",
+            clima="sol",
+            equipe=equipe,
+            fiscal=usuario,
+            autor=usuario,
+            status="aprovado",
+        )
+        ProducaoDiaria.objects.create(
+            registro_diario=registro,
+            rodovia="BR-365",
+            sentido="crescente",
+            disciplina=disciplina,
+            servico=servico,
+            km_inicial=Decimal("0.000"),
+            km_final=Decimal("1.000"),
+            quantidade=valor,
+            unidade=unidade,
+        )
+
+
+def test_carta_controle_com_menos_de_5_dias_retorna_none():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+        quantidade_planejada=Decimal("10000.000"),
+    )
+    _criar_producoes_diarias(servico, [Decimal("100.000")] * 4)
+
+    assert calcular_carta_controle(servico) is None
+
+
+def test_carta_controle_com_5_dias_calcula_media_desvio_e_limites():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+        quantidade_planejada=Decimal("10000.000"),
+    )
+    _criar_producoes_diarias(
+        servico,
+        [
+            Decimal("100.000"),
+            Decimal("110.000"),
+            Decimal("90.000"),
+            Decimal("105.000"),
+            Decimal("95.000"),
+        ],
+    )
+
+    cc = calcular_carta_controle(servico)
+
+    assert cc is not None
+    assert cc.media == Decimal("100.000")
+    assert cc.desvio_padrao == Decimal("7.906")
+    assert cc.lsc == Decimal("123.718")
+    assert cc.lic == Decimal("76.282")
+    assert len(cc.pontos) == 5  # noqa: PLR2004
+    assert [p.data_referencia for p in cc.pontos] == [
+        datetime.date(2026, 7, 1),
+        datetime.date(2026, 7, 2),
+        datetime.date(2026, 7, 3),
+        datetime.date(2026, 7, 4),
+        datetime.date(2026, 7, 5),
+    ]
+    assert all(p.fora_de_controle is False for p in cc.pontos)
+
+
+def test_carta_controle_soma_dois_lancamentos_do_mesmo_dia_antes_da_amostra():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        quantidade_planejada=Decimal("10000.000"),
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    usuario = projeto.criado_por
+    for indice in range(4):
+        registro = RegistroDiario.objects.create(
+            projeto=projeto,
+            data_referencia=datetime.date(2026, 7, 1) + datetime.timedelta(days=indice),
+            turno="diurno",
+            clima="sol",
+            equipe=equipe,
+            fiscal=usuario,
+            autor=usuario,
+            status="aprovado",
+        )
+        ProducaoDiaria.objects.create(
+            registro_diario=registro,
+            rodovia="BR-365",
+            sentido="crescente",
+            disciplina=disciplina,
+            servico=servico,
+            km_inicial=Decimal("0.000"),
+            km_final=Decimal("1.000"),
+            quantidade=Decimal("100.000"),
+            unidade=unidade,
+        )
+    # 5o dia: dois lancamentos no mesmo RDO, devem somar 100 antes de virar 1 ponto
+    registro_5 = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia=datetime.date(2026, 7, 5),
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+        status="aprovado",
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_5,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.000"),
+        km_final=Decimal("0.500"),
+        quantidade=Decimal("70.000"),
+        unidade=unidade,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_5,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.500"),
+        km_final=Decimal("1.000"),
+        quantidade=Decimal("30.000"),
+        unidade=unidade,
+    )
+
+    cc = calcular_carta_controle(servico)
+
+    assert cc is not None
+    assert len(cc.pontos) == 5  # noqa: PLR2004
+    assert cc.pontos[4].quantidade == Decimal("100.000")
+    assert cc.media == Decimal("100.000")
+    assert cc.desvio_padrao == Decimal("0.000")
+
+
+def test_carta_controle_marca_ponto_acima_do_lsc_como_fora_de_controle():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+        quantidade_planejada=Decimal("10000.000"),
+    )
+    _criar_producoes_diarias(servico, [Decimal("100.000")] * 14 + [Decimal("400.000")])
+
+    cc = calcular_carta_controle(servico)
+
+    assert cc is not None
+    assert cc.media == Decimal("120.000")
+    assert cc.desvio_padrao == Decimal("77.460")
+    assert cc.lsc == Decimal("352.380")
+    assert cc.lic == Decimal("0.000")
+    assert [p.fora_de_controle for p in cc.pontos] == [False] * 14 + [True]
+
+
+def test_carta_controle_marca_ponto_abaixo_do_lic_como_fora_de_controle():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=_criar_unidade(),
+        quantidade_planejada=Decimal("10000.000"),
+    )
+    _criar_producoes_diarias(servico, [Decimal("100.000")] * 14 + [Decimal("1.000")])
+
+    cc = calcular_carta_controle(servico)
+
+    assert cc is not None
+    assert cc.media == Decimal("93.400")
+    assert cc.desvio_padrao == Decimal("25.562")
+    assert cc.lsc == Decimal("170.086")
+    assert cc.lic == Decimal("16.714")
+    assert [p.fora_de_controle for p in cc.pontos] == [False] * 14 + [True]
