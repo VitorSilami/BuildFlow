@@ -98,6 +98,24 @@ def test_criar_rdo_completo_com_sub_recursos(cenario):
     assert registro.maquinas.count() == 1
 
 
+def test_criar_rdo_com_servico_de_outro_projeto_retorna_400(cenario):
+    url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
+    outra_disciplina = DisciplinaFactory()
+    outro_servico = CatalogoServicoFactory(disciplina=outra_disciplina)
+    payload = _payload(cenario)
+    payload["producoes"][0]["disciplina"] = str(outra_disciplina.id)
+    payload["producoes"][0]["servico"] = str(outro_servico.id)
+
+    response = _authenticated_client(cenario["usuario"]).post(
+        url,
+        payload,
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.data
+    assert "producoes" in response.data
+
+
 def test_listar_rdos_do_projeto(cenario):
     url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
     client = _authenticated_client(cenario["usuario"])
@@ -171,7 +189,10 @@ def test_filtro_intervalo_retorna_apenas_rdos_do_periodo(cenario):
 def test_filtro_intervalo_so_data_inicio_retorna_400(cenario):
     url = f"/api/v1/projetos/{cenario['projeto'].id}/registros-diarios/"
 
-    response = _authenticated_client(cenario["usuario"]).get(url, {"data_inicio": "2026-07-01"})
+    response = _authenticated_client(cenario["usuario"]).get(
+        url,
+        {"data_inicio": "2026-07-01"},
+    )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
 

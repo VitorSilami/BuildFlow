@@ -151,6 +151,21 @@ class RegistroDiarioSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate(self, attrs):
+        projeto = self.context["projeto"]
+        for producao in attrs.get("producoes", []):
+            disciplina = producao["disciplina"]
+            servico = producao["servico"]
+            if disciplina.projeto_id != projeto.id:
+                raise serializers.ValidationError(
+                    {"producoes": "Disciplina não pertence a este projeto."},
+                )
+            if servico.disciplina_id != disciplina.id:
+                raise serializers.ValidationError(
+                    {"producoes": "Serviço não pertence à disciplina informada."},
+                )
+        return attrs
+
     def create(self, validated_data):
         producoes_data = validated_data.pop("producoes")
         presencas_data = validated_data.pop("presencas")

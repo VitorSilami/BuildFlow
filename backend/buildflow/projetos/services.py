@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from buildflow.registros_diarios.models import ProducaoDiaria
 from buildflow.registros_diarios.models import RegistroDiario
+from buildflow.registros_diarios.models import StatusRegistroChoices
 
 from .models import Projeto
 
@@ -23,20 +24,28 @@ DIAS_JANELA_ATIVIDADE = 7
 
 def calcular_quantidade_executada_total(servico: CatalogoServico) -> Decimal:
     """Quantidade executada de um servico: soma dos lancamentos de ProducaoDiaria
-    vinculados a ele, mais o ajuste manual (producao anterior ao uso do sistema
-    ou correcoes pontuais). Sempre recalculada, nunca armazenada.
+    de RDOs aprovados vinculados a ele, mais o ajuste manual (producao anterior
+    ao uso do sistema ou correcoes pontuais). RDO rejeitado ou aguardando
+    aprovacao nao conta — so producao formalmente aprovada e um numero real.
+    Sempre recalculada, nunca armazenada.
     """
-    soma_rdo = ProducaoDiaria.objects.filter(servico=servico).aggregate(
-        total=Sum("quantidade"),
-    )["total"] or Decimal("0")
+    soma_rdo = ProducaoDiaria.objects.filter(
+        servico=servico,
+        registro_diario__status=StatusRegistroChoices.APROVADO,
+    ).aggregate(total=Sum("quantidade"))["total"] or Decimal("0")
     return servico.quantidade_executada_manual + soma_rdo
 
 
 def listar_producoes_vinculadas(servico: CatalogoServico) -> list[ProducaoDiaria]:
-    """Lancamentos de RDO vinculados a um servico, do mais recente para o mais
-    antigo — usado para exibir rastreabilidade do total executado."""
+    """Lancamentos de RDO aprovados vinculados a um servico, do mais recente
+    para o mais antigo — usado para exibir rastreabilidade do total executado.
+    RDO rejeitado ou aguardando aprovacao nao aparece aqui (mesma regra de
+    calcular_quantidade_executada_total)."""
     return list(
-        ProducaoDiaria.objects.filter(servico=servico)
+        ProducaoDiaria.objects.filter(
+            servico=servico,
+            registro_diario__status=StatusRegistroChoices.APROVADO,
+        )
         .select_related("registro_diario")
         .order_by("-registro_diario__data_referencia"),
     )

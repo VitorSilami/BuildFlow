@@ -41,7 +41,11 @@ class RegistroDiarioViewSet(
 
         data_inicio = self.request.query_params.get("data_inicio")
         data_fim = self.request.query_params.get("data_fim")
-        filtro_intervalo = filtro_intervalo_datas(data_inicio, data_fim, "data_referencia")
+        filtro_intervalo = filtro_intervalo_datas(
+            data_inicio,
+            data_fim,
+            "data_referencia",
+        )
         if filtro_intervalo:
             return queryset.filter(**filtro_intervalo)
 
@@ -69,6 +73,11 @@ class RegistroDiarioViewSet(
             Projeto.objects.for_empresa(self.request.user.empresa),
             pk=self.kwargs["projeto_pk"],
         )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["projeto"] = self._get_projeto()
+        return context
 
     def perform_create(self, serializer):
         projeto = self._get_projeto()

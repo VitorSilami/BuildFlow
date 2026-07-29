@@ -48,6 +48,25 @@ def test_configuracao_rdo_retorna_disciplinas_equipes_e_unidades_do_projeto():
     assert usuario.email in [f["email"] for f in body["fiscais"]]
 
 
+def test_configuracao_rdo_servico_nao_expoe_campos_da_eap():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    unidade = UnidadeFactory()
+    CatalogoServicoFactory(disciplina=disciplina, unidade=unidade)
+
+    response = _authenticated_client(usuario).get(
+        f"/api/v1/projetos/{projeto.id}/configuracao-rdo/",
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    servico = response.json()["disciplinas"][0]["servicos"][0]
+    assert set(servico.keys()) == {"id", "nome", "unidade"}
+    assert "peso_percentual" not in servico
+    assert "quantidade_executada" not in servico
+    assert "producoes_vinculadas" not in servico
+
+
 def test_configuracao_rdo_de_outra_empresa_retorna_404():
     usuario_a = UsuarioFactory()
     projeto_a = ProjetoParaRdoFactory(criado_por=usuario_a)
@@ -387,6 +406,7 @@ def test_servico_expoe_producoes_vinculadas_ordenadas_por_data_recente():
         equipe=equipe,
         fiscal=usuario,
         autor=usuario,
+        status="aprovado",
     )
     registro_recente = RegistroDiario.objects.create(
         projeto=projeto,
@@ -396,6 +416,7 @@ def test_servico_expoe_producoes_vinculadas_ordenadas_por_data_recente():
         equipe=equipe,
         fiscal=usuario,
         autor=usuario,
+        status="aprovado",
     )
     ProducaoDiaria.objects.create(
         registro_diario=registro_antigo,

@@ -21,6 +21,7 @@ from .models import Pessoa
 from .models import Unidade
 from .models import ValorCusto
 from .serializers import CatalogoServicoSerializer
+from .serializers import DisciplinaResumoSerializer
 from .serializers import DisciplinaSerializer
 from .serializers import EquipeSerializer
 from .serializers import MaquinaSerializer
@@ -57,7 +58,7 @@ class ConfiguracaoRdoView(APIView):
 
         return Response(
             {
-                "disciplinas": DisciplinaSerializer(disciplinas, many=True).data,
+                "disciplinas": DisciplinaResumoSerializer(disciplinas, many=True).data,
                 "unidades": UnidadeSerializer(Unidade.objects.all(), many=True).data,
                 "equipes": EquipeSerializer(equipes, many=True).data,
                 "motivos_parada": MotivoParadaSerializer(

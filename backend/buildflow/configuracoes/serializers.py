@@ -31,6 +31,20 @@ class MotivoParadaSerializer(serializers.ModelSerializer):
         fields = ["id", "descricao"]
 
 
+class CatalogoServicoResumoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CatalogoServico
+        fields = ["id", "nome", "unidade"]
+
+
+class DisciplinaResumoSerializer(serializers.ModelSerializer):
+    servicos = CatalogoServicoResumoSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Disciplina
+        fields = ["id", "nome", "servicos"]
+
+
 class CatalogoServicoSerializer(serializers.ModelSerializer):
     avanco_percentual = serializers.SerializerMethodField()
     quantidade_executada = serializers.SerializerMethodField()

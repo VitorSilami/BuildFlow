@@ -227,6 +227,7 @@ def test_quantidade_executada_total_soma_producoes_diarias_do_servico():
         equipe=equipe,
         fiscal=usuario,
         autor=usuario,
+        status="aprovado",
     )
     registro_2 = RegistroDiario.objects.create(
         projeto=projeto,
@@ -236,6 +237,7 @@ def test_quantidade_executada_total_soma_producoes_diarias_do_servico():
         equipe=equipe,
         fiscal=usuario,
         autor=usuario,
+        status="aprovado",
     )
     ProducaoDiaria.objects.create(
         registro_diario=registro_1,
@@ -284,6 +286,7 @@ def test_quantidade_executada_total_soma_ajuste_manual_e_producoes_diarias():
         equipe=equipe,
         fiscal=usuario,
         autor=usuario,
+        status="aprovado",
     )
     ProducaoDiaria.objects.create(
         registro_diario=registro,
@@ -334,6 +337,7 @@ def test_avanco_servico_usa_soma_de_producoes_diarias():
         equipe=equipe,
         fiscal=usuario,
         autor=usuario,
+        status="aprovado",
     )
     ProducaoDiaria.objects.create(
         registro_diario=registro,
@@ -370,6 +374,7 @@ def test_listar_producoes_vinculadas_ordena_do_mais_recente_para_o_mais_antigo()
         equipe=equipe,
         fiscal=usuario,
         autor=usuario,
+        status="aprovado",
     )
     registro_recente = RegistroDiario.objects.create(
         projeto=projeto,
@@ -379,6 +384,7 @@ def test_listar_producoes_vinculadas_ordena_do_mais_recente_para_o_mais_antigo()
         equipe=equipe,
         fiscal=usuario,
         autor=usuario,
+        status="aprovado",
     )
     ProducaoDiaria.objects.create(
         registro_diario=registro_antigo,
@@ -406,3 +412,78 @@ def test_listar_producoes_vinculadas_ordena_do_mais_recente_para_o_mais_antigo()
     resultado = listar_producoes_vinculadas(servico)
 
     assert [str(p.quantidade) for p in resultado] == ["150.000", "100.000"]
+
+
+def test_quantidade_executada_total_exclui_producao_de_rdo_rejeitado():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        quantidade_planejada=Decimal("1000.000"),
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    usuario = projeto.criado_por
+    registro = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+        status="rejeitado",
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.000"),
+        km_final=Decimal("1.000"),
+        quantidade=Decimal("400.000"),
+        unidade=unidade,
+    )
+
+    assert calcular_quantidade_executada_total(servico) == Decimal("0")
+    assert calcular_avanco_servico(servico) == Decimal("0.00")
+
+
+def test_quantidade_executada_total_exclui_producao_de_rdo_aguardando_aprovacao():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        quantidade_planejada=Decimal("1000.000"),
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    usuario = projeto.criado_por
+    registro = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.000"),
+        km_final=Decimal("1.000"),
+        quantidade=Decimal("400.000"),
+        unidade=unidade,
+    )
+
+    assert calcular_quantidade_executada_total(servico) == Decimal("0")
+    assert calcular_avanco_servico(servico) == Decimal("0.00")

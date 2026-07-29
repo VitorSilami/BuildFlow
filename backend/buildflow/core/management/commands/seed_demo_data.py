@@ -131,6 +131,7 @@ class Command(BaseCommand):
             equipe=equipe,
             fiscal=autor,
             autor=autor,
+            status="aprovado",
         )
         ProducaoDiaria.objects.create(
             registro_diario=registro,
