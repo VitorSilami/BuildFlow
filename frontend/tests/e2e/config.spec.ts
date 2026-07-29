@@ -375,3 +375,104 @@ test('mostra a carta de controle quando o servico tem amostra suficiente de RDOs
 
   await expect(page.getByLabel('Carta de controle de produtividade diária')).toBeVisible()
 })
+
+test('mostra badge de status e avanco previsto quando o servico tem datas previstas', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [
+          {
+            id: 'disc-1',
+            nome: 'Terraplenagem',
+            peso_percentual: '100.00',
+            avanco_percentual: '25.00',
+            avanco_previsto_percentual: '60.00',
+            status_eap: 'atencao',
+            servicos: [
+              {
+                id: 'serv-1',
+                nome: 'Corte',
+                unidade: 1,
+                peso_percentual: '100.00',
+                quantidade_planejada: '1000.000',
+                quantidade_executada_manual: '250.000',
+                quantidade_executada: '250.000',
+                producoes_vinculadas: [],
+                carta_controle: null,
+                avanco_percentual: '25.00',
+                data_inicio_prevista: '2026-01-01',
+                data_fim_prevista: '2026-01-31',
+                avanco_previsto_percentual: '60.00',
+                status_eap: 'atencao',
+              },
+            ],
+          },
+        ],
+        equipes: [],
+        valores_custo: [],
+        soma_pesos_disciplinas: 100,
+      },
+    }),
+  )
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
+
+  await expect(page.getByText('Atenção').first()).toBeVisible()
+  await expect(page.getByText(/Previsto:\s*60\.00%/).first()).toBeVisible()
+})
+
+test('nao mostra badge nem previsto quando o servico nao tem datas previstas', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [
+          {
+            id: 'disc-1',
+            nome: 'Terraplenagem',
+            peso_percentual: '100.00',
+            avanco_percentual: '25.00',
+            avanco_previsto_percentual: null,
+            status_eap: null,
+            servicos: [
+              {
+                id: 'serv-1',
+                nome: 'Corte',
+                unidade: 1,
+                peso_percentual: '100.00',
+                quantidade_planejada: '1000.000',
+                quantidade_executada_manual: '250.000',
+                quantidade_executada: '250.000',
+                producoes_vinculadas: [],
+                carta_controle: null,
+                avanco_percentual: '25.00',
+                data_inicio_prevista: null,
+                data_fim_prevista: null,
+                avanco_previsto_percentual: null,
+                status_eap: null,
+              },
+            ],
+          },
+        ],
+        equipes: [],
+        valores_custo: [],
+        soma_pesos_disciplinas: 100,
+      },
+    }),
+  )
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
+
+  await expect(page.getByText(/Previsto:/)).toHaveCount(0)
+})

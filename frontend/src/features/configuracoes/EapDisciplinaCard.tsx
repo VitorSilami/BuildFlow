@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight, ListChecks } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from '../../hooks/use-toast'
-import { execucaoCorClasse, formatData, formatExecucao } from '../../lib/format'
+import { execucaoCorClasse, formatData, formatExecucao, statusEapCorClasse, statusEapLabel } from '../../lib/format'
 import type { CatalogoServico, Disciplina } from '../../types/configuracao'
 import type { Unidade } from '../../types/registroDiario'
 import { Button, FormField, Input, Progress, SelectField } from '../../components/ui'
@@ -68,6 +68,13 @@ export function EapDisciplinaCard({ projetoId, disciplina, unidades }: EapDiscip
           <span className="w-12 text-right text-xs text-muted-foreground">
             {formatExecucao(disciplina.avanco_percentual)}
           </span>
+          {disciplina.status_eap !== null && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-medium text-white ${statusEapCorClasse(disciplina.status_eap)}`}
+            >
+              {statusEapLabel(disciplina.status_eap)}
+            </span>
+          )}
         </div>
         <FormField id={`peso-disciplina-${disciplina.id}`} label="Peso (%)" className="mb-0 w-24">
           <Input
@@ -167,12 +174,19 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
   const [peso, setPeso] = useState(servico.peso_percentual ?? '')
   const [quantidadePlanejada, setQuantidadePlanejada] = useState(servico.quantidade_planejada ?? '')
   const [quantidadeExecutadaManual, setQuantidadeExecutadaManual] = useState(servico.quantidade_executada_manual)
+  const [dataInicioPrevista, setDataInicioPrevista] = useState(servico.data_inicio_prevista ?? '')
+  const [dataFimPrevista, setDataFimPrevista] = useState(servico.data_fim_prevista ?? '')
   const [lancamentosVisiveis, setLancamentosVisiveis] = useState(false)
 
   const atualizarServico = useAtualizarServico(projetoId)
 
   function salvar(
-    campo: 'peso_percentual' | 'quantidade_planejada' | 'quantidade_executada_manual',
+    campo:
+      | 'peso_percentual'
+      | 'quantidade_planejada'
+      | 'quantidade_executada_manual'
+      | 'data_inicio_prevista'
+      | 'data_fim_prevista',
     valor: string,
     valorOriginal: string,
   ) {
@@ -222,6 +236,31 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
             }
           />
         </FormField>
+        <FormField id={`servico-inicio-${servico.id}`} label="Início previsto" className="mb-0 w-32">
+          <Input
+            id={`servico-inicio-${servico.id}`}
+            type="date"
+            value={dataInicioPrevista}
+            onChange={(event) => setDataInicioPrevista(event.target.value)}
+            onBlur={() => salvar('data_inicio_prevista', dataInicioPrevista, servico.data_inicio_prevista ?? '')}
+          />
+        </FormField>
+        <FormField id={`servico-fim-${servico.id}`} label="Fim previsto" className="mb-0 w-32">
+          <Input
+            id={`servico-fim-${servico.id}`}
+            type="date"
+            value={dataFimPrevista}
+            onChange={(event) => setDataFimPrevista(event.target.value)}
+            onBlur={() => salvar('data_fim_prevista', dataFimPrevista, servico.data_fim_prevista ?? '')}
+          />
+        </FormField>
+        {servico.status_eap !== null && (
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-medium text-white ${statusEapCorClasse(servico.status_eap)}`}
+          >
+            {statusEapLabel(servico.status_eap)}
+          </span>
+        )}
       </div>
       <div className="flex flex-wrap items-center gap-2 pl-1 text-muted-foreground">
         <span>
@@ -229,6 +268,7 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
           {' + ajuste manual: '}
           {servico.quantidade_executada_manual})
         </span>
+        {servico.avanco_previsto_percentual !== null && <span>Previsto: {servico.avanco_previsto_percentual}%</span>}
         {servico.producoes_vinculadas.length > 0 && (
           <Button type="button" variant="ghost" size="sm" onClick={() => setLancamentosVisiveis((valor) => !valor)}>
             {lancamentosVisiveis ? 'Ocultar lançamentos' : `Ver lançamentos (${servico.producoes_vinculadas.length})`}

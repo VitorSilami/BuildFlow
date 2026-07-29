@@ -19,6 +19,8 @@ export interface CartaControle {
   pontos: PontoCartaControle[]
 }
 
+export type StatusEap = 'concluido' | 'no_prazo' | 'atencao' | 'critico' | 'nao_iniciado' | 'planejado'
+
 export interface CatalogoServico {
   id: string
   nome: string
@@ -30,6 +32,10 @@ export interface CatalogoServico {
   producoes_vinculadas: ProducaoVinculada[]
   carta_controle: CartaControle | null
   avanco_percentual: string | null
+  data_inicio_prevista: string | null
+  data_fim_prevista: string | null
+  avanco_previsto_percentual: string | null
+  status_eap: StatusEap | null
 }
 
 export interface Disciplina {
@@ -38,6 +44,8 @@ export interface Disciplina {
   peso_percentual: string | null
   servicos: CatalogoServico[]
   avanco_percentual: string | null
+  avanco_previsto_percentual: string | null
+  status_eap: StatusEap | null
 }
 
 export interface ValorCusto {
