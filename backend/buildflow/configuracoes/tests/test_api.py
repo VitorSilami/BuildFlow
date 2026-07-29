@@ -529,3 +529,121 @@ def test_configuracao_rdo_servico_nao_expoe_carta_controle():
 
     servico_body = response.json()["disciplinas"][0]["servicos"][0]
     assert "carta_controle" not in servico_body
+
+
+def test_criar_servico_aceita_datas_previstas_e_calcula_avanco_previsto():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    unidade = UnidadeFactory()
+    client = _authenticated_client(usuario)
+
+    response = client.post(
+        f"/api/v1/configuracoes/disciplinas/{disciplina.id}/servicos/",
+        {
+            "nome": "Corte",
+            "unidade": unidade.id,
+            "peso_percentual": "100.00",
+            "quantidade_planejada": "1000.000",
+            "data_inicio_prevista": "2026-01-01",
+            "data_fim_prevista": "2026-01-31",
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.CREATED, response.data
+    body = response.json()
+    assert body["data_inicio_prevista"] == "2026-01-01"
+    assert body["data_fim_prevista"] == "2026-01-31"
+    assert body["avanco_previsto_percentual"] is not None
+    assert body["status_eap"] is not None
+
+
+def test_patch_servico_atualiza_datas_previstas():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    servico = CatalogoServicoFactory(disciplina=disciplina, unidade=UnidadeFactory())
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/servicos/{servico.id}/",
+        {"data_inicio_prevista": "2026-02-01", "data_fim_prevista": "2026-03-01"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.data
+    assert response.json()["data_inicio_prevista"] == "2026-02-01"
+    assert response.json()["data_fim_prevista"] == "2026-03-01"
+
+
+def test_patch_servico_com_fim_previsto_anterior_ao_inicio_retorna_400():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    servico = CatalogoServicoFactory(
+        disciplina=disciplina,
+        unidade=UnidadeFactory(),
+        data_inicio_prevista=datetime.date(2026, 2, 1),
+        data_fim_prevista=datetime.date(2026, 3, 1),
+    )
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/servicos/{servico.id}/",
+        {"data_fim_prevista": "2026-01-01"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_servico_sem_datas_previstas_expoe_avanco_previsto_e_status_nulos():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    CatalogoServicoFactory(disciplina=disciplina, unidade=UnidadeFactory())
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    servico_body = response.json()["disciplinas"][0]["servicos"][0]
+    assert servico_body["avanco_previsto_percentual"] is None
+    assert servico_body["status_eap"] is None
+
+
+def test_disciplina_expoe_avanco_previsto_e_status_calculados_dos_servicos():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto, peso_percentual=Decimal("100.00"))
+    CatalogoServicoFactory(
+        disciplina=disciplina,
+        unidade=UnidadeFactory(),
+        peso_percentual=Decimal("100.00"),
+        quantidade_planejada="1000.000",
+        quantidade_executada_manual="1000.000",
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 1, 31),
+    )
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    disciplina_body = response.json()["disciplinas"][0]
+    assert disciplina_body["avanco_previsto_percentual"] is not None
+    assert disciplina_body["status_eap"] is not None
+
+
+def test_configuracao_rdo_servico_nao_expoe_campos_de_datas_previstas():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    CatalogoServicoFactory(disciplina=disciplina, unidade=UnidadeFactory())
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao-rdo/")
+
+    servico_body = response.json()["disciplinas"][0]["servicos"][0]
+    assert "data_inicio_prevista" not in servico_body
+    assert "avanco_previsto_percentual" not in servico_body
+    assert "status_eap" not in servico_body

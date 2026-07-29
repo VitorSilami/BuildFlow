@@ -3,9 +3,12 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from buildflow.projetos.services import calcular_avanco_disciplina
+from buildflow.projetos.services import calcular_avanco_previsto_disciplina
+from buildflow.projetos.services import calcular_avanco_previsto_servico
 from buildflow.projetos.services import calcular_avanco_servico
 from buildflow.projetos.services import calcular_carta_controle
 from buildflow.projetos.services import calcular_quantidade_executada_total
+from buildflow.projetos.services import classificar_status_eap
 from buildflow.projetos.services import decimal_para_str_ou_none
 from buildflow.projetos.services import listar_producoes_vinculadas
 
@@ -51,6 +54,8 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
     quantidade_executada = serializers.SerializerMethodField()
     producoes_vinculadas = serializers.SerializerMethodField()
     carta_controle = serializers.SerializerMethodField()
+    avanco_previsto_percentual = serializers.SerializerMethodField()
+    status_eap = serializers.SerializerMethodField()
 
     class Meta:
         model = CatalogoServico
@@ -65,6 +70,10 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
             "producoes_vinculadas",
             "carta_controle",
             "avanco_percentual",
+            "data_inicio_prevista",
+            "data_fim_prevista",
+            "avanco_previsto_percentual",
+            "status_eap",
         ]
 
     def get_avanco_percentual(self, obj: CatalogoServico) -> str | None:
@@ -102,17 +111,65 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
             ],
         }
 
+    def get_avanco_previsto_percentual(self, obj: CatalogoServico) -> str | None:
+        return decimal_para_str_ou_none(calcular_avanco_previsto_servico(obj))
+
+    def get_status_eap(self, obj: CatalogoServico) -> str | None:
+        return classificar_status_eap(
+            calcular_avanco_servico(obj),
+            calcular_avanco_previsto_servico(obj),
+        )
+
+    def validate(self, attrs):
+        inicio = attrs.get(
+            "data_inicio_prevista",
+            getattr(self.instance, "data_inicio_prevista", None),
+        )
+        fim = attrs.get(
+            "data_fim_prevista",
+            getattr(self.instance, "data_fim_prevista", None),
+        )
+        if inicio and fim and fim < inicio:
+            raise serializers.ValidationError(
+                {
+                    "data_fim_prevista": (
+                        "Data de fim prevista não pode ser anterior "
+                        "à data de início prevista."
+                    ),
+                },
+            )
+        return attrs
+
 
 class DisciplinaSerializer(serializers.ModelSerializer):
     servicos = CatalogoServicoSerializer(many=True, read_only=True)
     avanco_percentual = serializers.SerializerMethodField()
+    avanco_previsto_percentual = serializers.SerializerMethodField()
+    status_eap = serializers.SerializerMethodField()
 
     class Meta:
         model = Disciplina
-        fields = ["id", "nome", "peso_percentual", "servicos", "avanco_percentual"]
+        fields = [
+            "id",
+            "nome",
+            "peso_percentual",
+            "servicos",
+            "avanco_percentual",
+            "avanco_previsto_percentual",
+            "status_eap",
+        ]
 
     def get_avanco_percentual(self, obj: Disciplina) -> str | None:
         return decimal_para_str_ou_none(calcular_avanco_disciplina(obj))
+
+    def get_avanco_previsto_percentual(self, obj: Disciplina) -> str | None:
+        return decimal_para_str_ou_none(calcular_avanco_previsto_disciplina(obj))
+
+    def get_status_eap(self, obj: Disciplina) -> str | None:
+        return classificar_status_eap(
+            calcular_avanco_disciplina(obj),
+            calcular_avanco_previsto_disciplina(obj),
+        )
 
 
 class PessoaSerializer(serializers.ModelSerializer):
