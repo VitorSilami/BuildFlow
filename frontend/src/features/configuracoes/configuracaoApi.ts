@@ -72,7 +72,7 @@ export function useAtualizarServico(projetoId: string) {
       servicoId: string
       peso_percentual?: string
       quantidade_planejada?: string
-      quantidade_executada?: string
+      quantidade_executada_manual?: string
     }) => apiClient.patch<CatalogoServico>(`/api/v1/configuracoes/servicos/${servicoId}/`, values),
     onSuccess: invalidar,
   })

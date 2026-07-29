@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight, ListChecks } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from '../../hooks/use-toast'
-import { execucaoCorClasse, formatExecucao } from '../../lib/format'
+import { execucaoCorClasse, formatData, formatExecucao } from '../../lib/format'
 import type { CatalogoServico, Disciplina } from '../../types/configuracao'
 import type { Unidade } from '../../types/registroDiario'
 import { Button, FormField, Input, Progress, SelectField } from '../../components/ui'
@@ -165,12 +165,13 @@ interface EapServicoRowProps {
 function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
   const [peso, setPeso] = useState(servico.peso_percentual ?? '')
   const [quantidadePlanejada, setQuantidadePlanejada] = useState(servico.quantidade_planejada ?? '')
-  const [quantidadeExecutada, setQuantidadeExecutada] = useState(servico.quantidade_executada)
+  const [quantidadeExecutadaManual, setQuantidadeExecutadaManual] = useState(servico.quantidade_executada_manual)
+  const [lancamentosVisiveis, setLancamentosVisiveis] = useState(false)
 
   const atualizarServico = useAtualizarServico(projetoId)
 
   function salvar(
-    campo: 'peso_percentual' | 'quantidade_planejada' | 'quantidade_executada',
+    campo: 'peso_percentual' | 'quantidade_planejada' | 'quantidade_executada_manual',
     valor: string,
     valorOriginal: string,
   ) {
@@ -181,40 +182,67 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
     )
   }
 
+  const somaRdo = (Number(servico.quantidade_executada) - Number(servico.quantidade_executada_manual)).toFixed(3)
+
   return (
-    <li className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-2 text-xs">
-      <span className="flex-1 font-medium text-ink">{servico.nome}</span>
-      <div className="flex w-32 items-center gap-2">
-        <Progress
-          value={servico.avanco_percentual ? Number(servico.avanco_percentual) : 0}
-          indicatorClassName={execucaoCorClasse(servico.avanco_percentual)}
-        />
-        <span className="w-10 text-right text-muted-foreground">{formatExecucao(servico.avanco_percentual)}</span>
+    <li className="flex flex-col gap-2 rounded-lg border border-border p-2 text-xs">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="flex-1 font-medium text-ink">{servico.nome}</span>
+        <div className="flex w-32 items-center gap-2">
+          <Progress
+            value={servico.avanco_percentual ? Number(servico.avanco_percentual) : 0}
+            indicatorClassName={execucaoCorClasse(servico.avanco_percentual)}
+          />
+          <span className="w-10 text-right text-muted-foreground">{formatExecucao(servico.avanco_percentual)}</span>
+        </div>
+        <FormField id={`servico-peso-${servico.id}`} label="Peso (%)" className="mb-0 w-20">
+          <Input
+            id={`servico-peso-${servico.id}`}
+            value={peso}
+            onChange={(event) => setPeso(event.target.value)}
+            onBlur={() => salvar('peso_percentual', peso, servico.peso_percentual ?? '')}
+          />
+        </FormField>
+        <FormField id={`servico-planejada-${servico.id}`} label="Planejada" className="mb-0 w-24">
+          <Input
+            id={`servico-planejada-${servico.id}`}
+            value={quantidadePlanejada}
+            onChange={(event) => setQuantidadePlanejada(event.target.value)}
+            onBlur={() => salvar('quantidade_planejada', quantidadePlanejada, servico.quantidade_planejada ?? '')}
+          />
+        </FormField>
+        <FormField id={`servico-ajuste-${servico.id}`} label="Ajuste manual" className="mb-0 w-24">
+          <Input
+            id={`servico-ajuste-${servico.id}`}
+            value={quantidadeExecutadaManual}
+            onChange={(event) => setQuantidadeExecutadaManual(event.target.value)}
+            onBlur={() =>
+              salvar('quantidade_executada_manual', quantidadeExecutadaManual, servico.quantidade_executada_manual)
+            }
+          />
+        </FormField>
       </div>
-      <FormField id={`servico-peso-${servico.id}`} label="Peso (%)" className="mb-0 w-20">
-        <Input
-          id={`servico-peso-${servico.id}`}
-          value={peso}
-          onChange={(event) => setPeso(event.target.value)}
-          onBlur={() => salvar('peso_percentual', peso, servico.peso_percentual ?? '')}
-        />
-      </FormField>
-      <FormField id={`servico-planejada-${servico.id}`} label="Planejada" className="mb-0 w-24">
-        <Input
-          id={`servico-planejada-${servico.id}`}
-          value={quantidadePlanejada}
-          onChange={(event) => setQuantidadePlanejada(event.target.value)}
-          onBlur={() => salvar('quantidade_planejada', quantidadePlanejada, servico.quantidade_planejada ?? '')}
-        />
-      </FormField>
-      <FormField id={`servico-executada-${servico.id}`} label="Executada" className="mb-0 w-24">
-        <Input
-          id={`servico-executada-${servico.id}`}
-          value={quantidadeExecutada}
-          onChange={(event) => setQuantidadeExecutada(event.target.value)}
-          onBlur={() => salvar('quantidade_executada', quantidadeExecutada, servico.quantidade_executada)}
-        />
-      </FormField>
+      <div className="flex flex-wrap items-center gap-2 pl-1 text-muted-foreground">
+        <span>
+          Executado: <span className="font-semibold text-ink">{servico.quantidade_executada}</span> (RDO: {somaRdo}
+          {' + ajuste manual: '}
+          {servico.quantidade_executada_manual})
+        </span>
+        {servico.producoes_vinculadas.length > 0 && (
+          <Button type="button" variant="ghost" size="sm" onClick={() => setLancamentosVisiveis((valor) => !valor)}>
+            {lancamentosVisiveis ? 'Ocultar lançamentos' : `Ver lançamentos (${servico.producoes_vinculadas.length})`}
+          </Button>
+        )}
+      </div>
+      {lancamentosVisiveis && (
+        <ul className="flex flex-col gap-1 pl-1 text-muted-foreground">
+          {servico.producoes_vinculadas.map((producao, indice) => (
+            <li key={`${producao.data_referencia}-${producao.quantidade}-${indice}`}>
+              {formatData(producao.data_referencia)} — {producao.quantidade}
+            </li>
+          ))}
+        </ul>
+      )}
     </li>
   )
 }

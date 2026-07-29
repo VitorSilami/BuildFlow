@@ -1,5 +1,10 @@
 import type { Equipe } from './registroDiario'
 
+export interface ProducaoVinculada {
+  data_referencia: string
+  quantidade: string
+}
+
 export interface CatalogoServico {
   id: string
   nome: string
@@ -7,6 +12,8 @@ export interface CatalogoServico {
   peso_percentual: string | null
   quantidade_planejada: string | null
   quantidade_executada: string
+  quantidade_executada_manual: string
+  producoes_vinculadas: ProducaoVinculada[]
   avanco_percentual: string | null
 }
 
