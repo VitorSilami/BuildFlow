@@ -178,7 +178,8 @@ def calcular_avanco_previsto_servico(
         return Decimal("100")
     dias_totais = (fim - inicio).days
     dias_decorridos = (hoje - inicio).days
-    return (Decimal(dias_decorridos) / Decimal(dias_totais) * Decimal("100")).quantize(Decimal("0.01"))
+    proporcao = Decimal(dias_decorridos) / Decimal(dias_totais) * Decimal("100")
+    return proporcao.quantize(Decimal("0.01"))
 
 
 def calcular_avanco_previsto_disciplina(
@@ -203,7 +204,9 @@ def calcular_avanco_previsto_disciplina(
     return (soma_ponderada / soma_pesos).quantize(Decimal("0.01"))
 
 
-def classificar_status_eap(real: Decimal | None, previsto: Decimal | None) -> str | None:
+def classificar_status_eap(  # noqa: PLR0911
+    real: Decimal | None, previsto: Decimal | None,
+) -> str | None:
     """Status do item (servico ou disciplina) a partir do avanco real vs
     previsto. Sem avanco real (sem quantidade_planejada), nao ha o que
     classificar — retorna None.
