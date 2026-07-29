@@ -194,6 +194,7 @@ test('define peso da disciplina e adiciona serviço na aba EAP', async ({ page }
               quantidade_executada: '0.000',
               quantidade_executada_manual: '0.000',
               producoes_vinculadas: [],
+              carta_controle: null,
               avanco_percentual: null,
             },
           ]
@@ -239,6 +240,7 @@ test('define peso da disciplina e adiciona serviço na aba EAP', async ({ page }
         quantidade_executada: '0.000',
         quantidade_executada_manual: '0.000',
         producoes_vinculadas: [],
+        carta_controle: null,
         avanco_percentual: null,
       },
     })
@@ -309,4 +311,67 @@ test('mostra total executado combinando RDO e ajuste manual, com lançamentos vi
   await page.getByRole('button', { name: 'Ver lançamentos (2)' }).click()
   await expect(page.getByText('10/07/2026 — 150.000')).toBeVisible()
   await expect(page.getByText('01/07/2026 — 100.000')).toBeVisible()
+})
+
+test('mostra a carta de controle quando o servico tem amostra suficiente de RDOs aprovados', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [
+          {
+            id: 'disc-1',
+            nome: 'Terraplenagem',
+            peso_percentual: '100.00',
+            avanco_percentual: '25.00',
+            servicos: [
+              {
+                id: 'serv-1',
+                nome: 'Corte',
+                unidade: 1,
+                peso_percentual: '100.00',
+                quantidade_planejada: '1000.000',
+                quantidade_executada_manual: '0.000',
+                quantidade_executada: '500.000',
+                producoes_vinculadas: [
+                  { data_referencia: '2026-07-05', quantidade: '95.000' },
+                  { data_referencia: '2026-07-04', quantidade: '105.000' },
+                  { data_referencia: '2026-07-03', quantidade: '90.000' },
+                  { data_referencia: '2026-07-02', quantidade: '110.000' },
+                  { data_referencia: '2026-07-01', quantidade: '100.000' },
+                ],
+                carta_controle: {
+                  media: '100.000',
+                  desvio_padrao: '7.906',
+                  lsc: '123.718',
+                  lic: '76.282',
+                  pontos: [
+                    { data_referencia: '2026-07-01', quantidade: '100.000', fora_de_controle: false },
+                    { data_referencia: '2026-07-02', quantidade: '110.000', fora_de_controle: false },
+                    { data_referencia: '2026-07-03', quantidade: '90.000', fora_de_controle: false },
+                    { data_referencia: '2026-07-04', quantidade: '105.000', fora_de_controle: false },
+                    { data_referencia: '2026-07-05', quantidade: '95.000', fora_de_controle: false },
+                  ],
+                },
+                avanco_percentual: '50.00',
+              },
+            ],
+          },
+        ],
+        equipes: [],
+        valores_custo: [],
+        soma_pesos_disciplinas: 100,
+      },
+    }),
+  )
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
+  await page.getByRole('button', { name: 'Ver lançamentos (5)' }).click()
+
+  await expect(page.getByLabel('Carta de controle de produtividade diária')).toBeVisible()
 })

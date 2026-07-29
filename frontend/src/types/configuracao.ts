@@ -5,6 +5,20 @@ export interface ProducaoVinculada {
   quantidade: string
 }
 
+export interface PontoCartaControle {
+  data_referencia: string
+  quantidade: string
+  fora_de_controle: boolean
+}
+
+export interface CartaControle {
+  media: string
+  desvio_padrao: string
+  lsc: string
+  lic: string
+  pontos: PontoCartaControle[]
+}
+
 export interface CatalogoServico {
   id: string
   nome: string
@@ -14,6 +28,7 @@ export interface CatalogoServico {
   quantidade_executada: string
   quantidade_executada_manual: string
   producoes_vinculadas: ProducaoVinculada[]
+  carta_controle: CartaControle | null
   avanco_percentual: string | null
 }
 

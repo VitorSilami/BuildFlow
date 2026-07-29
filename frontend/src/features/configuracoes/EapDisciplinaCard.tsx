@@ -5,6 +5,7 @@ import { execucaoCorClasse, formatData, formatExecucao } from '../../lib/format'
 import type { CatalogoServico, Disciplina } from '../../types/configuracao'
 import type { Unidade } from '../../types/registroDiario'
 import { Button, FormField, Input, Progress, SelectField } from '../../components/ui'
+import { CartaControleChart } from './CartaControleChart'
 import { useAtualizarDisciplina, useAtualizarServico, useCriarServico } from './configuracaoApi'
 
 const TOLERANCIA_SOMA_PESOS = 0.01
@@ -235,13 +236,16 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
         )}
       </div>
       {lancamentosVisiveis && (
-        <ul className="flex flex-col gap-1 pl-1 text-muted-foreground">
-          {servico.producoes_vinculadas.map((producao, indice) => (
-            <li key={`${producao.data_referencia}-${producao.quantidade}-${indice}`}>
-              {formatData(producao.data_referencia)} — {producao.quantidade}
-            </li>
-          ))}
-        </ul>
+        <>
+          {servico.carta_controle && <CartaControleChart cartaControle={servico.carta_controle} />}
+          <ul className="flex flex-col gap-1 pl-1 text-muted-foreground">
+            {servico.producoes_vinculadas.map((producao, indice) => (
+              <li key={`${producao.data_referencia}-${producao.quantidade}-${indice}`}>
+                {formatData(producao.data_referencia)} — {producao.quantidade}
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </li>
   )
