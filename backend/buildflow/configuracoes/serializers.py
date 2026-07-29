@@ -1,8 +1,12 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from buildflow.projetos.services import calcular_avanco_disciplina
 from buildflow.projetos.services import calcular_avanco_servico
+from buildflow.projetos.services import calcular_quantidade_executada_total
 from buildflow.projetos.services import decimal_para_str_ou_none
+from buildflow.projetos.services import listar_producoes_vinculadas
 
 from . import services
 from .models import CatalogoServico
@@ -29,6 +33,8 @@ class MotivoParadaSerializer(serializers.ModelSerializer):
 
 class CatalogoServicoSerializer(serializers.ModelSerializer):
     avanco_percentual = serializers.SerializerMethodField()
+    quantidade_executada = serializers.SerializerMethodField()
+    producoes_vinculadas = serializers.SerializerMethodField()
 
     class Meta:
         model = CatalogoServico
@@ -39,11 +45,26 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
             "peso_percentual",
             "quantidade_planejada",
             "quantidade_executada_manual",
+            "quantidade_executada",
+            "producoes_vinculadas",
             "avanco_percentual",
         ]
 
     def get_avanco_percentual(self, obj: CatalogoServico) -> str | None:
         return decimal_para_str_ou_none(calcular_avanco_servico(obj))
+
+    def get_quantidade_executada(self, obj: CatalogoServico) -> str:
+        total = calcular_quantidade_executada_total(obj)
+        return str(total.quantize(Decimal("0.001")))
+
+    def get_producoes_vinculadas(self, obj: CatalogoServico) -> list[dict]:
+        return [
+            {
+                "data_referencia": producao.registro_diario.data_referencia.isoformat(),
+                "quantidade": str(producao.quantidade),
+            }
+            for producao in listar_producoes_vinculadas(obj)
+        ]
 
 
 class DisciplinaSerializer(serializers.ModelSerializer):

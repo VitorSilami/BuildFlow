@@ -1,3 +1,4 @@
+from decimal import Decimal
 from http import HTTPStatus
 
 import pytest
@@ -6,6 +7,8 @@ from rest_framework.test import APIClient
 from buildflow.configuracoes.models import Equipe
 from buildflow.configuracoes.models import Maquina
 from buildflow.core.tests.factories import UsuarioFactory
+from buildflow.registros_diarios.models import ProducaoDiaria
+from buildflow.registros_diarios.models import RegistroDiario
 from buildflow.registros_diarios.tests.factories import CatalogoServicoFactory
 from buildflow.registros_diarios.tests.factories import DisciplinaFactory
 from buildflow.registros_diarios.tests.factories import EquipeFactory
@@ -147,6 +150,8 @@ def test_criar_servico_no_catalogo_da_disciplina():
     assert body["peso_percentual"] == "100.00"
     assert body["quantidade_planejada"] == "1000.000"
     assert body["quantidade_executada_manual"] == "0.000"
+    assert body["quantidade_executada"] == "0.000"
+    assert body["producoes_vinculadas"] == []
     assert body["avanco_percentual"] == "0.00"
 
 
@@ -165,6 +170,7 @@ def test_patch_servico_atualiza_peso_quantidade_e_recalcula_avanco():
 
     assert response.status_code == HTTPStatus.OK, response.data
     assert response.json()["avanco_percentual"] == "25.00"
+    assert response.json()["quantidade_executada"] == "250.000"
 
 
 def test_configuracao_projeto_retorna_soma_pesos_disciplinas_e_avanco():
@@ -341,3 +347,85 @@ def test_valor_custo_equipamento_com_funcao_e_rejeitado():
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_patch_servico_ignora_quantidade_executada_bruta_por_ser_somente_leitura():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    servico = CatalogoServicoFactory(
+        disciplina=disciplina,
+        unidade=UnidadeFactory(),
+        quantidade_planejada="1000.000",
+    )
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/servicos/{servico.id}/",
+        {"quantidade_executada": "999.000"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.data
+    servico.refresh_from_db()
+    assert str(servico.quantidade_executada_manual) == "0.000"
+    assert response.json()["quantidade_executada"] == "0.000"
+
+
+def test_servico_expoe_producoes_vinculadas_ordenadas_por_data_recente():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    unidade = UnidadeFactory()
+    servico = CatalogoServicoFactory(disciplina=disciplina, unidade=unidade)
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    registro_antigo = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    registro_recente = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-10",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_antigo,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.000"),
+        km_final=Decimal("1.000"),
+        quantidade=Decimal("100.000"),
+        unidade=unidade,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_recente,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("1.000"),
+        km_final=Decimal("2.000"),
+        quantidade=Decimal("150.000"),
+        unidade=unidade,
+    )
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    servico_body = response.json()["disciplinas"][0]["servicos"][0]
+    assert servico_body["quantidade_executada"] == "250.000"
+    assert servico_body["producoes_vinculadas"] == [
+        {"data_referencia": "2026-07-10", "quantidade": "150.000"},
+        {"data_referencia": "2026-07-01", "quantidade": "100.000"},
+    ]

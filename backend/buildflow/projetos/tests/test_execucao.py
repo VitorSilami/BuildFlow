@@ -12,6 +12,7 @@ from buildflow.projetos.services import calcular_avanco_disciplina
 from buildflow.projetos.services import calcular_avanco_servico
 from buildflow.projetos.services import calcular_execucao_percentual
 from buildflow.projetos.services import calcular_quantidade_executada_total
+from buildflow.projetos.services import listar_producoes_vinculadas
 from buildflow.registros_diarios.models import ProducaoDiaria
 from buildflow.registros_diarios.models import RegistroDiario
 
@@ -347,3 +348,61 @@ def test_avanco_servico_usa_soma_de_producoes_diarias():
     )
 
     assert calcular_avanco_servico(servico) == Decimal("40.00")
+
+
+def test_listar_producoes_vinculadas_ordena_do_mais_recente_para_o_mais_antigo():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        quantidade_planejada=Decimal("1000.000"),
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    usuario = projeto.criado_por
+    registro_antigo = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    registro_recente = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-10",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_antigo,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.000"),
+        km_final=Decimal("1.000"),
+        quantidade=Decimal("100.000"),
+        unidade=unidade,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_recente,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("1.000"),
+        km_final=Decimal("2.000"),
+        quantidade=Decimal("150.000"),
+        unidade=unidade,
+    )
+
+    resultado = listar_producoes_vinculadas(servico)
+
+    assert [str(p.quantidade) for p in resultado] == ["150.000", "100.000"]

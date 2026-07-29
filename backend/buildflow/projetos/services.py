@@ -32,6 +32,16 @@ def calcular_quantidade_executada_total(servico: CatalogoServico) -> Decimal:
     return servico.quantidade_executada_manual + soma_rdo
 
 
+def listar_producoes_vinculadas(servico: CatalogoServico) -> list[ProducaoDiaria]:
+    """Lancamentos de RDO vinculados a um servico, do mais recente para o mais
+    antigo — usado para exibir rastreabilidade do total executado."""
+    return list(
+        ProducaoDiaria.objects.filter(servico=servico)
+        .select_related("registro_diario")
+        .order_by("-registro_diario__data_referencia"),
+    )
+
+
 def calcular_avanco_servico(servico: CatalogoServico) -> Decimal | None:
     """Percentual executado de um servico: quantidade_executada / quantidade_planejada.
     Retorna None quando nao ha quantidade planejada — nunca inventa um numero.
