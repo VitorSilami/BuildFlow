@@ -16,6 +16,7 @@ from buildflow.projetos.services import calcular_avanco_previsto_servico
 from buildflow.projetos.services import calcular_avanco_servico
 from buildflow.projetos.services import calcular_carta_controle
 from buildflow.projetos.services import calcular_execucao_percentual
+from buildflow.projetos.services import calcular_janela_disciplina
 from buildflow.projetos.services import calcular_quantidade_executada_total
 from buildflow.projetos.services import calcular_status_eap_disciplina
 from buildflow.projetos.services import classificar_status_eap
@@ -933,3 +934,69 @@ def test_status_eap_disciplina_retorna_status_real_quando_bases_coincidem():
     # passaram (avanco previsto tambem 100%) — real >= LIMIAR_CONCLUIDO
     # classifica CONCLUIDO independente do previsto.
     assert calcular_status_eap_disciplina(disciplina) == StatusEapChoices.CONCLUIDO
+
+
+def test_janela_disciplina_sem_nenhum_servico_com_as_duas_datas_retorna_none():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+    )
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Aterro",
+        unidade=unidade,
+    )
+
+    assert calcular_janela_disciplina(disciplina) is None
+
+
+def test_janela_disciplina_usa_so_servicos_com_as_duas_datas():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        data_inicio_prevista=datetime.date(2026, 1, 10),
+        data_fim_prevista=datetime.date(2026, 2, 10),
+    )
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Aterro",
+        unidade=unidade,
+        data_inicio_prevista=datetime.date(2026, 3, 1),
+    )
+
+    janela = calcular_janela_disciplina(disciplina)
+
+    assert janela == (datetime.date(2026, 1, 10), datetime.date(2026, 2, 10))
+
+
+def test_janela_disciplina_usa_menor_inicio_e_maior_fim_entre_servicos():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        data_inicio_prevista=datetime.date(2026, 1, 10),
+        data_fim_prevista=datetime.date(2026, 3, 1),
+    )
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Aterro",
+        unidade=unidade,
+        data_inicio_prevista=datetime.date(2026, 2, 1),
+        data_fim_prevista=datetime.date(2026, 5, 20),
+    )
+
+    janela = calcular_janela_disciplina(disciplina)
+
+    assert janela == (datetime.date(2026, 1, 10), datetime.date(2026, 5, 20))

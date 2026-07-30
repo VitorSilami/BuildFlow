@@ -253,6 +253,27 @@ def calcular_status_eap_disciplina(disciplina: Disciplina) -> StatusEapChoices |
     )
 
 
+def calcular_janela_disciplina(
+    disciplina: Disciplina,
+) -> tuple[datetime.date, datetime.date] | None:
+    """Janela (inicio, fim) de uma disciplina para o Gantt: menor
+    data_inicio_prevista e maior data_fim_prevista entre os servicos filhos
+    que tem ambas as datas definidas. Sem nenhum servico com as duas datas,
+    retorna None — disciplina nao aparece no Gantt, nunca inventa uma janela.
+    """
+    servicos_com_janela = [
+        s
+        for s in disciplina.servicos.all()
+        if s.data_inicio_prevista is not None and s.data_fim_prevista is not None
+    ]
+    if not servicos_com_janela:
+        return None
+    return (
+        min(s.data_inicio_prevista for s in servicos_com_janela),
+        max(s.data_fim_prevista for s in servicos_com_janela),
+    )
+
+
 def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
     """Media ponderada (por Disciplina.peso_percentual) do avanco de cada
     disciplina do projeto. Disciplina sem peso definido nao conta. Retorna
