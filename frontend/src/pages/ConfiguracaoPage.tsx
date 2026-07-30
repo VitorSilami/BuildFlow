@@ -11,6 +11,7 @@ import {
   useCriarValorCusto,
 } from '../features/configuracoes/configuracaoApi'
 import { EapDisciplinaCard } from '../features/configuracoes/EapDisciplinaCard'
+import { GanttChart } from '../features/configuracoes/GanttChart'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import {
   Button,
@@ -70,6 +71,7 @@ export function ConfiguracaoPage() {
   const [valorValor, setValorValor] = useState('')
   const [valorFuncao, setValorFuncao] = useState('')
   const [valorMaquinaId, setValorMaquinaId] = useState('')
+  const [verGantt, setVerGantt] = useState(false)
 
   if (configuracao.isLoading) return <ConfiguracaoSkeleton />
   if (configuracao.isError || !configuracao.data) {
@@ -139,6 +141,14 @@ export function ConfiguracaoPage() {
             <div aria-label="EAP">
               {disciplinas.length === 0 && (
                 <EmptyState>Cadastre uma disciplina na aba Disciplinas para começar a EAP.</EmptyState>
+              )}
+              {disciplinas.some((d) => d.data_inicio_prevista !== null && d.data_fim_prevista !== null) && (
+                <div className="mb-4">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setVerGantt((valor) => !valor)}>
+                    {verGantt ? 'Ocultar cronograma' : 'Ver cronograma (Gantt)'}
+                  </Button>
+                  {verGantt && <GanttChart disciplinas={disciplinas} />}
+                </div>
               )}
               <ul className="mb-4 flex flex-col gap-3">
                 {disciplinas.map((disciplina) => (

@@ -46,6 +46,8 @@ export interface Disciplina {
   avanco_percentual: string | null
   avanco_previsto_percentual: string | null
   status_eap: StatusEap | null
+  data_inicio_prevista: string | null
+  data_fim_prevista: string | null
 }
 
 export interface ValorCusto {
