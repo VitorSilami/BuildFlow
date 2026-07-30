@@ -8,6 +8,7 @@ from buildflow.projetos.services import calcular_avanco_previsto_servico
 from buildflow.projetos.services import calcular_avanco_servico
 from buildflow.projetos.services import calcular_carta_controle
 from buildflow.projetos.services import calcular_quantidade_executada_total
+from buildflow.projetos.services import calcular_status_eap_disciplina
 from buildflow.projetos.services import classificar_status_eap
 from buildflow.projetos.services import decimal_para_str_ou_none
 from buildflow.projetos.services import listar_producoes_vinculadas
@@ -76,8 +77,14 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
             "status_eap",
         ]
 
+    def _avanco_real(self, obj: CatalogoServico) -> Decimal | None:
+        cache = self.context.setdefault("_avanco_real_cache", {})
+        if obj.pk not in cache:
+            cache[obj.pk] = calcular_avanco_servico(obj)
+        return cache[obj.pk]
+
     def get_avanco_percentual(self, obj: CatalogoServico) -> str | None:
-        return decimal_para_str_ou_none(calcular_avanco_servico(obj))
+        return decimal_para_str_ou_none(self._avanco_real(obj))
 
     def get_quantidade_executada(self, obj: CatalogoServico) -> str:
         total = calcular_quantidade_executada_total(obj)
@@ -116,7 +123,7 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
 
     def get_status_eap(self, obj: CatalogoServico) -> str | None:
         return classificar_status_eap(
-            calcular_avanco_servico(obj),
+            self._avanco_real(obj),
             calcular_avanco_previsto_servico(obj),
         )
 
@@ -159,17 +166,20 @@ class DisciplinaSerializer(serializers.ModelSerializer):
             "status_eap",
         ]
 
+    def _avanco_real(self, obj: Disciplina) -> Decimal | None:
+        cache = self.context.setdefault("_avanco_real_disciplina_cache", {})
+        if obj.pk not in cache:
+            cache[obj.pk] = calcular_avanco_disciplina(obj)
+        return cache[obj.pk]
+
     def get_avanco_percentual(self, obj: Disciplina) -> str | None:
-        return decimal_para_str_ou_none(calcular_avanco_disciplina(obj))
+        return decimal_para_str_ou_none(self._avanco_real(obj))
 
     def get_avanco_previsto_percentual(self, obj: Disciplina) -> str | None:
         return decimal_para_str_ou_none(calcular_avanco_previsto_disciplina(obj))
 
     def get_status_eap(self, obj: Disciplina) -> str | None:
-        return classificar_status_eap(
-            calcular_avanco_disciplina(obj),
-            calcular_avanco_previsto_disciplina(obj),
-        )
+        return calcular_status_eap_disciplina(obj)
 
 
 class PessoaSerializer(serializers.ModelSerializer):

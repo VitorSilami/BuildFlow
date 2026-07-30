@@ -577,6 +577,35 @@ def test_patch_servico_atualiza_datas_previstas():
     assert response.json()["data_fim_prevista"] == "2026-03-01"
 
 
+def test_patch_servico_limpa_data_inicio_prevista_com_null():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    servico = CatalogoServicoFactory(
+        disciplina=disciplina,
+        unidade=UnidadeFactory(),
+        peso_percentual=Decimal("100.00"),
+        quantidade_planejada="1000.000",
+        quantidade_executada_manual="250.000",
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 1, 31),
+    )
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/servicos/{servico.id}/",
+        {"data_inicio_prevista": None},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.data
+    body = response.json()
+    assert body["data_inicio_prevista"] is None
+    assert body["data_fim_prevista"] == "2026-01-31"
+    assert body["avanco_previsto_percentual"] is None
+    assert body["status_eap"] == "planejado"
+
+
 def test_patch_servico_com_fim_previsto_anterior_ao_inicio_retorna_400():
     usuario = UsuarioFactory()
     projeto = ProjetoParaRdoFactory(criado_por=usuario)

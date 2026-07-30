@@ -206,7 +206,7 @@ def calcular_avanco_previsto_disciplina(
 
 def classificar_status_eap(  # noqa: PLR0911
     real: Decimal | None, previsto: Decimal | None,
-) -> str | None:
+) -> StatusEapChoices | None:
     """Status do item (servico ou disciplina) a partir do avanco real vs
     previsto. Sem avanco real (sem quantidade_planejada), nao ha o que
     classificar — retorna None.
@@ -225,6 +225,32 @@ def classificar_status_eap(  # noqa: PLR0911
     if desvio <= DESVIO_ATENCAO:
         return StatusEapChoices.ATENCAO
     return StatusEapChoices.NO_PRAZO
+
+
+def calcular_status_eap_disciplina(disciplina: Disciplina) -> StatusEapChoices | None:
+    """Status da disciplina, mas so quando o avanco real e o avanco previsto
+    forem calculados sobre o mesmo conjunto de servicos. Bases diferentes
+    (ex.: um servico so tem quantidade_planejada, outro so tem datas
+    previstas) tornam a comparacao sem sentido — retorna None em vez de
+    um status enganoso, mesmo principio de "nunca inventa numero".
+    """
+    servicos_com_peso = [
+        s for s in disciplina.servicos.all() if s.peso_percentual is not None
+    ]
+    ids_com_avanco_real = {
+        s.id for s in servicos_com_peso if calcular_avanco_servico(s) is not None
+    }
+    ids_com_avanco_previsto = {
+        s.id
+        for s in servicos_com_peso
+        if calcular_avanco_previsto_servico(s) is not None
+    }
+    if ids_com_avanco_real != ids_com_avanco_previsto:
+        return None
+    return classificar_status_eap(
+        calcular_avanco_disciplina(disciplina),
+        calcular_avanco_previsto_disciplina(disciplina),
+    )
 
 
 def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:

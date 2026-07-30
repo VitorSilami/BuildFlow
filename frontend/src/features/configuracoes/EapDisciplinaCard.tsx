@@ -187,8 +187,8 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
       | 'quantidade_executada_manual'
       | 'data_inicio_prevista'
       | 'data_fim_prevista',
-    valor: string,
-    valorOriginal: string,
+    valor: string | null,
+    valorOriginal: string | null,
   ) {
     if (valor === valorOriginal) return
     atualizarServico.mutate(
@@ -242,7 +242,13 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
             type="date"
             value={dataInicioPrevista}
             onChange={(event) => setDataInicioPrevista(event.target.value)}
-            onBlur={() => salvar('data_inicio_prevista', dataInicioPrevista, servico.data_inicio_prevista ?? '')}
+            onBlur={() =>
+              salvar(
+                'data_inicio_prevista',
+                dataInicioPrevista === '' ? null : dataInicioPrevista,
+                servico.data_inicio_prevista,
+              )
+            }
           />
         </FormField>
         <FormField id={`servico-fim-${servico.id}`} label="Fim previsto" className="mb-0 w-32">
@@ -251,7 +257,9 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
             type="date"
             value={dataFimPrevista}
             onChange={(event) => setDataFimPrevista(event.target.value)}
-            onBlur={() => salvar('data_fim_prevista', dataFimPrevista, servico.data_fim_prevista ?? '')}
+            onBlur={() =>
+              salvar('data_fim_prevista', dataFimPrevista === '' ? null : dataFimPrevista, servico.data_fim_prevista)
+            }
           />
         </FormField>
         {servico.status_eap !== null && (

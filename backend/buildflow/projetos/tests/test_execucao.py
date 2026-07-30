@@ -17,6 +17,7 @@ from buildflow.projetos.services import calcular_avanco_servico
 from buildflow.projetos.services import calcular_carta_controle
 from buildflow.projetos.services import calcular_execucao_percentual
 from buildflow.projetos.services import calcular_quantidade_executada_total
+from buildflow.projetos.services import calcular_status_eap_disciplina
 from buildflow.projetos.services import classificar_status_eap
 from buildflow.projetos.services import listar_producoes_vinculadas
 from buildflow.registros_diarios.models import ProducaoDiaria
@@ -866,3 +867,69 @@ def test_status_eap_no_prazo_quando_desvio_acima_do_limiar_de_atencao():
 
 def test_status_eap_sem_avanco_real_retorna_none():
     assert classificar_status_eap(None, Decimal("50.00")) is None
+
+
+def test_status_eap_disciplina_retorna_none_quando_bases_de_real_e_previsto_diferem():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(
+        projeto=projeto,
+        nome="Terraplenagem",
+        peso_percentual=Decimal("100.00"),
+    )
+    unidade = _criar_unidade()
+    # So tem quantidade_planejada (entra no avanco real, nao no previsto)
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        peso_percentual=Decimal("50.00"),
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("500.000"),
+    )
+    # So tem datas previstas (entra no previsto, nao no avanco real)
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Aterro",
+        unidade=unidade,
+        peso_percentual=Decimal("50.00"),
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 1, 31),
+    )
+
+    assert calcular_status_eap_disciplina(disciplina) is None
+
+
+def test_status_eap_disciplina_retorna_status_real_quando_bases_coincidem():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(
+        projeto=projeto,
+        nome="Terraplenagem",
+        peso_percentual=Decimal("100.00"),
+    )
+    unidade = _criar_unidade()
+    # Ambos os servicos tem quantidade_planejada E datas previstas — mesma base
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        peso_percentual=Decimal("50.00"),
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("1000.000"),
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 1, 31),
+    )
+    CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Aterro",
+        unidade=unidade,
+        peso_percentual=Decimal("50.00"),
+        quantidade_planejada=Decimal("500.000"),
+        quantidade_executada_manual=Decimal("500.000"),
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 1, 31),
+    )
+
+    # Os dois servicos estao 100% executados e as datas previstas ja
+    # passaram (avanco previsto tambem 100%) — real >= LIMIAR_CONCLUIDO
+    # classifica CONCLUIDO independente do previsto.
+    assert calcular_status_eap_disciplina(disciplina) == StatusEapChoices.CONCLUIDO

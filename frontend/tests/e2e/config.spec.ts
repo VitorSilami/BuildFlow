@@ -427,6 +427,83 @@ test('mostra badge de status e avanco previsto quando o servico tem datas previs
   await expect(page.getByText(/Previsto:\s*60\.00%/).first()).toBeVisible()
 })
 
+test('limpar a data de inicio previsto envia null no PATCH, nao string vazia', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [
+          {
+            id: 'disc-1',
+            nome: 'Terraplenagem',
+            peso_percentual: '100.00',
+            avanco_percentual: '25.00',
+            avanco_previsto_percentual: '60.00',
+            status_eap: 'atencao',
+            servicos: [
+              {
+                id: 'serv-1',
+                nome: 'Corte',
+                unidade: 1,
+                peso_percentual: '100.00',
+                quantidade_planejada: '1000.000',
+                quantidade_executada_manual: '250.000',
+                quantidade_executada: '250.000',
+                producoes_vinculadas: [],
+                carta_controle: null,
+                avanco_percentual: '25.00',
+                data_inicio_prevista: '2026-01-01',
+                data_fim_prevista: '2026-01-31',
+                avanco_previsto_percentual: '60.00',
+                status_eap: 'atencao',
+              },
+            ],
+          },
+        ],
+        equipes: [],
+        valores_custo: [],
+        soma_pesos_disciplinas: 100,
+      },
+    }),
+  )
+
+  let payloadRecebido: { data_inicio_prevista?: string | null } | null = null
+  await page.route('**/api/v1/configuracoes/servicos/serv-1/', (route) => {
+    payloadRecebido = route.request().postDataJSON() as { data_inicio_prevista?: string | null }
+    return route.fulfill({
+      json: {
+        id: 'serv-1',
+        nome: 'Corte',
+        unidade: 1,
+        peso_percentual: '100.00',
+        quantidade_planejada: '1000.000',
+        quantidade_executada_manual: '250.000',
+        quantidade_executada: '250.000',
+        producoes_vinculadas: [],
+        carta_controle: null,
+        avanco_percentual: '25.00',
+        data_inicio_prevista: null,
+        data_fim_prevista: '2026-01-31',
+        avanco_previsto_percentual: null,
+        status_eap: 'planejado',
+      },
+    })
+  })
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
+
+  await page.getByLabel('Início previsto').fill('')
+  await page.getByLabel('Início previsto').blur()
+
+  await expect.poll(() => payloadRecebido).not.toBeNull()
+  expect(payloadRecebido).toEqual({ data_inicio_prevista: null })
+})
+
 test('nao mostra badge nem previsto quando o servico nao tem datas previstas', async ({ page }) => {
   await page.route(SESSION_URL, (route) =>
     route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
