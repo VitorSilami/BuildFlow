@@ -7,6 +7,7 @@ interface GanttChartProps {
 
 const ALTURA_CABECALHO = 40
 const ALTURA_POR_LINHA = 40
+const MS_POR_DIA = 24 * 60 * 60 * 1000
 
 const STATUS_GANTT_CORES: Record<StatusEap, string> = {
   concluido: '#10b981',
@@ -92,7 +93,10 @@ export function GanttChart({ disciplinas }: GanttChartProps) {
     .map((d) => ({
       nome: d.nome,
       inicio: parseDataLocal(d.data_inicio_prevista as string).getTime(),
-      fim: parseDataLocal(d.data_fim_prevista as string).getTime(),
+      // data_fim_prevista e inclusiva (o servico ainda esta em andamento durante
+      // o proprio dia final) — soma 1 dia pra virar um instante exclusivo, senao
+      // o ultimo dia do cronograma tem duracao zero e a linha "Hoje" some nele.
+      fim: parseDataLocal(d.data_fim_prevista as string).getTime() + MS_POR_DIA,
       avancoReal: d.avanco_percentual ? Number(d.avanco_percentual) : null,
       cor: corDaBarra(d.status_eap),
     }))
