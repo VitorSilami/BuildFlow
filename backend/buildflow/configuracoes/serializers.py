@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from rest_framework import serializers
 
@@ -7,6 +10,7 @@ from buildflow.projetos.services import calcular_avanco_previsto_disciplina
 from buildflow.projetos.services import calcular_avanco_previsto_servico
 from buildflow.projetos.services import calcular_avanco_servico
 from buildflow.projetos.services import calcular_carta_controle
+from buildflow.projetos.services import calcular_janela_disciplina
 from buildflow.projetos.services import calcular_quantidade_executada_total
 from buildflow.projetos.services import calcular_status_eap_disciplina
 from buildflow.projetos.services import classificar_status_eap
@@ -22,6 +26,9 @@ from .models import MotivoParada
 from .models import Pessoa
 from .models import Unidade
 from .models import ValorCusto
+
+if TYPE_CHECKING:
+    import datetime
 
 
 class UnidadeSerializer(serializers.ModelSerializer):
@@ -153,6 +160,8 @@ class DisciplinaSerializer(serializers.ModelSerializer):
     avanco_percentual = serializers.SerializerMethodField()
     avanco_previsto_percentual = serializers.SerializerMethodField()
     status_eap = serializers.SerializerMethodField()
+    data_inicio_prevista = serializers.SerializerMethodField()
+    data_fim_prevista = serializers.SerializerMethodField()
 
     class Meta:
         model = Disciplina
@@ -164,6 +173,8 @@ class DisciplinaSerializer(serializers.ModelSerializer):
             "avanco_percentual",
             "avanco_previsto_percentual",
             "status_eap",
+            "data_inicio_prevista",
+            "data_fim_prevista",
         ]
 
     def _avanco_real(self, obj: Disciplina) -> Decimal | None:
@@ -180,6 +191,20 @@ class DisciplinaSerializer(serializers.ModelSerializer):
 
     def get_status_eap(self, obj: Disciplina) -> str | None:
         return calcular_status_eap_disciplina(obj)
+
+    def _janela(self, obj: Disciplina) -> tuple[datetime.date, datetime.date] | None:
+        cache = self.context.setdefault("_janela_disciplina_cache", {})
+        if obj.pk not in cache:
+            cache[obj.pk] = calcular_janela_disciplina(obj)
+        return cache[obj.pk]
+
+    def get_data_inicio_prevista(self, obj: Disciplina) -> str | None:
+        janela = self._janela(obj)
+        return janela[0].isoformat() if janela else None
+
+    def get_data_fim_prevista(self, obj: Disciplina) -> str | None:
+        janela = self._janela(obj)
+        return janela[1].isoformat() if janela else None
 
 
 class PessoaSerializer(serializers.ModelSerializer):

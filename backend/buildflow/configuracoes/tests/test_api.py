@@ -676,3 +676,51 @@ def test_configuracao_rdo_servico_nao_expoe_campos_de_datas_previstas():
     assert "data_inicio_prevista" not in servico_body
     assert "avanco_previsto_percentual" not in servico_body
     assert "status_eap" not in servico_body
+
+
+def test_disciplina_expoe_janela_derivada_dos_servicos_com_data():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    unidade = UnidadeFactory()
+    CatalogoServicoFactory(
+        disciplina=disciplina,
+        unidade=unidade,
+        data_inicio_prevista=datetime.date(2026, 1, 10),
+        data_fim_prevista=datetime.date(2026, 3, 1),
+    )
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    disciplina_body = response.json()["disciplinas"][0]
+    assert disciplina_body["data_inicio_prevista"] == "2026-01-10"
+    assert disciplina_body["data_fim_prevista"] == "2026-03-01"
+
+
+def test_disciplina_sem_servico_com_as_duas_datas_expoe_janela_nula():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    CatalogoServicoFactory(disciplina=disciplina, unidade=UnidadeFactory())
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    disciplina_body = response.json()["disciplinas"][0]
+    assert disciplina_body["data_inicio_prevista"] is None
+    assert disciplina_body["data_fim_prevista"] is None
+
+
+def test_configuracao_rdo_disciplina_nao_expoe_janela_do_gantt():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    CatalogoServicoFactory(disciplina=disciplina, unidade=UnidadeFactory())
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao-rdo/")
+
+    disciplina_body = response.json()["disciplinas"][0]
+    assert "data_inicio_prevista" not in disciplina_body
+    assert "data_fim_prevista" not in disciplina_body
