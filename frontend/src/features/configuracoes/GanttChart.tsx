@@ -22,6 +22,11 @@ function corDaBarra(status: StatusEap | null): string {
   return status === null ? COR_SEM_STATUS : STATUS_GANTT_CORES[status]
 }
 
+function parseDataLocal(iso: string): Date {
+  const [ano, mes, dia] = iso.split('-').map(Number)
+  return new Date(ano, mes - 1, dia)
+}
+
 function gerarTicksMensais(minimo: number, maximo: number): number[] {
   const ticks: number[] = []
   const cursor = new Date(minimo)
@@ -39,16 +44,17 @@ interface BarraDuracaoProps {
   y?: number
   width?: number
   height?: number
-  payload?: { avancoReal: number; cor: string }
+  payload?: { avancoReal: number | null; cor: string }
 }
 
 function BarraDuracao({ x = 0, y = 0, width = 0, height = 0, payload }: BarraDuracaoProps) {
   const cor = payload?.cor ?? COR_SEM_STATUS
-  const avancoReal = payload?.avancoReal ?? 0
-  const larguraProgresso = Math.max(0, (width * Math.min(100, avancoReal)) / 100)
+  const avancoReal = payload?.avancoReal ?? null
+  const larguraProgresso = avancoReal === null ? 0 : Math.max(0, (width * Math.min(100, avancoReal)) / 100)
+  const larguraVisivel = Math.max(2, width)
   return (
     <g>
-      <rect x={x} y={y} width={width} height={height} rx={4} fill={cor} fillOpacity={0.18} stroke={cor} strokeWidth={1} />
+      <rect x={x} y={y} width={larguraVisivel} height={height} rx={4} fill={cor} fillOpacity={0.18} stroke={cor} strokeWidth={1} />
       <rect x={x} y={y} width={larguraProgresso} height={height} rx={4} fill={cor} />
     </g>
   )
@@ -56,7 +62,7 @@ function BarraDuracao({ x = 0, y = 0, width = 0, height = 0, payload }: BarraDur
 
 interface TooltipGanttProps {
   active?: boolean
-  payload?: ReadonlyArray<{ payload?: { nome: string; avancoReal: number } }>
+  payload?: ReadonlyArray<{ payload?: { nome: string; avancoReal: number | null } }>
 }
 
 function TooltipGantt({ active, payload }: TooltipGanttProps) {
@@ -75,7 +81,7 @@ function TooltipGantt({ active, payload }: TooltipGanttProps) {
       }}
     >
       <div style={{ fontWeight: 600 }}>{nome}</div>
-      <div>{avancoReal}% executado</div>
+      <div>{avancoReal === null ? '—' : `${avancoReal}% executado`}</div>
     </div>
   )
 }
@@ -85,9 +91,9 @@ export function GanttChart({ disciplinas }: GanttChartProps) {
     .filter((d) => d.data_inicio_prevista !== null && d.data_fim_prevista !== null)
     .map((d) => ({
       nome: d.nome,
-      inicio: new Date(d.data_inicio_prevista as string).getTime(),
-      fim: new Date(d.data_fim_prevista as string).getTime(),
-      avancoReal: d.avanco_percentual ? Number(d.avanco_percentual) : 0,
+      inicio: parseDataLocal(d.data_inicio_prevista as string).getTime(),
+      fim: parseDataLocal(d.data_fim_prevista as string).getTime(),
+      avancoReal: d.avanco_percentual ? Number(d.avanco_percentual) : null,
       cor: corDaBarra(d.status_eap),
     }))
 

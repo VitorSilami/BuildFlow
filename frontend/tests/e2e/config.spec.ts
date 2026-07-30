@@ -640,3 +640,55 @@ test('disciplina sem janela valida nao aparece no Gantt', async ({ page }) => {
 
   await expect(page.getByRole('button', { name: 'Ver cronograma (Gantt)' })).not.toBeVisible()
 })
+
+test('disciplina com status_eap nulo renderiza no Gantt sem quebrar', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [
+          {
+            id: 'disc-1',
+            nome: 'Terraplenagem',
+            peso_percentual: '100.00',
+            avanco_percentual: null,
+            avanco_previsto_percentual: null,
+            status_eap: null,
+            data_inicio_prevista: '2026-01-01',
+            data_fim_prevista: '2026-03-01',
+            servicos: [
+              {
+                id: 'serv-1',
+                nome: 'Corte',
+                unidade: 1,
+                peso_percentual: '100.00',
+                quantidade_planejada: null,
+                quantidade_executada_manual: null,
+                quantidade_executada: null,
+                producoes_vinculadas: [],
+                carta_controle: null,
+                avanco_percentual: null,
+                data_inicio_prevista: '2026-01-01',
+                data_fim_prevista: '2026-03-01',
+                avanco_previsto_percentual: null,
+                status_eap: null,
+              },
+            ],
+          },
+        ],
+        equipes: [],
+        valores_custo: [],
+        soma_pesos_disciplinas: 100,
+      },
+    }),
+  )
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.getByRole('button', { name: 'Ver cronograma (Gantt)' }).click()
+
+  await expect(page.getByLabel('Cronograma da EAP')).toBeVisible()
+})
