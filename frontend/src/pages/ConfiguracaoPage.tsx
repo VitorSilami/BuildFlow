@@ -1,6 +1,6 @@
 import { BookOpen, DollarSign, HardHat, Truck, Users } from 'lucide-react'
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { useConfiguracaoRdo } from '../features/registros-diarios/registrosDiariosApi'
 import {
   useConfiguracaoProjeto,
@@ -48,6 +48,8 @@ function ConfiguracaoSkeleton() {
 
 export function ConfiguracaoPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const abaAtiva = searchParams.get('tab') ?? 'disciplinas'
   const configuracao = useConfiguracaoProjeto(projetoId ?? '')
   const configuracaoRdo = useConfiguracaoRdo(projetoId ?? '')
   const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'Configurações' }])
@@ -90,7 +92,16 @@ export function ConfiguracaoPage() {
     <main aria-label="Configurações do projeto">
       <PageHeader title="Configurações" breadcrumbs={breadcrumbs} />
 
-      <Tabs defaultValue="disciplinas">
+      <Tabs
+        value={abaAtiva}
+        onValueChange={(valor) => {
+          setSearchParams((prev) => {
+            const proximo = new URLSearchParams(prev)
+            proximo.set('tab', valor)
+            return proximo
+          })
+        }}
+      >
         <TabsList aria-label="Seções de configuração">
           <TabsTrigger value="disciplinas">Disciplinas</TabsTrigger>
           <TabsTrigger value="eap">EAP</TabsTrigger>

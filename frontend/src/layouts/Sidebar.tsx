@@ -1,4 +1,13 @@
-import { AlertTriangle, DollarSign, FileText, History, LayoutDashboard, LayoutGrid, Settings } from 'lucide-react'
+import {
+  AlertTriangle,
+  DollarSign,
+  FileText,
+  History,
+  LayoutDashboard,
+  LayoutGrid,
+  ListTree,
+  Settings,
+} from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
 import { ProjectContextCard } from './sidebar/ProjectContextCard'
@@ -26,6 +35,19 @@ export function SidebarNav() {
           <ProjectContextCard projetoId={projetoId} />
 
           <div className="relative ml-4 flex flex-col gap-1 border-l-2 border-dashed border-primary/25 pl-3">
+            <SidebarGroup title="Planejamento">
+              <SidebarNavItem
+                to={`/projetos/${projetoId}/configuracoes?tab=eap`}
+                icon={<ListTree size={18} aria-hidden="true" />}
+                isActive={(location) =>
+                  location.pathname === `/projetos/${projetoId}/configuracoes` &&
+                  new URLSearchParams(location.search).get('tab') === 'eap'
+                }
+              >
+                EAP
+              </SidebarNavItem>
+            </SidebarGroup>
+
             <SidebarGroup title="Operação">
               <SidebarNavItem
                 to={`/projetos/${projetoId}/registros-diarios`}
@@ -62,6 +84,10 @@ export function SidebarNav() {
               <SidebarNavItem
                 to={`/projetos/${projetoId}/configuracoes`}
                 icon={<Settings size={18} aria-hidden="true" />}
+                isActive={(location) =>
+                  location.pathname === `/projetos/${projetoId}/configuracoes` &&
+                  new URLSearchParams(location.search).get('tab') !== 'eap'
+                }
               >
                 Configurações
               </SidebarNavItem>
