@@ -70,7 +70,7 @@ export function EapDisciplinaCard({ projetoId, disciplina, unidades }: EapDiscip
           </span>
           {disciplina.status_eap !== null && (
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-medium text-white ${statusEapCorClasse(disciplina.status_eap)}`}
+              className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium text-white ${statusEapCorClasse(disciplina.status_eap)}`}
             >
               {statusEapLabel(disciplina.status_eap)}
             </span>
@@ -236,7 +236,7 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
             }
           />
         </FormField>
-        <FormField id={`servico-inicio-${servico.id}`} label="Início previsto" className="mb-0 w-32">
+        <FormField id={`servico-inicio-${servico.id}`} label="Início previsto" className="mb-0 w-40">
           <Input
             id={`servico-inicio-${servico.id}`}
             type="date"
@@ -251,7 +251,7 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
             }
           />
         </FormField>
-        <FormField id={`servico-fim-${servico.id}`} label="Fim previsto" className="mb-0 w-32">
+        <FormField id={`servico-fim-${servico.id}`} label="Fim previsto" className="mb-0 w-40">
           <Input
             id={`servico-fim-${servico.id}`}
             type="date"
@@ -264,7 +264,7 @@ function EapServicoRow({ projetoId, servico }: EapServicoRowProps) {
         </FormField>
         {servico.status_eap !== null && (
           <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-medium text-white ${statusEapCorClasse(servico.status_eap)}`}
+            className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium text-white ${statusEapCorClasse(servico.status_eap)}`}
           >
             {statusEapLabel(servico.status_eap)}
           </span>
