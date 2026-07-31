@@ -31,3 +31,5 @@ mazer-main/
 !.vscode/extensions.json
 .idea/
 .DS_Store
+
+.superpowers/
