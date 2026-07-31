@@ -146,7 +146,14 @@ export function GanttChart({ disciplinas }: GanttChartProps) {
             axisLine={false}
           />
           <Tooltip content={TooltipGantt} />
-          {mostrarHoje && <ReferenceLine x={hojeOffset} stroke="#f59e0b" strokeDasharray="4 3" label="Hoje" />}
+          {mostrarHoje && (
+            <ReferenceLine
+              x={hojeOffset}
+              stroke="#f59e0b"
+              strokeDasharray="4 3"
+              label={{ value: 'Hoje', position: 'top', fill: '#f59e0b', fontSize: 11, fontWeight: 600 }}
+            />
+          )}
           <Bar dataKey="offset" stackId="gantt" fill="transparent" isAnimationActive={false} name="offset" />
           <Bar dataKey="duracao" stackId="gantt" shape={BarraDuracao} isAnimationActive={false} name="duracao" />
         </BarChart>
