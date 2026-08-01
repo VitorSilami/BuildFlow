@@ -263,3 +263,43 @@ def test_linha_totalmente_em_branco_e_ignorada():
 
     assert resultado.disciplinas_criadas == 1
     assert resultado.servicos_criados == 1
+
+
+def test_nome_de_disciplina_duplicado_entre_ramos_diferentes_e_rejeitado():
+    projeto = ProjetoParaRdoFactory()
+    principal = [
+        CABECALHO_PRINCIPAL,
+        ["001", "Terraplenagem", 50, 1, "", "", "", ""],
+        ["001.001", "Escavações", 100, 2, "", "", "", ""],
+        ["001.001.001", "Escavação manual", 100, 3, "", "", "m³", 100],
+        ["002", "Drenagem", 50, 1, "", "", "", ""],
+        ["002.001", "Escavações", 100, 2, "", "", "", ""],
+        ["002.001.001", "Escavação manual", 100, 3, "", "", "m³", 200],
+    ]
+    arquivo = _workbook_upload("import.xlsx", {"EXPORT_PROJECT": principal})
+
+    with pytest.raises(LinhasInvalidas) as exc_info:
+        _importar(projeto, arquivo)
+
+    assert exc_info.value.erros == [
+        'Linha 6: nome de disciplina "Escavações" duplicado (já usado no código 001.001).',
+    ]
+
+
+def test_erros_de_folha_saem_em_ordem_de_linha_do_arquivo():
+    projeto = ProjetoParaRdoFactory()
+    principal = [
+        CABECALHO_PRINCIPAL,
+        ["001", "Mobilização", 100, 1, "", "", "", ""],
+        ["001.001", "Canteiro A", 50, 2, "", "", "", 1],
+        ["001.002", "Canteiro B", 50, 2, "", "", "", 1],
+    ]
+    arquivo = _workbook_upload("import.xlsx", {"EXPORT_PROJECT": principal})
+
+    with pytest.raises(LinhasInvalidas) as exc_info:
+        _importar(projeto, arquivo)
+
+    assert exc_info.value.erros == [
+        "Linha 3: UNIDADE em branco.",
+        "Linha 4: UNIDADE em branco.",
+    ]

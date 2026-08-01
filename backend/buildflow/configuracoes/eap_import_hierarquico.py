@@ -229,7 +229,7 @@ def _validar_folhas(
     erros: list[str] = []
     quantidades: dict[str, Decimal] = {}
 
-    for codigo in folhas:
+    for codigo in sorted(folhas, key=lambda c: nos[c].numero_linha):
         no = nos[codigo]
         if not no.unidade_bruta:
             erros.append(f"Linha {no.numero_linha}: UNIDADE em branco.")
@@ -247,6 +247,26 @@ def _validar_folhas(
         quantidades[codigo] = quantidade
 
     return quantidades, erros
+
+
+def _validar_nomes_disciplina_unicos(
+    nos: dict[str, _NoHierarquico],
+    folhas: set[str],
+) -> list[str]:
+    erros: list[str] = []
+    nomes_vistos: dict[str, str] = {}
+    for codigo, no in nos.items():
+        if codigo in folhas:
+            continue
+        chave = no.nome.upper()
+        if chave in nomes_vistos:
+            erros.append(
+                f"Linha {no.numero_linha}: nome de disciplina "
+                f'"{no.nome}" duplicado (já usado no código {nomes_vistos[chave]}).',
+            )
+            continue
+        nomes_vistos[chave] = codigo
+    return erros
 
 
 def _localizar_aba_por_nome(
@@ -328,8 +348,9 @@ def importar(
     nos, erros_parse = _parsear_linhas(linhas, indice_cabecalho, colunas)
     pais, folhas, erros_arvore = _construir_arvore(nos)
     quantidades, erros_folhas = _validar_folhas(nos, folhas)
+    erros_nomes = _validar_nomes_disciplina_unicos(nos, folhas)
 
-    erros = erros_parse + erros_arvore + erros_folhas
+    erros = erros_parse + erros_arvore + erros_folhas + erros_nomes
     if erros:
         raise LinhasInvalidas(erros)
 
