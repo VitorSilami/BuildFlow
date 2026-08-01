@@ -300,3 +300,18 @@ def test_disciplina_muito_longa_gera_erro():
     assert exc_info.value.erros == [
         "Linha 2: DISCIPLINA excede o tamanho máximo (255 caracteres).",
     ]
+
+
+def test_linha_com_nota_em_coluna_ignorada_e_tratada_como_branco():
+    projeto = ProjetoParaRdoFactory()
+    csv_texto = (
+        "CHAVE,EAP,DISCIPLINA,ATIVIDADE,UN,TOTAL\n"
+        "1,1,Terraplenagem,Corte,m3,1500\n"
+        "Nota: quantidades parametrizadas, substituir quando consolidadas.,,,,,\n"
+    )
+    arquivo = _csv_upload("import.csv", csv_texto)
+
+    resultado = importar_eap_de_arquivo(projeto, arquivo)
+
+    assert resultado.disciplinas_criadas == 1
+    assert resultado.servicos_criados == 1
