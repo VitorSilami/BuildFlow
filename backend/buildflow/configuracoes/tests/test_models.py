@@ -109,3 +109,31 @@ def test_disciplina_clean_rejeita_ciclo_de_ancestralidade():
 
     with pytest.raises(ValidationError):
         a.full_clean()
+
+
+def test_disciplina_aceita_valor_base_opcional():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(
+        projeto=projeto,
+        nome="Terraplenagem",
+        valor_base=Decimal("1500000.00"),
+    )
+
+    disciplina.refresh_from_db()
+    assert disciplina.valor_base == Decimal("1500000.00")
+
+
+def test_catalogo_servico_aceita_preco_unitario_opcional():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = Unidade.objects.create(sigla="m³", descricao="metro cúbico")
+
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        preco_unitario=Decimal("18.50"),
+    )
+
+    servico.refresh_from_db()
+    assert servico.preco_unitario == Decimal("18.50")

@@ -68,6 +68,13 @@ class Disciplina(models.Model):
         null=True,
         blank=True,
     )
+    valor_base = models.DecimalField(
+        _("valor base"),
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
 
     tenant_path = "projeto__empresa"
     objects = TenantScopedManager()
@@ -115,6 +122,13 @@ class CatalogoServico(models.Model):
     peso_percentual = models.DecimalField(
         _("peso percentual"),
         max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    preco_unitario = models.DecimalField(
+        _("preço unitário"),
+        max_digits=12,
         decimal_places=2,
         null=True,
         blank=True,

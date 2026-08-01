@@ -942,3 +942,37 @@ def test_importar_eap_de_projeto_de_outra_empresa_retorna_404():
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_patch_disciplina_atualiza_valor_base():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/disciplinas/{disciplina.id}/",
+        {"valor_base": "2500000.00"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.data
+    assert response.json()["valor_base"] == "2500000.00"
+
+
+def test_patch_servico_atualiza_preco_unitario():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    unidade = UnidadeFactory()
+    servico = CatalogoServicoFactory(disciplina=disciplina, unidade=unidade)
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/servicos/{servico.id}/",
+        {"preco_unitario": "18.50"},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.data
+    assert response.json()["preco_unitario"] == "18.50"
