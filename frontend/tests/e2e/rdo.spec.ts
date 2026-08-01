@@ -35,6 +35,7 @@ const CONFIGURACAO = {
 const RDO_CRIADO = {
   id: 'rdo-1',
   data_referencia: '2026-07-17',
+  status: 'aprovado',
   turno: 'diurno',
   clima: 'sol',
   equipe_nome: 'Equipe A',

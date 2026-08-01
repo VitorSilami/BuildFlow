@@ -93,6 +93,10 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('gerente ve custos e ociosidade do projeto no mes', async ({ page }) => {
+  // Relogio fixo em julho/2026 — o filtro de mes usa new Date() como default
+  // e o teste asserta 'mes=2026-07' explicitamente, entao sem fixar o
+  // relogio o teste quebra sempre que a execucao real cruza pro proximo mes.
+  await page.clock.setFixedTime(new Date('2026-07-17T10:00:00'))
   await page.route(SESSION_URL, (route) =>
     route.fulfill({ json: { status: 200, data: { user: GERENTE }, meta: { is_authenticated: true } } }),
   )

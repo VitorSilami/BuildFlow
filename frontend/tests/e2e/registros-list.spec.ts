@@ -61,7 +61,7 @@ test('dia com 1 RDO navega direto para o detalhe', async ({ page }) => {
   await mockAuthenticated(page)
   await page.route(LIST_URL, (route) =>
     route.fulfill({
-      json: [{ id: 'rdo-1', data_referencia: '2026-07-17', turno: 'diurno', clima: 'sol' }],
+      json: [{ id: 'rdo-1', data_referencia: '2026-07-17', status: 'aprovado', turno: 'diurno', clima: 'sol' }],
     }),
   )
   await page.route(DETAIL_URL, (route) =>
@@ -69,6 +69,7 @@ test('dia com 1 RDO navega direto para o detalhe', async ({ page }) => {
       json: {
         id: 'rdo-1',
         data_referencia: '2026-07-17',
+        status: 'aprovado',
         turno: 'diurno',
         clima: 'sol',
         equipe_nome: 'Equipe A',
@@ -106,8 +107,8 @@ test('dia com 2+ RDOs mostra lista inline em vez de navegar direto', async ({ pa
   await page.route(LIST_URL, (route) =>
     route.fulfill({
       json: [
-        { id: 'rdo-1', data_referencia: '2026-07-17', turno: 'diurno', clima: 'sol' },
-        { id: 'rdo-2', data_referencia: '2026-07-17', turno: 'noturno', clima: 'nublado' },
+        { id: 'rdo-1', data_referencia: '2026-07-17', status: 'aprovado', turno: 'diurno', clima: 'sol' },
+        { id: 'rdo-2', data_referencia: '2026-07-17', status: 'aprovado', turno: 'noturno', clima: 'nublado' },
       ],
     }),
   )
