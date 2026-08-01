@@ -67,3 +67,8 @@ export interface ConfiguracaoProjeto {
   valores_custo: ValorCusto[]
   soma_pesos_disciplinas: number
 }
+
+export interface ResultadoImportacaoEap {
+  disciplinas_criadas: number
+  servicos_criados: number
+}

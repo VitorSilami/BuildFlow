@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../services/apiClient'
-import type { CatalogoServico, ConfiguracaoProjeto, Disciplina, ValorCusto } from '../../types/configuracao'
+import type { CatalogoServico, ConfiguracaoProjeto, Disciplina, ResultadoImportacaoEap, ValorCusto } from '../../types/configuracao'
 import type { Equipe, Maquina, Pessoa } from '../../types/registroDiario'
 
 export function useConfiguracaoProjeto(projetoId: string) {
@@ -117,6 +117,48 @@ export function useCriarValorCusto(projetoId: string) {
       funcao?: string
       maquina?: string
     }) => apiClient.post<ValorCusto>(`/api/v1/projetos/${projetoId}/configuracao/valores/`, values),
+    onSuccess: invalidar,
+  })
+}
+
+export class ImportarEapError extends Error {
+  erros: string[] | null
+  detail: string | null
+
+  constructor(erros: string[] | null, detail: string | null) {
+    super(detail ?? erros?.join(' ') ?? 'Falha ao importar planilha.')
+    this.erros = erros
+    this.detail = detail
+  }
+}
+
+async function importarEapRequest(projetoId: string, arquivo: File): Promise<ResultadoImportacaoEap> {
+  const formData = new FormData()
+  formData.append('arquivo', arquivo)
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'}/api/v1/projetos/${projetoId}/configuracao/eap/importar/`,
+    {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': document.cookie.match(/(?:^|; )csrftoken=([^;]*)/)?.[1] ?? '',
+      },
+    },
+  )
+
+  const body = await response.json().catch(() => null)
+  if (!response.ok) {
+    throw new ImportarEapError(body?.erros ?? null, body?.detail ?? null)
+  }
+  return body as ResultadoImportacaoEap
+}
+
+export function useImportarEap(projetoId: string) {
+  const invalidar = useInvalidarConfiguracao(projetoId)
+  return useMutation({
+    mutationFn: (arquivo: File) => importarEapRequest(projetoId, arquivo),
     onSuccess: invalidar,
   })
 }

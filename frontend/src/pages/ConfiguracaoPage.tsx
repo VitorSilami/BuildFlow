@@ -12,6 +12,7 @@ import {
 } from '../features/configuracoes/configuracaoApi'
 import { EapDisciplinaCard } from '../features/configuracoes/EapDisciplinaCard'
 import { GanttChart } from '../features/configuracoes/GanttChart'
+import { ImportarEapButton } from '../features/configuracoes/ImportarEapButton'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import {
   Button,
@@ -151,7 +152,12 @@ export function ConfiguracaoPage() {
           <Card title="EAP">
             <div aria-label="EAP">
               {disciplinas.length === 0 && (
-                <EmptyState>Cadastre uma disciplina na aba Disciplinas para começar a EAP.</EmptyState>
+                <>
+                  <EmptyState>Cadastre uma disciplina na aba Disciplinas para começar a EAP.</EmptyState>
+                  <div className="mb-4 flex justify-center">
+                    <ImportarEapButton projetoId={projetoId ?? ''} />
+                  </div>
+                </>
               )}
               {disciplinas.some((d) => d.data_inicio_prevista !== null && d.data_fim_prevista !== null) && (
                 <div className="mb-4">
