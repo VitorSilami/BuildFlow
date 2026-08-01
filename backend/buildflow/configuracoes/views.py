@@ -89,9 +89,9 @@ class ConfiguracaoProjetoView(APIView):
             "maquinas",
         )
         valores = ValorCusto.objects.filter(projeto=projeto)
-        disciplinas = Disciplina.objects.filter(projeto=projeto).prefetch_related(
-            "servicos",
-        )
+        disciplinas = Disciplina.objects.filter(
+            projeto=projeto, pai__isnull=True,
+        ).prefetch_related("servicos", "subdisciplinas__servicos")
 
         return Response(
             {
@@ -132,7 +132,11 @@ class DisciplinaViewSet(
         return [IsAuthenticatedWithEmpresa()]
 
     def get_queryset(self):
-        return super().get_queryset().filter(projeto_id=self.kwargs["projeto_pk"])
+        return (
+            super()
+            .get_queryset()
+            .filter(projeto_id=self.kwargs["projeto_pk"], pai__isnull=True)
+        )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

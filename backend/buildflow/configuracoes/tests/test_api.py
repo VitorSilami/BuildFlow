@@ -787,3 +787,20 @@ def test_patch_disciplina_pai_formando_ciclo_indireto_e_rejeitado():
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_configuracao_projeto_retorna_subdisciplinas_aninhadas():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    pai = DisciplinaFactory(projeto=projeto, nome="Terraplenagem")
+    DisciplinaFactory(projeto=projeto, nome="Movimento de Terra", pai=pai)
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    assert response.status_code == HTTPStatus.OK
+    body = response.json()
+    assert len(body["disciplinas"]) == 1
+    assert body["disciplinas"][0]["nome"] == "Terraplenagem"
+    assert len(body["disciplinas"][0]["subdisciplinas"]) == 1
+    assert body["disciplinas"][0]["subdisciplinas"][0]["nome"] == "Movimento de Terra"

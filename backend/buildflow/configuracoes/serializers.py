@@ -157,6 +157,7 @@ class CatalogoServicoSerializer(serializers.ModelSerializer):
 
 class DisciplinaSerializer(serializers.ModelSerializer):
     servicos = CatalogoServicoSerializer(many=True, read_only=True)
+    subdisciplinas = serializers.SerializerMethodField()
     avanco_percentual = serializers.SerializerMethodField()
     avanco_previsto_percentual = serializers.SerializerMethodField()
     status_eap = serializers.SerializerMethodField()
@@ -171,12 +172,18 @@ class DisciplinaSerializer(serializers.ModelSerializer):
             "peso_percentual",
             "pai",
             "servicos",
+            "subdisciplinas",
             "avanco_percentual",
             "avanco_previsto_percentual",
             "status_eap",
             "data_inicio_prevista",
             "data_fim_prevista",
         ]
+
+    def get_subdisciplinas(self, obj: Disciplina) -> list[dict]:
+        return DisciplinaSerializer(
+            obj.subdisciplinas.all(), many=True, context=self.context,
+        ).data
 
     def validate_pai(self, pai: Disciplina | None) -> Disciplina | None:
         if pai is None:
