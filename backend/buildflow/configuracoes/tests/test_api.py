@@ -3,6 +3,7 @@ from decimal import Decimal
 from http import HTTPStatus
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
 from buildflow.configuracoes.models import Equipe
@@ -841,3 +842,103 @@ def test_configuracao_projeto_retorna_subdisciplinas_tres_niveis():
     assert nivel2["nome"] == "Movimento de Terra"
     nivel3 = nivel2["subdisciplinas"][0]
     assert nivel3["nome"] == "Escavação"
+
+
+def test_importar_eap_via_csv_retorna_201_com_contadores():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    client = _authenticated_client(usuario)
+    arquivo = SimpleUploadedFile(
+        "import.csv",
+        b"DISCIPLINA,ATIVIDADE,UN,TOTAL\nTerraplenagem,Corte,m3,1500\n",
+        content_type="text/csv",
+    )
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/eap/importar/",
+        {"arquivo": arquivo},
+        format="multipart",
+    )
+
+    assert response.status_code == HTTPStatus.CREATED, response.data
+    assert response.json() == {"disciplinas_criadas": 1, "servicos_criados": 1}
+
+
+def test_importar_eap_retorna_lista_de_erros_quando_ha_linha_invalida():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    client = _authenticated_client(usuario)
+    arquivo = SimpleUploadedFile(
+        "import.csv",
+        b"DISCIPLINA,ATIVIDADE,UN,TOTAL\nTerraplenagem,Corte,m3,abc\n",
+        content_type="text/csv",
+    )
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/eap/importar/",
+        {"arquivo": arquivo},
+        format="multipart",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {"erros": ["Linha 2: TOTAL/QUANTIDADE inválido."]}
+
+
+def test_importar_eap_com_projeto_ja_populado_retorna_detail():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    DisciplinaFactory(projeto=projeto)
+    client = _authenticated_client(usuario)
+    arquivo = SimpleUploadedFile(
+        "import.csv",
+        b"DISCIPLINA,ATIVIDADE,UN,TOTAL\nTerraplenagem,Corte,m3,1500\n",
+        content_type="text/csv",
+    )
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/eap/importar/",
+        {"arquivo": arquivo},
+        format="multipart",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert "já possui uma EAP" in response.json()["detail"]
+
+
+def test_auxiliar_administrativo_recebe_403_ao_importar_eap():
+    usuario = UsuarioFactory(perfil=PerfilChoices.AUXILIAR_ADMINISTRATIVO)
+    projeto = ProjetoParaRdoFactory()
+    client = _authenticated_client(usuario)
+    arquivo = SimpleUploadedFile(
+        "import.csv",
+        b"DISCIPLINA,ATIVIDADE,UN,TOTAL\nTerraplenagem,Corte,m3,1500\n",
+        content_type="text/csv",
+    )
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/eap/importar/",
+        {"arquivo": arquivo},
+        format="multipart",
+    )
+
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_importar_eap_de_projeto_de_outra_empresa_retorna_404():
+    usuario_a = UsuarioFactory()
+    projeto_a = ProjetoParaRdoFactory(criado_por=usuario_a)
+    usuario_b = UsuarioFactory()
+    client = _authenticated_client(usuario_b)
+    arquivo = SimpleUploadedFile(
+        "import.csv",
+        b"DISCIPLINA,ATIVIDADE,UN,TOTAL\nTerraplenagem,Corte,m3,1500\n",
+        content_type="text/csv",
+    )
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto_a.id}/configuracao/eap/importar/",
+        {"arquivo": arquivo},
+        format="multipart",
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND

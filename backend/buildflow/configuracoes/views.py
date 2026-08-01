@@ -1,5 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins
+from rest_framework.parsers import FormParser
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
@@ -11,6 +13,7 @@ from buildflow.projetos.models import Projeto
 from buildflow.usuarios.api.serializers import UserSerializer
 from buildflow.usuarios.models import User
 
+from . import eap_import
 from . import services
 from .models import CatalogoServico
 from .models import Disciplina
@@ -146,6 +149,32 @@ class DisciplinaViewSet(
 
     def perform_create(self, serializer):
         serializer.save(projeto=self._get_projeto())
+
+
+class EapImportView(ProjetoNestedMixin, APIView):
+    permission_classes = (IsAuthenticatedWithEmpresa, IsGerente)
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, projeto_pk):
+        projeto = self._get_projeto()
+        arquivo = request.FILES.get("arquivo")
+        if arquivo is None:
+            return Response({"detail": "Nenhum arquivo enviado."}, status=400)
+
+        try:
+            resultado = eap_import.importar_eap_de_arquivo(projeto, arquivo)
+        except eap_import.ArquivoInvalido as exc:
+            return Response({"detail": exc.mensagem}, status=400)
+        except eap_import.LinhasInvalidas as exc:
+            return Response({"erros": exc.erros}, status=400)
+
+        return Response(
+            {
+                "disciplinas_criadas": resultado.disciplinas_criadas,
+                "servicos_criados": resultado.servicos_criados,
+            },
+            status=201,
+        )
 
 
 class DisciplinaDetailViewSet(

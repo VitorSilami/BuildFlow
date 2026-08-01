@@ -4,6 +4,7 @@ from .views import ConfiguracaoProjetoView
 from .views import ConfiguracaoRdoView
 from .views import DisciplinaDetailViewSet
 from .views import DisciplinaViewSet
+from .views import EapImportView
 from .views import EquipeDetailViewSet
 from .views import EquipeViewSet
 from .views import MaquinaDetailViewSet
@@ -32,6 +33,11 @@ urlpatterns = [
         "projetos/<uuid:projeto_pk>/configuracao/disciplinas/",
         DisciplinaViewSet.as_view({"get": "list", "post": "create"}),
         name="configuracao-disciplinas",
+    ),
+    path(
+        "projetos/<uuid:projeto_pk>/configuracao/eap/importar/",
+        EapImportView.as_view(),
+        name="configuracao-eap-importar",
     ),
     path(
         "configuracoes/disciplinas/<uuid:pk>/",
