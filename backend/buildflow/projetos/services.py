@@ -138,12 +138,23 @@ def calcular_avanco_servico(servico: CatalogoServico) -> Decimal | None:
 
 
 def calcular_avanco_disciplina(disciplina: Disciplina) -> Decimal | None:
-    """Media ponderada (por CatalogoServico.peso_percentual) do avanco dos
-    servicos de uma disciplina. Servico sem peso definido nao conta. Retorna
-    None quando nenhum servico tem peso definido.
+    """Media ponderada (por peso_percentual) do avanco dos filhos de uma
+    disciplina -- subdisciplinas e servicos contam igual, cada um com seu
+    proprio avanco ja calculado (recursivo pelas subdisciplinas). Filho sem
+    peso definido ou sem avanco calculavel nao conta. Retorna None quando
+    nenhum filho conta.
     """
     soma_pesos = Decimal("0")
     soma_ponderada = Decimal("0")
+
+    for subdisciplina in disciplina.subdisciplinas.all():
+        if subdisciplina.peso_percentual is None:
+            continue
+        avanco = calcular_avanco_disciplina(subdisciplina)
+        if avanco is None:
+            continue
+        soma_ponderada += avanco * subdisciplina.peso_percentual
+        soma_pesos += subdisciplina.peso_percentual
 
     for servico in disciplina.servicos.all():
         if servico.peso_percentual is None:
@@ -186,11 +197,22 @@ def calcular_avanco_previsto_disciplina(
     disciplina: Disciplina,
     hoje: datetime.date | None = None,
 ) -> Decimal | None:
-    """Media ponderada (por peso_percentual) do avanco previsto dos servicos
-    da disciplina. Servico sem peso ou sem previsto (datas ausentes) nao conta.
+    """Media ponderada (por peso_percentual) do avanco previsto dos filhos da
+    disciplina -- subdisciplinas e servicos, recursivo. Filho sem peso ou sem
+    previsto (datas ausentes) nao conta.
     """
     soma_pesos = Decimal("0")
     soma_ponderada = Decimal("0")
+
+    for subdisciplina in disciplina.subdisciplinas.all():
+        if subdisciplina.peso_percentual is None:
+            continue
+        previsto = calcular_avanco_previsto_disciplina(subdisciplina, hoje)
+        if previsto is None:
+            continue
+        soma_ponderada += previsto * subdisciplina.peso_percentual
+        soma_pesos += subdisciplina.peso_percentual
+
     for servico in disciplina.servicos.all():
         if servico.peso_percentual is None:
             continue
@@ -199,6 +221,7 @@ def calcular_avanco_previsto_disciplina(
             continue
         soma_ponderada += previsto * servico.peso_percentual
         soma_pesos += servico.peso_percentual
+
     if soma_pesos == 0:
         return None
     return (soma_ponderada / soma_pesos).quantize(Decimal("0.01"))
@@ -227,15 +250,26 @@ def classificar_status_eap(  # noqa: PLR0911
     return StatusEapChoices.NO_PRAZO
 
 
+def _servicos_leaf(disciplina: Disciplina) -> list[CatalogoServico]:
+    """Todos os servicos-folha descendentes de uma disciplina, em qualquer
+    profundidade (recursivo pelas subdisciplinas).
+    """
+    servicos = list(disciplina.servicos.all())
+    for subdisciplina in disciplina.subdisciplinas.all():
+        servicos.extend(_servicos_leaf(subdisciplina))
+    return servicos
+
+
 def calcular_status_eap_disciplina(disciplina: Disciplina) -> StatusEapChoices | None:
     """Status da disciplina, mas so quando o avanco real e o avanco previsto
-    forem calculados sobre o mesmo conjunto de servicos. Bases diferentes
-    (ex.: um servico so tem quantidade_planejada, outro so tem datas
-    previstas) tornam a comparacao sem sentido — retorna None em vez de
-    um status enganoso, mesmo principio de "nunca inventa numero".
+    forem calculados sobre o mesmo conjunto de servicos-folha de toda a
+    subarvore (recursivo por subdisciplinas). Bases diferentes (ex.: um
+    servico so tem quantidade_planejada, outro so tem datas previstas)
+    tornam a comparacao sem sentido — retorna None em vez de um status
+    enganoso, mesmo principio de "nunca inventa numero".
     """
     servicos_com_peso = [
-        s for s in disciplina.servicos.all() if s.peso_percentual is not None
+        s for s in _servicos_leaf(disciplina) if s.peso_percentual is not None
     ]
     ids_com_avanco_real = {
         s.id for s in servicos_com_peso if calcular_avanco_servico(s) is not None
@@ -257,13 +291,14 @@ def calcular_janela_disciplina(
     disciplina: Disciplina,
 ) -> tuple[datetime.date, datetime.date] | None:
     """Janela (inicio, fim) de uma disciplina para o Gantt: menor
-    data_inicio_prevista e maior data_fim_prevista entre os servicos filhos
-    que tem ambas as datas definidas. Sem nenhum servico com as duas datas,
-    retorna None — disciplina nao aparece no Gantt, nunca inventa uma janela.
+    data_inicio_prevista e maior data_fim_prevista entre os servicos-folha
+    descendentes (em qualquer profundidade, via subdisciplinas) que tem
+    ambas as datas definidas. Sem nenhum servico com as duas datas, retorna
+    None -- disciplina nao aparece no Gantt, nunca inventa uma janela.
     """
     servicos_com_janela = [
         s
-        for s in disciplina.servicos.all()
+        for s in _servicos_leaf(disciplina)
         if s.data_inicio_prevista is not None and s.data_fim_prevista is not None
     ]
     if not servicos_com_janela:
@@ -276,14 +311,15 @@ def calcular_janela_disciplina(
 
 def calcular_execucao_percentual(projeto: Projeto) -> Decimal | None:
     """Media ponderada (por Disciplina.peso_percentual) do avanco de cada
-    disciplina do projeto. Disciplina sem peso definido nao conta. Retorna
-    None quando nao ha base real para calcular (sem disciplinas, ou nenhuma
-    disciplina com peso definido) — nunca inventa um numero.
+    disciplina RAIZ do projeto. Subdisciplinas nao contam aqui -- seu peso ja
+    esta embutido no rollup recursivo do proprio pai; contar de novo neste
+    nivel duplicaria. Disciplina sem peso definido nao conta. Retorna None
+    quando nao ha base real para calcular -- nunca inventa um numero.
     """
     soma_pesos = Decimal("0")
     soma_ponderada = Decimal("0")
 
-    for disciplina in projeto.disciplinas.all():
+    for disciplina in projeto.disciplinas.filter(pai__isnull=True):
         if disciplina.peso_percentual is None:
             continue
         avanco = calcular_avanco_disciplina(disciplina)

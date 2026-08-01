@@ -5,7 +5,9 @@ from rest_framework.exceptions import ValidationError
 
 
 def soma_pesos_disciplinas(projeto) -> Decimal:
-    """Soma dos pesos percentuais das disciplinas de um projeto.
+    """Soma dos pesos percentuais das disciplinas RAIZ de um projeto.
+    Subdisciplinas nao contam aqui -- seu peso e relativo ao proprio pai
+    (dentro do pool de peso do pai), nao ao projeto; contar aqui duplicaria.
 
     Validacao informativa (nao bloqueante): o frontend usa isso so para
     alertar visualmente quando a soma nao fica proxima de 100%, sem impedir
@@ -13,7 +15,7 @@ def soma_pesos_disciplinas(projeto) -> Decimal:
     visualmente, nunca travava o cadastro).
     """
     total = Decimal("0")
-    for disciplina in projeto.disciplinas.all():
+    for disciplina in projeto.disciplinas.filter(pai__isnull=True):
         if disciplina.peso_percentual is not None:
             total += disciplina.peso_percentual
     return total

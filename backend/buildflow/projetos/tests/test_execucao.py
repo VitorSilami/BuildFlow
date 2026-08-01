@@ -1000,3 +1000,139 @@ def test_janela_disciplina_usa_menor_inicio_e_maior_fim_entre_servicos():
     janela = calcular_janela_disciplina(disciplina)
 
     assert janela == (datetime.date(2026, 1, 10), datetime.date(2026, 5, 20))
+
+
+def test_calcula_avanco_disciplina_com_subdisciplina_e_servico_misturados():
+    projeto = _criar_projeto()
+    unidade = _criar_unidade()
+    pai = Disciplina.objects.create(
+        projeto=projeto, nome="Terraplenagem", peso_percentual=Decimal("100.00"),
+    )
+    filha = Disciplina.objects.create(
+        projeto=projeto,
+        nome="Movimento de Terra",
+        pai=pai,
+        peso_percentual=Decimal("50.00"),
+    )
+    CatalogoServico.objects.create(
+        disciplina=filha,
+        nome="Escavação",
+        unidade=unidade,
+        peso_percentual=Decimal("100.00"),
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("800.000"),
+    )
+    CatalogoServico.objects.create(
+        disciplina=pai,
+        nome="Compactação",
+        unidade=unidade,
+        peso_percentual=Decimal("50.00"),
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("200.000"),
+    )
+
+    # filha: 1 servico com peso 100, avanco 800/1000 = 80.00
+    assert calcular_avanco_disciplina(filha) == Decimal("80.00")
+    # pai: filha (peso 50, avanco 80) + servico direto (peso 50, avanco 20)
+    # -> (50*80 + 50*20) / 100 = 50.00
+    assert calcular_avanco_disciplina(pai) == Decimal("50.00")
+
+
+def test_execucao_percentual_projeto_ignora_peso_de_subdisciplina():
+    projeto = _criar_projeto()
+    unidade = _criar_unidade()
+    pai = Disciplina.objects.create(
+        projeto=projeto, nome="Terraplenagem", peso_percentual=Decimal("100.00"),
+    )
+    filha = Disciplina.objects.create(
+        projeto=projeto,
+        nome="Movimento de Terra",
+        pai=pai,
+        peso_percentual=Decimal("50.00"),
+    )
+    CatalogoServico.objects.create(
+        disciplina=filha,
+        nome="Escavação",
+        unidade=unidade,
+        peso_percentual=Decimal("100.00"),
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("800.000"),
+    )
+    CatalogoServico.objects.create(
+        disciplina=pai,
+        nome="Compactação",
+        unidade=unidade,
+        peso_percentual=Decimal("50.00"),
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("200.000"),
+    )
+
+    # pai: filha (peso 50, avanco 80) + servico direto (peso 50, avanco 20)
+    # -> (50*80 + 50*20) / 100 = 50.00 (ver teste anterior)
+    assert calcular_avanco_disciplina(pai) == Decimal("50.00")
+
+    # Sem a correcao, projeto.disciplinas.all() tambem incluiria "filha" com
+    # seu peso_percentual (50, relativo ao PAI, nao ao projeto) contando de
+    # novo no nivel de projeto -- resultado errado seria 60.00 em vez de
+    # 50.00: (100*50 + 50*80) / (100+50) = 9000/150 = 60.00.
+    assert calcular_execucao_percentual(projeto) == Decimal("50.00")
+
+
+def test_status_eap_disciplina_considera_servicos_folha_de_subdisciplina():
+    projeto = _criar_projeto()
+    pai = Disciplina.objects.create(
+        projeto=projeto, nome="Terraplenagem", peso_percentual=Decimal("100.00"),
+    )
+    filha = Disciplina.objects.create(
+        projeto=projeto,
+        nome="Movimento de Terra",
+        pai=pai,
+        peso_percentual=Decimal("100.00"),
+    )
+    CatalogoServico.objects.create(
+        disciplina=filha,
+        nome="Escavação",
+        unidade=_criar_unidade(),
+        peso_percentual=Decimal("100.00"),
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("1000.000"),
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 1, 31),
+    )
+
+    # Servico-folha (dentro da subdisciplina, sem nenhum servico direto no
+    # pai) 100% executado e com datas ja no passado -> real >=
+    # LIMIAR_CONCLUIDO classifica CONCLUIDO independente da data de "hoje"
+    # em que o teste roda (mesmo truque de
+    # test_status_eap_disciplina_retorna_status_real_quando_bases_coincidem,
+    # que evita ter que mockar timezone.now()). Isso confirma que o status
+    # do pai enxerga o servico-folha dentro da subdisciplina.
+    assert calcular_status_eap_disciplina(pai) == StatusEapChoices.CONCLUIDO
+
+
+def test_janela_disciplina_considera_servicos_de_subdisciplina():
+    projeto = _criar_projeto()
+    unidade = _criar_unidade()
+    pai = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    filha = Disciplina.objects.create(
+        projeto=projeto, nome="Movimento de Terra", pai=pai,
+    )
+    CatalogoServico.objects.create(
+        disciplina=filha,
+        nome="Escavação",
+        unidade=unidade,
+        data_inicio_prevista=datetime.date(2026, 2, 1),
+        data_fim_prevista=datetime.date(2026, 5, 1),
+    )
+    CatalogoServico.objects.create(
+        disciplina=pai,
+        nome="Compactação",
+        unidade=unidade,
+        data_inicio_prevista=datetime.date(2026, 1, 1),
+        data_fim_prevista=datetime.date(2026, 3, 1),
+    )
+
+    assert calcular_janela_disciplina(pai) == (
+        datetime.date(2026, 1, 1),
+        datetime.date(2026, 5, 1),
+    )
