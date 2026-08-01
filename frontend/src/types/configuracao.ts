@@ -42,7 +42,9 @@ export interface Disciplina {
   id: string
   nome: string
   peso_percentual: string | null
+  pai: string | null
   servicos: CatalogoServico[]
+  subdisciplinas: Disciplina[]
   avanco_percentual: string | null
   avanco_previsto_percentual: string | null
   status_eap: StatusEap | null

@@ -87,8 +87,12 @@ function TooltipGantt({ active, payload }: TooltipGanttProps) {
   )
 }
 
+function achatarDisciplinas(disciplinas: Disciplina[]): Disciplina[] {
+  return disciplinas.flatMap((disciplina) => [disciplina, ...achatarDisciplinas(disciplina.subdisciplinas)])
+}
+
 export function GanttChart({ disciplinas }: GanttChartProps) {
-  const linhas = disciplinas
+  const linhas = achatarDisciplinas(disciplinas)
     .filter((d) => d.data_inicio_prevista !== null && d.data_fim_prevista !== null)
     .map((d) => ({
       nome: d.nome,
@@ -139,7 +143,7 @@ export function GanttChart({ disciplinas }: GanttChartProps) {
           <YAxis
             type="category"
             dataKey="nome"
-            width={140}
+            width={180}
             stroke="var(--color-muted-foreground)"
             fontSize={12}
             tickLine={false}

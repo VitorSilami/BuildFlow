@@ -56,7 +56,7 @@ test('criar disciplina e equipe na configuração do projeto', async ({ page }) 
 
   await page.route(CONFIG_URL, (route) => {
     const disciplinas = disciplinaCriada
-      ? [{ id: 'disc-1', nome: 'Terraplenagem', peso_percentual: null, avanco_percentual: null, servicos: [] }]
+      ? [{ id: 'disc-1', nome: 'Terraplenagem', peso_percentual: null, avanco_percentual: null, subdisciplinas: [], servicos: [] }]
       : []
     const equipes = equipeCriada
       ? [{ id: 'equipe-1', nome: 'Equipe A', pessoas: [], maquinas: [] }]
@@ -70,7 +70,7 @@ test('criar disciplina e equipe na configuração do projeto', async ({ page }) 
     disciplinaCriada = true
     return route.fulfill({
       status: 201,
-      json: { id: 'disc-1', nome: 'Terraplenagem', peso_percentual: null, avanco_percentual: null, servicos: [] },
+      json: { id: 'disc-1', nome: 'Terraplenagem', peso_percentual: null, avanco_percentual: null, subdisciplinas: [], servicos: [] },
     })
   })
 
@@ -105,7 +105,7 @@ test('trocar de aba mantém a seção anterior preenchida ao voltar', async ({ p
     route.fulfill({
       json: {
         disciplinas: [
-          { id: 'disc-1', nome: 'Terraplenagem', peso_percentual: null, avanco_percentual: null, servicos: [] },
+          { id: 'disc-1', nome: 'Terraplenagem', peso_percentual: null, avanco_percentual: null, subdisciplinas: [], servicos: [] },
         ],
         equipes: [],
         valores_custo: [],
@@ -183,6 +183,7 @@ test('define peso da disciplina e adiciona serviço na aba EAP', async ({ page }
       nome: 'Terraplenagem',
       peso_percentual: pesoDisciplina,
       avanco_percentual: null,
+      subdisciplinas: [],
       servicos: servicoCriado
         ? [
             {
@@ -222,6 +223,7 @@ test('define peso da disciplina e adiciona serviço na aba EAP', async ({ page }
         nome: 'Terraplenagem',
         peso_percentual: '100.00',
         avanco_percentual: null,
+        subdisciplinas: [],
         servicos: [],
       },
     })
@@ -277,6 +279,7 @@ test('mostra total executado combinando RDO e ajuste manual, com lançamentos vi
             nome: 'Terraplenagem',
             peso_percentual: '100.00',
             avanco_percentual: '25.00',
+            subdisciplinas: [],
             servicos: [
               {
                 id: 'serv-1',
@@ -327,6 +330,7 @@ test('mostra a carta de controle quando o servico tem amostra suficiente de RDOs
             nome: 'Terraplenagem',
             peso_percentual: '100.00',
             avanco_percentual: '25.00',
+            subdisciplinas: [],
             servicos: [
               {
                 id: 'serv-1',
@@ -392,6 +396,7 @@ test('mostra badge de status e avanco previsto quando o servico tem datas previs
             avanco_percentual: '25.00',
             avanco_previsto_percentual: '60.00',
             status_eap: 'atencao',
+            subdisciplinas: [],
             servicos: [
               {
                 id: 'serv-1',
@@ -443,6 +448,7 @@ test('limpar a data de inicio previsto envia null no PATCH, nao string vazia', a
             avanco_percentual: '25.00',
             avanco_previsto_percentual: '60.00',
             status_eap: 'atencao',
+            subdisciplinas: [],
             servicos: [
               {
                 id: 'serv-1',
@@ -520,6 +526,7 @@ test('nao mostra badge nem previsto quando o servico nao tem datas previstas', a
             avanco_percentual: '25.00',
             avanco_previsto_percentual: null,
             status_eap: null,
+            subdisciplinas: [],
             servicos: [
               {
                 id: 'serv-1',
@@ -572,6 +579,7 @@ test('toggle do Gantt fica oculto por padrao e mostra o cronograma ao clicar', a
             status_eap: 'atencao',
             data_inicio_prevista: '2026-01-01',
             data_fim_prevista: '2026-03-01',
+            subdisciplinas: [],
             servicos: [
               {
                 id: 'serv-1',
@@ -625,6 +633,7 @@ test('disciplina sem janela valida nao aparece no Gantt', async ({ page }) => {
             status_eap: null,
             data_inicio_prevista: null,
             data_fim_prevista: null,
+            subdisciplinas: [],
             servicos: [],
           },
         ],
@@ -659,6 +668,7 @@ test('disciplina com status_eap nulo renderiza no Gantt sem quebrar', async ({ p
             status_eap: null,
             data_inicio_prevista: '2026-01-01',
             data_fim_prevista: '2026-03-01',
+            subdisciplinas: [],
             servicos: [
               {
                 id: 'serv-1',
@@ -691,4 +701,185 @@ test('disciplina com status_eap nulo renderiza no Gantt sem quebrar', async ({ p
   await page.getByRole('button', { name: 'Ver cronograma (Gantt)' }).click()
 
   await expect(page.getByLabel('Cronograma da EAP')).toBeVisible()
+})
+
+test('cria subdisciplina e ela aparece aninhada dentro do card do pai', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  let subdisciplinaCriada = false
+
+  await page.route(CONFIG_URL, (route) => {
+    const disciplina = {
+      id: 'disc-1',
+      nome: 'Terraplenagem',
+      peso_percentual: '100.00',
+      avanco_percentual: null,
+      servicos: [],
+      subdisciplinas: subdisciplinaCriada
+        ? [
+            {
+              id: 'disc-2',
+              nome: 'Movimento de Terra',
+              peso_percentual: null,
+              avanco_percentual: null,
+              servicos: [],
+              subdisciplinas: [],
+            },
+          ]
+        : [],
+    }
+    return route.fulfill({
+      json: { disciplinas: [disciplina], equipes: [], valores_custo: [], soma_pesos_disciplinas: 100 },
+    })
+  })
+
+  await page.route(DISCIPLINAS_URL, (route) => {
+    subdisciplinaCriada = true
+    return route.fulfill({
+      status: 201,
+      json: {
+        id: 'disc-2',
+        nome: 'Movimento de Terra',
+        peso_percentual: null,
+        avanco_percentual: null,
+        servicos: [],
+        subdisciplinas: [],
+      },
+    })
+  })
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
+
+  await page.getByLabel('Nova subdisciplina').fill('Movimento de Terra')
+  await page.getByRole('button', { name: '+ Subdisciplina' }).click()
+
+  await expect(page.getByText('Movimento de Terra')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Expandir Movimento de Terra' })).toBeVisible()
+})
+
+test('aviso de soma de pesos considera subdisciplinas e servicos juntos', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [
+          {
+            id: 'disc-1',
+            nome: 'Terraplenagem',
+            peso_percentual: '100.00',
+            avanco_percentual: null,
+            servicos: [
+              {
+                id: 'serv-1',
+                nome: 'Corte',
+                unidade: 1,
+                peso_percentual: '30.00',
+                quantidade_planejada: null,
+                quantidade_executada: '0.000',
+                quantidade_executada_manual: '0.000',
+                producoes_vinculadas: [],
+                carta_controle: null,
+                avanco_percentual: null,
+              },
+            ],
+            subdisciplinas: [
+              {
+                id: 'disc-2',
+                nome: 'Movimento de Terra',
+                peso_percentual: '30.00',
+                avanco_percentual: null,
+                servicos: [],
+                subdisciplinas: [],
+              },
+            ],
+          },
+        ],
+        equipes: [],
+        valores_custo: [],
+        soma_pesos_disciplinas: 100,
+      },
+    }),
+  )
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
+
+  await expect(page.getByText(/a soma dos pesos dos filhos desta disciplina não fecha 100%/)).toBeVisible()
+})
+
+test('Gantt mostra uma barra para disciplina raiz e outra para a subdisciplina', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [
+          {
+            id: 'disc-1',
+            nome: 'Terraplenagem',
+            peso_percentual: '100.00',
+            avanco_percentual: null,
+            avanco_previsto_percentual: null,
+            status_eap: null,
+            data_inicio_prevista: '2026-01-01',
+            data_fim_prevista: '2026-03-01',
+            servicos: [],
+            subdisciplinas: [
+              {
+                id: 'disc-2',
+                nome: 'Movimento de Terra',
+                peso_percentual: '100.00',
+                avanco_percentual: '50.00',
+                avanco_previsto_percentual: '60.00',
+                status_eap: 'atencao',
+                data_inicio_prevista: '2026-01-01',
+                data_fim_prevista: '2026-03-01',
+                subdisciplinas: [],
+                servicos: [
+                  {
+                    id: 'serv-1',
+                    nome: 'Corte',
+                    unidade: 1,
+                    peso_percentual: '100.00',
+                    quantidade_planejada: '1000.000',
+                    quantidade_executada_manual: '500.000',
+                    quantidade_executada: '500.000',
+                    producoes_vinculadas: [],
+                    carta_controle: null,
+                    avanco_percentual: '50.00',
+                    data_inicio_prevista: '2026-01-01',
+                    data_fim_prevista: '2026-03-01',
+                    avanco_previsto_percentual: '60.00',
+                    status_eap: 'atencao',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        equipes: [],
+        valores_custo: [],
+        soma_pesos_disciplinas: 100,
+      },
+    }),
+  )
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.getByRole('button', { name: 'Ver cronograma (Gantt)' }).click()
+
+  const grafico = page.getByLabel('Cronograma da EAP')
+  await expect(grafico).toBeVisible()
+  await expect(grafico.getByText('Terraplenagem')).toBeVisible()
+  await expect(grafico.getByText('Movimento de Terra')).toBeVisible()
 })

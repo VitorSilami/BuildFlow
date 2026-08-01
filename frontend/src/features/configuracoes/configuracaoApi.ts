@@ -21,7 +21,7 @@ function useInvalidarConfiguracao(projetoId: string) {
 export function useCriarDisciplina(projetoId: string) {
   const invalidar = useInvalidarConfiguracao(projetoId)
   return useMutation({
-    mutationFn: (values: { nome: string; peso_percentual?: string }) =>
+    mutationFn: (values: { nome: string; peso_percentual?: string; pai?: string }) =>
       apiClient.post<Disciplina>(`/api/v1/projetos/${projetoId}/configuracao/disciplinas/`, values),
     onSuccess: invalidar,
   })

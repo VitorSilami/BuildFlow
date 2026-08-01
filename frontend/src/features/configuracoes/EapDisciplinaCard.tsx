@@ -6,15 +6,20 @@ import type { CatalogoServico, Disciplina } from '../../types/configuracao'
 import type { Unidade } from '../../types/registroDiario'
 import { Button, FormField, Input, Progress, SelectField } from '../../components/ui'
 import { CartaControleChart } from './CartaControleChart'
-import { useAtualizarDisciplina, useAtualizarServico, useCriarServico } from './configuracaoApi'
+import { useAtualizarDisciplina, useAtualizarServico, useCriarDisciplina, useCriarServico } from './configuracaoApi'
 
 const TOLERANCIA_SOMA_PESOS = 0.01
 
-function somaPesosServicos(disciplina: Disciplina): number {
-  return disciplina.servicos.reduce(
+function somaPesosFilhos(disciplina: Disciplina): number {
+  const somaServicos = disciplina.servicos.reduce(
     (total, servico) => total + (servico.peso_percentual ? Number(servico.peso_percentual) : 0),
     0,
   )
+  const somaSubdisciplinas = disciplina.subdisciplinas.reduce(
+    (total, subdisciplina) => total + (subdisciplina.peso_percentual ? Number(subdisciplina.peso_percentual) : 0),
+    0,
+  )
+  return somaServicos + somaSubdisciplinas
 }
 
 interface EapDisciplinaCardProps {
@@ -30,13 +35,15 @@ export function EapDisciplinaCard({ projetoId, disciplina, unidades }: EapDiscip
   const [novoServicoUnidade, setNovoServicoUnidade] = useState('')
   const [novoServicoPeso, setNovoServicoPeso] = useState('')
   const [novoServicoQuantidade, setNovoServicoQuantidade] = useState('')
+  const [novaSubdisciplinaNome, setNovaSubdisciplinaNome] = useState('')
 
   const atualizarDisciplina = useAtualizarDisciplina(projetoId)
   const criarServico = useCriarServico(projetoId)
+  const criarDisciplina = useCriarDisciplina(projetoId)
 
-  const somaServicos = somaPesosServicos(disciplina)
-  const somaServicosForaDoAlvo =
-    disciplina.servicos.length > 0 && Math.abs(somaServicos - 100) > TOLERANCIA_SOMA_PESOS
+  const somaFilhos = somaPesosFilhos(disciplina)
+  const temFilhos = disciplina.servicos.length > 0 || disciplina.subdisciplinas.length > 0
+  const somaFilhosForaDoAlvo = temFilhos && Math.abs(somaFilhos - 100) > TOLERANCIA_SOMA_PESOS
 
   function salvarPesoDisciplina() {
     if (peso === (disciplina.peso_percentual ?? '')) return
@@ -88,19 +95,65 @@ export function EapDisciplinaCard({ projetoId, disciplina, unidades }: EapDiscip
 
       {expandido && (
         <div className="mt-3 pl-7">
-          {disciplina.servicos.length === 0 && (
-            <p className="mb-3 text-xs text-muted-foreground">Nenhum serviço cadastrado nesta disciplina ainda.</p>
-          )}
-          <ul className="mb-3 flex flex-col gap-2">
-            {disciplina.servicos.map((servico) => (
-              <EapServicoRow key={servico.id} projetoId={projetoId} servico={servico} />
-            ))}
-          </ul>
-          {somaServicosForaDoAlvo && (
-            <p className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-xs text-amber-700">
-              Atenção: a soma dos pesos dos serviços desta disciplina não fecha 100% ({somaServicos}%).
+          {!temFilhos && (
+            <p className="mb-3 text-xs text-muted-foreground">
+              Nenhuma subdisciplina ou serviço cadastrado nesta disciplina ainda.
             </p>
           )}
+
+          {disciplina.subdisciplinas.length > 0 && (
+            <ul className="mb-3 flex flex-col gap-2">
+              {disciplina.subdisciplinas.map((subdisciplina) => (
+                <EapDisciplinaCard
+                  key={subdisciplina.id}
+                  projetoId={projetoId}
+                  disciplina={subdisciplina}
+                  unidades={unidades}
+                />
+              ))}
+            </ul>
+          )}
+
+          {disciplina.servicos.length > 0 && (
+            <ul className="mb-3 flex flex-col gap-2">
+              {disciplina.servicos.map((servico) => (
+                <EapServicoRow key={servico.id} projetoId={projetoId} servico={servico} />
+              ))}
+            </ul>
+          )}
+
+          {somaFilhosForaDoAlvo && (
+            <p className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-xs text-amber-700">
+              Atenção: a soma dos pesos dos filhos desta disciplina não fecha 100% ({somaFilhos}%).
+            </p>
+          )}
+
+          <div className="mb-3 flex flex-wrap items-end gap-3">
+            <FormField id={`nova-subdisciplina-${disciplina.id}`} label="Nova subdisciplina">
+              <Input
+                id={`nova-subdisciplina-${disciplina.id}`}
+                value={novaSubdisciplinaNome}
+                onChange={(event) => setNovaSubdisciplinaNome(event.target.value)}
+              />
+            </FormField>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={!novaSubdisciplinaNome.trim() || criarDisciplina.isPending}
+              onClick={() =>
+                criarDisciplina.mutate(
+                  { nome: novaSubdisciplinaNome, pai: disciplina.id },
+                  {
+                    onSuccess: () => setNovaSubdisciplinaNome(''),
+                    onError: () =>
+                      toast({ title: 'Não foi possível criar a subdisciplina.', variant: 'destructive' }),
+                  },
+                )
+              }
+            >
+              + Subdisciplina
+            </Button>
+          </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
             <SelectField
