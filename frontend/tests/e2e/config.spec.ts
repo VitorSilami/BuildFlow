@@ -959,3 +959,84 @@ test('Gantt nao colapsa subdisciplinas com o mesmo nome em pais diferentes', asy
   await expect(grafico).toBeVisible()
   await expect(grafico.getByText('Escavação')).toHaveCount(2)
 })
+
+test('importa planilha CSV e popula a EAP com as disciplinas do arquivo', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  let importado = false
+
+  await page.route(CONFIG_URL, (route) => {
+    const disciplinas = importado
+      ? [
+          {
+            id: 'disc-1',
+            nome: 'Terraplenagem',
+            peso_percentual: null,
+            avanco_percentual: null,
+            subdisciplinas: [],
+            servicos: [
+              {
+                id: 'serv-1',
+                nome: 'Corte',
+                unidade: 1,
+                peso_percentual: null,
+                quantidade_planejada: '1500.000',
+                quantidade_executada: '0.000',
+                quantidade_executada_manual: '0.000',
+                producoes_vinculadas: [],
+                carta_controle: null,
+                avanco_percentual: null,
+              },
+            ],
+          },
+        ]
+      : []
+    return route.fulfill({
+      json: { disciplinas, equipes: [], valores_custo: [], soma_pesos_disciplinas: 0 },
+    })
+  })
+
+  await page.route('**/api/v1/projetos/*/configuracao/eap/importar/', (route) => {
+    importado = true
+    return route.fulfill({ status: 201, json: { disciplinas_criadas: 1, servicos_criados: 1 } })
+  })
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+
+  await expect(page.getByRole('button', { name: 'Importar planilha' })).toBeVisible()
+
+  await page.getByLabel('Importar planilha', { exact: true }).setInputFiles({
+    name: 'import.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from('DISCIPLINA,ATIVIDADE,UN,TOTAL\nTerraplenagem,Corte,m3,1500\n'),
+  })
+
+  await expect(page.getByText('Terraplenagem')).toBeVisible()
+})
+
+test('mostra lista de erros quando a planilha tem linha inválida e não altera a EAP', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({ json: { disciplinas: [], equipes: [], valores_custo: [], soma_pesos_disciplinas: 0 } }),
+  )
+  await page.route('**/api/v1/projetos/*/configuracao/eap/importar/', (route) =>
+    route.fulfill({ status: 400, json: { erros: ['Linha 2: TOTAL/QUANTIDADE inválido.'] } }),
+  )
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+
+  await page.getByLabel('Importar planilha', { exact: true }).setInputFiles({
+    name: 'import.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from('DISCIPLINA,ATIVIDADE,UN,TOTAL\nTerraplenagem,Corte,m3,abc\n'),
+  })
+
+  await expect(page.getByText('Linha 2: TOTAL/QUANTIDADE inválido.')).toBeVisible()
+  await expect(page.getByText('Cadastre uma disciplina na aba Disciplinas para começar a EAP.')).toBeVisible()
+})
