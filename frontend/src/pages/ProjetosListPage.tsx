@@ -2,7 +2,7 @@ import { Calendar, FolderPlus, MapPin, Pencil, Plus, Search, SearchX, Settings, 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Badge,
+  AppStatusBadge,
   Button,
   Card,
   Dialog,
@@ -21,13 +21,18 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { ProjetoForm } from '../features/projetos/ProjetoForm'
-import { STATUS_ACCENT_CLASS, STATUS_BADGE_CLASS, STATUS_LABEL } from '../features/projetos/statusBadge'
+import { STATUS_ACCENT_CLASS, STATUS_ICON, STATUS_LABEL, STATUS_TONE } from '../features/projetos/statusBadge'
 import { useProjetos } from '../features/projetos/projetosApi'
 import { execucaoCorClasse, formatData, formatExecucao } from '../lib/format'
 import type { Projeto, ProjetoStatus } from '../types/projeto'
 
 type FiltroStatus = 'todos' | ProjetoStatus
 type ModalState = 'fechado' | 'criar' | Projeto
+
+function ProjetoStatusIcon({ status }: { status: ProjetoStatus }) {
+  const Icon = STATUS_ICON[status]
+  return <Icon size={12} aria-hidden="true" />
+}
 
 function ProjetosListSkeleton() {
   return (
@@ -140,9 +145,11 @@ export function ProjetosListPage() {
                           {projeto.numero_contrato}
                         </span>
                       )}
-                      <Badge className={STATUS_BADGE_CLASS[projeto.status]}>
-                        {STATUS_LABEL[projeto.status]}
-                      </Badge>
+                      <AppStatusBadge
+                        tone={STATUS_TONE[projeto.status]}
+                        label={STATUS_LABEL[projeto.status]}
+                        icon={<ProjetoStatusIcon status={projeto.status} />}
+                      />
                       <Button
                         variant="ghost"
                         size="icon"

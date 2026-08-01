@@ -1,11 +1,16 @@
-import { Gauge, HardHat, MapPin, UserCheck } from 'lucide-react'
+import { CheckCircle2, FileText, Gauge, HardHat, MapPin, UserCheck, XCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Badge, Button, Card, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
+import { AppStatusBadge, Badge, Button, Card, EmptyState, ErrorRetry, PageHeader, Progress, Skeleton } from '../components/ui'
+import type { BadgeTone } from '../components/ui'
 import { ICONE_CLIMA, LABEL_CLIMA, LABEL_TURNO } from '../features/registros-diarios/climaIcons'
 import { FotoUpload } from '../features/registros-diarios/FotoUpload'
 import { useRegistroDiario } from '../features/registros-diarios/registrosDiariosApi'
-import { STATUS_REGISTRO_COR_TEXTO, STATUS_REGISTRO_LABEL } from '../features/registros-diarios/statusRegistroBadge'
+import {
+  STATUS_REGISTRO_ICON,
+  STATUS_REGISTRO_LABEL,
+  STATUS_REGISTRO_TONE,
+} from '../features/registros-diarios/statusRegistroBadge'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { execucaoCorClasse, formatData } from '../lib/format'
 import type { ApontamentoMaquina, Presenca, StatusPresenca } from '../types/registroDiario'
@@ -33,10 +38,16 @@ const LABEL_STATUS_PRESENCA: Record<StatusPresenca, string> = {
   atestado: 'Atestado',
 }
 
-const COR_STATUS_PRESENCA: Record<StatusPresenca, string> = {
-  presente: 'border-transparent bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400',
-  falta: 'border-transparent bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-400',
-  atestado: 'border-transparent bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
+const TONE_STATUS_PRESENCA: Record<StatusPresenca, BadgeTone> = {
+  presente: 'success',
+  falta: 'danger',
+  atestado: 'warning',
+}
+
+const ICON_STATUS_PRESENCA: Record<StatusPresenca, typeof CheckCircle2> = {
+  presente: CheckCircle2,
+  falta: XCircle,
+  atestado: FileText,
 }
 
 function CampoResumo({ label, valor, icon }: { label: string; valor: string; icon?: ReactNode }) {
@@ -68,12 +79,11 @@ function CardMaquina({ maquina }: { maquina: ApontamentoMaquina }) {
         <p className="mb-1 text-xs text-muted-foreground">Motivo da parada: {maquina.motivo_parada_descricao}</p>
       )}
       <div className="flex items-center gap-2">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-          <div
-            className={`h-full rounded-full ${execucaoCorClasse(String(eficienciaPercentual))}`}
-            style={{ width: `${eficienciaPercentual}%` }}
-          />
-        </div>
+        <Progress
+          value={eficienciaPercentual}
+          indicatorClassName={execucaoCorClasse(String(eficienciaPercentual))}
+          className="h-1.5 flex-1 bg-muted"
+        />
         <span className="w-10 text-right text-xs text-muted-foreground">{eficienciaPercentual}%</span>
       </div>
     </li>
@@ -81,12 +91,17 @@ function CardMaquina({ maquina }: { maquina: ApontamentoMaquina }) {
 }
 
 function LinhaPresenca({ presenca }: { presenca: Presenca }) {
+  const Icon = ICON_STATUS_PRESENCA[presenca.status]
   return (
     <li className="flex items-center justify-between py-2 text-sm">
       <span>
         {presenca.pessoa_nome ?? presenca.nome_avulso} — {presenca.funcao}
       </span>
-      <Badge className={COR_STATUS_PRESENCA[presenca.status]}>{LABEL_STATUS_PRESENCA[presenca.status]}</Badge>
+      <AppStatusBadge
+        tone={TONE_STATUS_PRESENCA[presenca.status]}
+        label={LABEL_STATUS_PRESENCA[presenca.status]}
+        icon={<Icon size={12} aria-hidden="true" />}
+      />
     </li>
   )
 }
@@ -105,6 +120,8 @@ export function RegistroDiarioDetailPage() {
     return <ErrorRetry message="Não foi possível carregar o registro diário." onRetry={() => void refetch()} />
   }
 
+  const StatusIcon = STATUS_REGISTRO_ICON[registro.status]
+
   return (
     <main aria-label="Detalhe do registro diário">
       <PageHeader
@@ -112,11 +129,11 @@ export function RegistroDiarioDetailPage() {
         breadcrumbs={breadcrumbs}
         actions={
           <div className="flex items-center gap-3">
-            <span
-              className={`rounded-md border px-2.5 py-0.5 text-xs font-semibold ${STATUS_REGISTRO_COR_TEXTO[registro.status]}`}
-            >
-              {STATUS_REGISTRO_LABEL[registro.status]}
-            </span>
+            <AppStatusBadge
+              tone={STATUS_REGISTRO_TONE[registro.status]}
+              label={STATUS_REGISTRO_LABEL[registro.status]}
+              icon={<StatusIcon size={12} aria-hidden="true" />}
+            />
             <Button asChild variant="outline" size="sm">
               <Link to={`/projetos/${projetoId}/registros-diarios`}>Voltar para a lista</Link>
             </Button>

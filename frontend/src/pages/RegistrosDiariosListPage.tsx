@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Button, Card, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
+import { AppStatusBadge, Button, Card, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
 import {
   CalendarioMensal,
   type DiaCalendario,
@@ -9,9 +9,14 @@ import {
 } from '../features/registros-diarios/CalendarioMensal'
 import { ICONE_CLIMA, LABEL_CLIMA, LABEL_TURNO } from '../features/registros-diarios/climaIcons'
 import { useRegistrosDiarios } from '../features/registros-diarios/registrosDiariosApi'
-import { STATUS_REGISTRO_COR_TEXTO, STATUS_REGISTRO_LABEL } from '../features/registros-diarios/statusRegistroBadge'
+import {
+  STATUS_REGISTRO_ICON,
+  STATUS_REGISTRO_LABEL,
+  STATUS_REGISTRO_TONE,
+} from '../features/registros-diarios/statusRegistroBadge'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { formatData } from '../lib/format'
+import type { StatusRegistro } from '../types/registroDiario'
 
 function mesAnoAtual(): MesAno {
   const hoje = new Date()
@@ -32,6 +37,17 @@ function mesSeguinte(mesAno: MesAno): MesAno {
 
 function formatarMesParaFiltro(mesAno: MesAno): string {
   return `${mesAno.ano}-${String(mesAno.mes).padStart(2, '0')}`
+}
+
+function RegistroStatusBadge({ status }: { status: StatusRegistro }) {
+  const Icon = STATUS_REGISTRO_ICON[status]
+  return (
+    <AppStatusBadge
+      tone={STATUS_REGISTRO_TONE[status]}
+      label={STATUS_REGISTRO_LABEL[status]}
+      icon={<Icon size={12} aria-hidden="true" />}
+    />
+  )
 }
 
 function CalendarioSkeleton() {
@@ -132,11 +148,7 @@ export function RegistrosDiariosListPage() {
                         {ICONE_CLIMA[registro.clima]}
                         {LABEL_TURNO[registro.turno]} · {LABEL_CLIMA[registro.clima]}
                       </span>
-                      <span
-                        className={`rounded-md border px-2.5 py-0.5 text-xs font-semibold ${STATUS_REGISTRO_COR_TEXTO[registro.status]}`}
-                      >
-                        {STATUS_REGISTRO_LABEL[registro.status]}
-                      </span>
+                      <RegistroStatusBadge status={registro.status} />
                     </Link>
                   </li>
                 ))}

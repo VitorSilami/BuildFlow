@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   Alert,
+  AppStatCard,
   Card,
   EmptyState,
   ErrorRetry,
   PageHeader,
+  Progress,
   Skeleton,
   Table,
   TableBody,
@@ -41,29 +43,21 @@ function CustosOciosidadeSkeleton() {
   )
 }
 
-function TileCusto({ label, valor, corFundo }: { label: string; valor: string; corFundo?: string }) {
-  return (
-    <div className={`rounded-lg border p-4 ${corFundo ?? 'border-dashed border-border'}`}>
-      <p className="mb-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </p>
-      <p className="font-display text-xl font-bold text-ink">{valor}</p>
-    </div>
-  )
-}
-
 function BarraSimples({ label, valor, maximo, corBarra }: { label: string; valor: number; maximo: number; corBarra: string }) {
   const pct = maximo > 0 ? (valor / maximo) * 100 : 0
   return (
     <div className="mb-3">
       <p className="mb-1 text-xs text-muted-foreground">{label}</p>
-      <div className="h-2 overflow-hidden rounded-full bg-muted">
-        <div className={`h-full rounded-full ${corBarra}`} style={{ width: `${pct}%` }} />
-      </div>
+      <Progress value={pct} indicatorClassName={corBarra} className="h-2 bg-muted" />
     </div>
   )
 }
 
+// BarraHistograma fica com divs cruas de propósito: representa duas
+// categorias lado a lado (principal + secundário) em vez de um valor único de
+// 0 a 100% — o componente Progress (role="progressbar") modela uma barra de
+// progresso singular, forçar duas categorias nele seria semanticamente
+// incorreto pra acessibilidade, não só uma questão de estilo.
 function BarraHistograma({
   label,
   principal,
@@ -133,20 +127,20 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
     <>
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="grid grid-cols-2 gap-4 lg:col-span-2">
-          <TileCusto label="Custo mão de obra" valor={formatMoeda(dados.custo_mao_de_obra)} />
-          <TileCusto label="Déficit mão de obra" valor={formatMoeda(dados.deficit_mao_de_obra)} />
-          <TileCusto label="Custo máquinas" valor={formatMoeda(dados.custo_produtivo_maquinas)} />
-          <TileCusto label="Custo ocioso máquinas" valor={formatMoeda(dados.custo_ocioso_maquinas)} />
-          <TileCusto label="Custo total do mês" valor={formatMoeda(dados.custo_total)} />
-          <TileCusto
+          <AppStatCard label="Custo mão de obra" value={formatMoeda(dados.custo_mao_de_obra)} />
+          <AppStatCard label="Déficit mão de obra" value={formatMoeda(dados.deficit_mao_de_obra)} />
+          <AppStatCard label="Custo máquinas" value={formatMoeda(dados.custo_produtivo_maquinas)} />
+          <AppStatCard label="Custo ocioso máquinas" value={formatMoeda(dados.custo_ocioso_maquinas)} />
+          <AppStatCard label="Custo total do mês" value={formatMoeda(dados.custo_total)} />
+          <AppStatCard
             label="Ociosidade evitável"
-            valor={formatMoeda(dados.ociosidade_evitavel_total)}
-            corFundo="border-red-500/30 bg-red-500/5"
+            value={formatMoeda(dados.ociosidade_evitavel_total)}
+            tone="danger"
           />
-          <TileCusto label="Horas ociosas" valor={`${dados.horas_ociosas_total}h`} />
-          <TileCusto
+          <AppStatCard label="Horas ociosas" value={`${dados.horas_ociosas_total}h`} />
+          <AppStatCard
             label="Eficiência gerencial"
-            valor={
+            value={
               dados.eficiencia_gerencial_percentual === null
                 ? '—'
                 : `${dados.eficiencia_gerencial_percentual}%`
@@ -225,14 +219,13 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className={`h-full rounded-full ${execucaoCorClasse(
-                            item.eficiencia_percentual === null ? null : String(item.eficiencia_percentual),
-                          )}`}
-                          style={{ width: `${item.eficiencia_percentual ?? 0}%` }}
-                        />
-                      </div>
+                      <Progress
+                        value={item.eficiencia_percentual ?? 0}
+                        indicatorClassName={execucaoCorClasse(
+                          item.eficiencia_percentual === null ? null : String(item.eficiencia_percentual),
+                        )}
+                        className="h-1.5 w-28 shrink-0 bg-muted"
+                      />
                       <span className="text-sm font-medium text-ink">
                         {item.eficiencia_percentual === null ? '—' : `${item.eficiencia_percentual}%`}
                       </span>

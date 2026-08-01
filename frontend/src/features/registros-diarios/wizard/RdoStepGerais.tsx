@@ -1,8 +1,7 @@
 import { Moon, Sun as SunIcon } from 'lucide-react'
-import { Button, FormField, Input } from '../../../components/ui'
+import { Button, FormField, GrupoBotoes, Input } from '../../../components/ui'
 import { ICONE_CLIMA, LABEL_CLIMA } from '../climaIcons'
 import type { Clima, Equipe, Fiscal, Turno } from '../../../types/registroDiario'
-import { GrupoBotoes } from './GrupoBotoes'
 import { NATIVE_SELECT_CLASSNAME } from './nativeSelectClassName'
 
 interface RdoStepGeraisProps {

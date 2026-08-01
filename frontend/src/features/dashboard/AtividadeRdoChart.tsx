@@ -1,4 +1,5 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { EmptyState } from '../../components/ui/empty-state'
 import type { DashboardAtividadeDia } from '../../types/dashboard'
 
 const DIAS_SEMANA_ABREVIADOS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
@@ -14,6 +15,15 @@ interface AtividadeRdoChartProps {
 
 export function AtividadeRdoChart({ dados }: AtividadeRdoChartProps) {
   const dadosFormatados = dados.map((dia) => ({ ...dia, rotulo: formatarDiaCurto(dia.data) }))
+  const temAtividade = dados.some((dia) => dia.quantidade > 0)
+
+  if (!temAtividade) {
+    return (
+      <div style={{ height: 220 }} className="flex items-center justify-center">
+        <EmptyState>Nenhum RDO registrado nos últimos 7 dias.</EmptyState>
+      </div>
+    )
+  }
 
   return (
     <div aria-label="Gráfico de RDOs por dia" style={{ width: '100%', height: 220 }}>

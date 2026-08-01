@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Button, Card, EmptyState, ErrorRetry, PageHeader, Skeleton, Textarea } from '../components/ui'
+import { AppStatCard, AppStatusBadge, Button, Card, EmptyState, ErrorRetry, PageHeader, Skeleton, Textarea } from '../components/ui'
 import { useAuth } from '../features/auth/AuthContext'
 import { AprovacaoDonutChart } from '../features/registros-diarios/AprovacaoDonutChart'
 import {
@@ -9,7 +9,11 @@ import {
   useRejeitarRegistroDiario,
 } from '../features/registros-diarios/registrosDiariosApi'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
-import { STATUS_REGISTRO_COR_TEXTO as COR_STATUS, STATUS_REGISTRO_LABEL as LABEL_STATUS } from '../features/registros-diarios/statusRegistroBadge'
+import {
+  STATUS_REGISTRO_ICON,
+  STATUS_REGISTRO_LABEL as LABEL_STATUS,
+  STATUS_REGISTRO_TONE,
+} from '../features/registros-diarios/statusRegistroBadge'
 import { toast } from '../hooks/use-toast'
 import { formatData, formatDataHora } from '../lib/format'
 import type { RegistroDiario, StatusRegistro } from '../types/registroDiario'
@@ -49,24 +53,6 @@ function HistoricoSkeleton() {
   )
 }
 
-interface TileHistoricoProps {
-  label: string
-  valor: string
-  cor?: string
-  corFundo?: string
-}
-
-function TileHistorico({ label, valor, cor, corFundo }: TileHistoricoProps) {
-  return (
-    <div className={`rounded-lg border p-4 ${corFundo ?? 'border-dashed border-border'}`}>
-      <p className="mb-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </p>
-      <p className={`font-display text-xl font-bold ${cor ?? 'text-ink'}`}>{valor}</p>
-    </div>
-  )
-}
-
 function calcularTaxaAprovacao(aprovados: number, rejeitados: number): number {
   const total = aprovados + rejeitados
   return total > 0 ? Math.round((aprovados / total) * 100) : 100
@@ -100,6 +86,7 @@ function CardRegistro({
   onConfirmarRejeicao,
 }: CardRegistroProps) {
   const podeDecidir = souFiscal && registro.status === 'aguardando_aprovacao'
+  const StatusIcon = STATUS_REGISTRO_ICON[registro.status]
 
   return (
     <div className="mb-3 rounded-lg border border-border">
@@ -114,11 +101,11 @@ function CardRegistro({
           </p>
           <p className="text-sm text-muted-foreground">{registro.clima}</p>
         </div>
-        <span
-          className={`rounded-md border px-2.5 py-0.5 text-xs font-semibold ${COR_STATUS[registro.status]}`}
-        >
-          {LABEL_STATUS[registro.status]}
-        </span>
+        <AppStatusBadge
+          tone={STATUS_REGISTRO_TONE[registro.status]}
+          label={LABEL_STATUS[registro.status]}
+          icon={<StatusIcon size={12} aria-hidden="true" />}
+        />
       </button>
 
       {expandido && (
@@ -281,25 +268,10 @@ export function HistoricoAprovacoesPage() {
         <>
           <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="grid grid-cols-2 gap-4 lg:col-span-2">
-              <TileHistorico
-                label="Aguardando aprovação"
-                valor={String(aguardando)}
-                cor="text-amber-600"
-                corFundo="border-amber-500/30 bg-amber-500/5"
-              />
-              <TileHistorico
-                label="Aprovados"
-                valor={String(aprovados)}
-                cor="text-emerald-600"
-                corFundo="border-emerald-500/30 bg-emerald-500/5"
-              />
-              <TileHistorico
-                label="Rejeitados"
-                valor={String(rejeitados)}
-                cor="text-red-600"
-                corFundo="border-red-500/30 bg-red-500/5"
-              />
-              <TileHistorico label="Taxa de aprovação" valor={`${taxaAprovacao}%`} />
+              <AppStatCard label="Aguardando aprovação" value={aguardando} tone="warning" />
+              <AppStatCard label="Aprovados" value={aprovados} tone="success" />
+              <AppStatCard label="Rejeitados" value={rejeitados} tone="danger" />
+              <AppStatCard label="Taxa de aprovação" value={`${taxaAprovacao}%`} />
             </div>
             {lista.length > 0 && (
               <Card title="Distribuição por status">

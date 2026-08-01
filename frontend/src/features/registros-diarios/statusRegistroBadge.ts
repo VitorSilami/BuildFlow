@@ -1,3 +1,5 @@
+import { CheckCircle2, Clock, XCircle } from 'lucide-react'
+import type { BadgeTone } from '../../components/ui/app-status-badge'
 import type { StatusRegistro } from '../../types/registroDiario'
 
 export const STATUS_REGISTRO_LABEL: Record<StatusRegistro, string> = {
@@ -6,10 +8,19 @@ export const STATUS_REGISTRO_LABEL: Record<StatusRegistro, string> = {
   rejeitado: 'Rejeitado',
 }
 
-export const STATUS_REGISTRO_COR_TEXTO: Record<StatusRegistro, string> = {
-  aguardando_aprovacao: 'border-amber-500 text-amber-600',
-  aprovado: 'border-emerald-500 text-emerald-600',
-  rejeitado: 'border-red-500 text-red-600',
+export const STATUS_REGISTRO_TONE: Record<StatusRegistro, BadgeTone> = {
+  aguardando_aprovacao: 'warning',
+  aprovado: 'success',
+  rejeitado: 'danger',
+}
+
+// Ícone junto da cor (não só cor) — mais acessível e consistente com o padrão
+// de referência pesquisado (shadcn-admin, Plane): status não depende só de
+// cor pra ser lido, importante pra relatório impresso em P&B.
+export const STATUS_REGISTRO_ICON: Record<StatusRegistro, typeof Clock> = {
+  aguardando_aprovacao: Clock,
+  aprovado: CheckCircle2,
+  rejeitado: XCircle,
 }
 
 export const STATUS_REGISTRO_COR_CELULA: Record<StatusRegistro, string> = {

@@ -17,6 +17,7 @@ import {
   Checkbox,
   ErrorRetry,
   FormField,
+  GrupoBotoes,
   Input,
   Label,
   PageHeader,
@@ -30,10 +31,9 @@ import { NATIVE_SELECT_CLASSNAME } from '../features/rnc/nativeSelectClassName'
 import { useAtualizarRnc, useConcluirRnc, useCriarRnc, useRnc } from '../features/rnc/rncApi'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { toast } from '../hooks/use-toast'
-import { cn } from '../lib/utils'
 import type { Categoria, Gravidade, Origem, RncInput, TipoRnc } from '../types/rnc'
 
-const GRAVIDADE_BOTAO_ATIVO: Record<Gravidade, string> = {
+const GRAVIDADE_COR_SELECIONADA: Record<Gravidade, string> = {
   alta: 'border-red-500 bg-red-500/10 text-red-600',
   media: 'border-amber-500 bg-amber-500/10 text-amber-600',
   baixa: 'border-emerald-500 bg-emerald-500/10 text-emerald-600',
@@ -273,30 +273,18 @@ export function RncFormPage() {
               ))}
             </select>
           </FormField>
-          <div>
-            <p id="rnc-gravidade-label" className="mb-1.5 text-sm font-medium text-ink">
-              Gravidade
-            </p>
-            <div role="group" aria-labelledby="rnc-gravidade-label" className="flex gap-2">
-              {(Object.entries(GRAVIDADE_LABELS) as [Gravidade, string][]).map(([valor, label]) => (
-                <button
-                  key={valor}
-                  type="button"
-                  disabled={somenteLeitura}
-                  aria-pressed={form.gravidade === valor}
-                  onClick={() => atualizarCampo('gravidade', valor)}
-                  className={cn(
-                    'flex-1 rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                    form.gravidade === valor
-                      ? GRAVIDADE_BOTAO_ATIVO[valor]
-                      : 'border-border text-muted-foreground hover:bg-surface',
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <GrupoBotoes
+            id="rnc-gravidade"
+            label="Gravidade"
+            value={form.gravidade}
+            onChange={(valor) => atualizarCampo('gravidade', valor)}
+            disabled={somenteLeitura}
+            options={(Object.entries(GRAVIDADE_LABELS) as [Gravidade, string][]).map(([valor, label]) => ({
+              value: valor,
+              label,
+              colorClass: GRAVIDADE_COR_SELECIONADA[valor],
+            }))}
+          />
           <FormField id="rnc-tipo" label="Tipo">
             <select
               id="rnc-tipo"

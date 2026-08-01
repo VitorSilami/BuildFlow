@@ -1,31 +1,10 @@
 import { Link } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, FolderKanban, PauseCircle, TrendingUp } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Badge, Card, EmptyState, ErrorRetry, PageHeader, Progress, Skeleton } from '../components/ui'
+import { AppStatCard, Badge, Card, EmptyState, ErrorRetry, PageHeader, Progress, Skeleton } from '../components/ui'
 import { AtividadeRdoChart } from '../features/dashboard/AtividadeRdoChart'
 import { StatusDonutChart } from '../features/dashboard/StatusDonutChart'
 import { useDashboard } from '../features/dashboard/dashboardApi'
 import { execucaoCorClasse, formatExecucao } from '../lib/format'
-
-interface TileResumoProps {
-  label: string
-  valor: string | number
-  icon: ReactNode
-}
-
-function TileResumo({ label, valor, icon }: TileResumoProps) {
-  return (
-    <div className="rounded-md border border-dashed border-border p-3">
-      <div className="flex items-center justify-between">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          {label}
-        </p>
-        {icon}
-      </div>
-      <p className="mt-1 text-3xl font-bold text-ink">{valor}</p>
-    </div>
-  )
-}
 
 function DashboardSkeleton() {
   return (
@@ -70,25 +49,25 @@ export function DashboardPage() {
       {!isLoading && !isError && data && (
         <>
           <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Resumo">
-            <TileResumo
+            <AppStatCard
               label="Projetos ativos"
-              valor={data.projetos_ativos}
-              icon={<FolderKanban className="text-primary" size={18} aria-hidden="true" />}
+              value={data.projetos_ativos}
+              icon={<FolderKanban size={18} aria-hidden="true" />}
             />
-            <TileResumo
+            <AppStatCard
               label="Pausados"
-              valor={data.projetos_pausados}
-              icon={<PauseCircle className="text-amber-500" size={18} aria-hidden="true" />}
+              value={data.projetos_pausados}
+              icon={<PauseCircle size={18} aria-hidden="true" />}
             />
-            <TileResumo
+            <AppStatCard
               label="Concluídos"
-              valor={data.projetos_concluidos}
-              icon={<CheckCircle2 className="text-slate-500" size={18} aria-hidden="true" />}
+              value={data.projetos_concluidos}
+              icon={<CheckCircle2 size={18} aria-hidden="true" />}
             />
-            <TileResumo
+            <AppStatCard
               label="Execução média"
-              valor={formatExecucao(data.execucao_media)}
-              icon={<TrendingUp className="text-emerald-500" size={18} aria-hidden="true" />}
+              value={formatExecucao(data.execucao_media)}
+              icon={<TrendingUp size={18} aria-hidden="true" />}
             />
           </div>
 

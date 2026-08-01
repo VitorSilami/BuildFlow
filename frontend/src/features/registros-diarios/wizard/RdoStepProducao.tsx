@@ -1,8 +1,7 @@
 import { MapPin } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
-import { Button, FormField, Input } from '../../../components/ui'
+import { Button, FormField, GrupoBotoes, Input } from '../../../components/ui'
 import type { Disciplina, ProducaoDiariaInput, Unidade } from '../../../types/registroDiario'
-import { GrupoBotoes } from './GrupoBotoes'
 import { NATIVE_SELECT_CLASSNAME } from './nativeSelectClassName'
 import { PRODUCAO_VAZIA } from './valoresVazios'
 

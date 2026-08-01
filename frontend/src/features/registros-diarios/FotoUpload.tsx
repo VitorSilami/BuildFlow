@@ -1,5 +1,5 @@
-import { useState, type ChangeEvent } from 'react'
-import { Alert, Button, FormField, Input } from '../../components/ui'
+import { useState } from 'react'
+import { Alert, Button, FormField, Input, PhotoUploadButton } from '../../components/ui'
 import { useEnviarFoto } from './registrosDiariosApi'
 
 interface FotoUploadProps {
@@ -12,8 +12,8 @@ export function FotoUpload({ registroId }: FotoUploadProps) {
   const [km, setKm] = useState('')
   const enviarFoto = useEnviarFoto(registroId)
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null
+  function handleFileChange(files: FileList | null) {
+    const file = files?.[0] ?? null
     setArquivo(file)
     setPreview(file ? URL.createObjectURL(file) : null)
   }
@@ -34,11 +34,9 @@ export function FotoUpload({ registroId }: FotoUploadProps) {
 
   return (
     <div aria-label="Anexar foto">
-      <FormField id="foto-arquivo" label="Foto">
-        <Input id="foto-arquivo" type="file" accept="image/*" onChange={handleFileChange} />
-      </FormField>
+      <PhotoUploadButton id="foto-arquivo" label="Escolher foto" onFilesSelected={handleFileChange} />
 
-      {preview && <img src={preview} alt="Pré-visualização da foto" width={120} className="mb-3 rounded-md" />}
+      {preview && <img src={preview} alt="Pré-visualização da foto" width={120} className="mb-3 mt-3 rounded-md" />}
 
       <FormField id="foto-km" label="Km (opcional)">
         <Input id="foto-km" value={km} onChange={(event) => setKm(event.target.value)} />

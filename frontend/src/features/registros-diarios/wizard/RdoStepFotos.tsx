@@ -1,6 +1,6 @@
-import { Camera, Image as ImageIcon, MapPin, X } from 'lucide-react'
-import { useRef, type Dispatch, type SetStateAction } from 'react'
-import { Input } from '../../../components/ui'
+import { MapPin, X } from 'lucide-react'
+import type { Dispatch, SetStateAction } from 'react'
+import { Input, PhotoUploadButton } from '../../../components/ui'
 
 export interface FotoStaged {
   arquivo: File
@@ -14,9 +14,6 @@ interface RdoStepFotosProps {
 }
 
 export function RdoStepFotos({ fotos, onFotosChange }: RdoStepFotosProps) {
-  const inputCameraRef = useRef<HTMLInputElement>(null)
-  const inputGaleriaRef = useRef<HTMLInputElement>(null)
-
   function adicionarArquivos(arquivos: FileList | null) {
     if (!arquivos) return
     const novas = Array.from(arquivos).map((arquivo) => ({
@@ -42,46 +39,8 @@ export function RdoStepFotos({ fotos, onFotosChange }: RdoStepFotosProps) {
       </p>
 
       <div className="mb-4 grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => inputCameraRef.current?.click()}
-          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-8 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-        >
-          <Camera size={20} aria-hidden="true" />
-          Câmera
-        </button>
-        <button
-          type="button"
-          onClick={() => inputGaleriaRef.current?.click()}
-          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-8 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-        >
-          <ImageIcon size={20} aria-hidden="true" />
-          Galeria
-        </button>
-        <input
-          ref={inputCameraRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          aria-label="Tirar foto com a câmera"
-          onChange={(event) => {
-            adicionarArquivos(event.target.files)
-            event.target.value = ''
-          }}
-        />
-        <input
-          ref={inputGaleriaRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          aria-label="Escolher fotos da galeria"
-          onChange={(event) => {
-            adicionarArquivos(event.target.files)
-            event.target.value = ''
-          }}
-        />
+        <PhotoUploadButton id="rdo-foto-camera" label="Câmera" useCamera onFilesSelected={adicionarArquivos} />
+        <PhotoUploadButton id="rdo-foto-galeria" label="Galeria" multiple onFilesSelected={adicionarArquivos} />
       </div>
 
       {fotos.length > 0 && (
