@@ -17,6 +17,10 @@ from .models import Disciplina
 from .models import Unidade
 
 LINHAS_MAX_BUSCA_CABECALHO = 20
+MAX_EAP_IMPORT_BYTES = 5 * 1024 * 1024
+NOME_MAX_LENGTH = 255
+UNIDADE_MAX_LENGTH = 16
+QUANTIDADE_MAXIMA = Decimal("999999999.999")
 COLUNAS_OBRIGATORIAS = {
     "disciplina": {"DISCIPLINA"},
     "atividade": {"ATIVIDADE"},
@@ -48,6 +52,10 @@ class ResultadoImportacaoEap:
 
 
 def importar_eap_de_arquivo(projeto, arquivo) -> ResultadoImportacaoEap:
+    if arquivo.size > MAX_EAP_IMPORT_BYTES:
+        msg = str(_("Arquivo excede o tamanho máximo permitido (5 MB)."))
+        raise ArquivoInvalido(msg)
+
     if projeto.disciplinas.filter(pai__isnull=True).exists():
         msg = str(
             _(
@@ -57,36 +65,42 @@ def importar_eap_de_arquivo(projeto, arquivo) -> ResultadoImportacaoEap:
         )
         raise ArquivoInvalido(msg)
 
-    linhas_brutas = _ler_linhas_brutas(arquivo)
-    indice_cabecalho, colunas = _localizar_cabecalho(linhas_brutas)
-    linhas_validas, erros = _validar_linhas(linhas_brutas, indice_cabecalho, colunas)
+    planilhas = _ler_planilhas_brutas(arquivo)
+    linhas, indice_cabecalho, colunas = _localizar_cabecalho_em_planilhas(planilhas)
+    linhas_validas, erros = _validar_linhas(linhas, indice_cabecalho, colunas)
     if erros:
         raise LinhasInvalidas(erros)
 
     return _criar_disciplinas_e_servicos(projeto, linhas_validas)
 
 
-def _ler_linhas_brutas(arquivo) -> list[list[str]]:
+def _ler_planilhas_brutas(arquivo) -> list[list[list[str]]]:
     nome = (arquivo.name or "").lower()
     if nome.endswith(".xlsx"):
-        return _ler_linhas_xlsx(arquivo)
+        return _ler_planilhas_xlsx(arquivo)
     if nome.endswith(".csv"):
-        return _ler_linhas_csv(arquivo)
+        return [_ler_linhas_csv(arquivo)]
     msg = str(_("Formato não suportado. Envie um arquivo .csv ou .xlsx."))
     raise ArquivoInvalido(msg)
 
 
-def _ler_linhas_xlsx(arquivo) -> list[list[str]]:
+def _ler_planilhas_xlsx(arquivo) -> list[list[list[str]]]:
     try:
-        workbook = openpyxl.load_workbook(io.BytesIO(arquivo.read()), data_only=True)
+        workbook = openpyxl.load_workbook(
+            io.BytesIO(arquivo.read()),
+            data_only=True,
+            read_only=True,
+        )
     except (BadZipFile, InvalidFileException) as exc:
         msg = str(_("Não foi possível ler o arquivo .xlsx."))
         raise ArquivoInvalido(msg) from exc
 
-    planilha = workbook.active
     return [
-        ["" if valor is None else str(valor).strip() for valor in row]
-        for row in planilha.iter_rows(values_only=True)
+        [
+            ["" if valor is None else str(valor).strip() for valor in row]
+            for row in planilha.iter_rows(values_only=True)
+        ]
+        for planilha in workbook.worksheets
     ]
 
 
@@ -101,15 +115,14 @@ def _ler_linhas_csv(arquivo) -> list[list[str]]:
     return [[celula.strip() for celula in linha] for linha in leitor]
 
 
-def _localizar_cabecalho(linhas: list[list[str]]) -> tuple[int, dict[str, int]]:
-    limite = min(len(linhas), LINHAS_MAX_BUSCA_CABECALHO)
-    for indice in range(limite):
-        celulas_normalizadas = [celula.strip().upper() for celula in linhas[indice]]
-        if "DISCIPLINA" in celulas_normalizadas and "ATIVIDADE" in celulas_normalizadas:
-            colunas = _resolver_colunas(celulas_normalizadas)
-            if colunas is not None:
-                return indice, colunas
-            break
+def _localizar_cabecalho_em_planilhas(
+    planilhas: list[list[list[str]]],
+) -> tuple[list[list[str]], int, dict[str, int]]:
+    for linhas in planilhas:
+        resultado = _tentar_localizar_cabecalho(linhas)
+        if resultado is not None:
+            indice, colunas = resultado
+            return linhas, indice, colunas
 
     msg = str(
         _(
@@ -118,6 +131,18 @@ def _localizar_cabecalho(linhas: list[list[str]]) -> tuple[int, dict[str, int]]:
         ),
     )
     raise ArquivoInvalido(msg)
+
+
+def _tentar_localizar_cabecalho(linhas: list[list[str]]) -> tuple[int, dict[str, int]] | None:
+    limite = min(len(linhas), LINHAS_MAX_BUSCA_CABECALHO)
+    for indice in range(limite):
+        celulas_normalizadas = [celula.strip().upper() for celula in linhas[indice]]
+        if "DISCIPLINA" in celulas_normalizadas and "ATIVIDADE" in celulas_normalizadas:
+            colunas = _resolver_colunas(celulas_normalizadas)
+            if colunas is not None:
+                return indice, colunas
+            return None
+    return None
 
 
 def _resolver_colunas(celulas_normalizadas: list[str]) -> dict[str, int] | None:
@@ -141,9 +166,12 @@ def _parse_quantidade(valor: str) -> Decimal | None:
     if not valor:
         return None
     try:
-        return Decimal(valor.replace(",", "."))
+        quantidade = Decimal(valor.replace(",", "."))
     except InvalidOperation:
         return None
+    if not quantidade.is_finite() or quantidade < 0 or quantidade > QUANTIDADE_MAXIMA:
+        return None
+    return quantidade
 
 
 def _validar_linhas(
@@ -168,11 +196,29 @@ def _validar_linhas(
         if not disciplina:
             erros.append(f"Linha {numero_linha}: DISCIPLINA em branco.")
             continue
+        if len(disciplina) > NOME_MAX_LENGTH:
+            erros.append(
+                f"Linha {numero_linha}: DISCIPLINA excede o tamanho máximo "
+                f"({NOME_MAX_LENGTH} caracteres).",
+            )
+            continue
         if not atividade:
             erros.append(f"Linha {numero_linha}: ATIVIDADE em branco.")
             continue
+        if len(atividade) > NOME_MAX_LENGTH:
+            erros.append(
+                f"Linha {numero_linha}: ATIVIDADE excede o tamanho máximo "
+                f"({NOME_MAX_LENGTH} caracteres).",
+            )
+            continue
         if not unidade:
             erros.append(f"Linha {numero_linha}: UNIDADE em branco.")
+            continue
+        if len(unidade) > UNIDADE_MAX_LENGTH:
+            erros.append(
+                f"Linha {numero_linha}: UNIDADE excede o tamanho máximo "
+                f"({UNIDADE_MAX_LENGTH} caracteres).",
+            )
             continue
 
         quantidade = _parse_quantidade(quantidade_bruta)
@@ -198,6 +244,13 @@ def _validar_linhas(
     return linhas_validas, erros
 
 
+def _obter_ou_criar_unidade(sigla: str) -> Unidade:
+    unidade = Unidade.objects.filter(sigla__iexact=sigla).first()
+    if unidade is not None:
+        return unidade
+    return Unidade.objects.create(sigla=sigla)
+
+
 def _criar_disciplinas_e_servicos(projeto, linhas_validas: list[dict]) -> ResultadoImportacaoEap:
     grupos: dict[str, list[dict]] = {}
     nomes_disciplina: dict[str, str] = {}
@@ -215,7 +268,7 @@ def _criar_disciplinas_e_servicos(projeto, linhas_validas: list[dict]) -> Result
                 pai=None,
             )
             for linha in linhas_do_grupo:
-                unidade, _criada = Unidade.objects.get_or_create(sigla=linha["unidade"])
+                unidade = _obter_ou_criar_unidade(linha["unidade"])
                 CatalogoServico.objects.create(
                     disciplina=disciplina,
                     nome=linha["atividade"],
