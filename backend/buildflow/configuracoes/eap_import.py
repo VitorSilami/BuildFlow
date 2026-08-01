@@ -2,9 +2,6 @@ from __future__ import annotations
 
 import csv
 import io
-from dataclasses import dataclass
-from decimal import Decimal
-from decimal import InvalidOperation
 from zipfile import BadZipFile
 
 import openpyxl
@@ -12,43 +9,25 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from openpyxl.utils.exceptions import InvalidFileException
 
+from .eap_import_shared import LINHAS_MAX_BUSCA_CABECALHO
+from .eap_import_shared import NOME_MAX_LENGTH
+from .eap_import_shared import UNIDADE_MAX_LENGTH
+from .eap_import_shared import ArquivoInvalido
+from .eap_import_shared import LinhasInvalidas
+from .eap_import_shared import ResultadoImportacaoEap
+from .eap_import_shared import _celula
+from .eap_import_shared import _obter_ou_criar_unidade
+from .eap_import_shared import _parse_quantidade
 from .models import CatalogoServico
 from .models import Disciplina
-from .models import Unidade
 
-LINHAS_MAX_BUSCA_CABECALHO = 20
 MAX_EAP_IMPORT_BYTES = 5 * 1024 * 1024
-NOME_MAX_LENGTH = 255
-UNIDADE_MAX_LENGTH = 16
-QUANTIDADE_MAXIMA = Decimal("999999999.999")
 COLUNAS_OBRIGATORIAS = {
     "disciplina": {"DISCIPLINA"},
     "atividade": {"ATIVIDADE"},
     "unidade": {"UN", "UNIDADE"},
     "quantidade": {"TOTAL", "QUANTIDADE"},
 }
-
-
-class ArquivoInvalido(Exception):
-    """Erro de pré-condição, formato ou cabeçalho — mensagem única."""
-
-    def __init__(self, mensagem: str) -> None:
-        self.mensagem = mensagem
-        super().__init__(mensagem)
-
-
-class LinhasInvalidas(Exception):
-    """Erros de validação linha a linha — uma mensagem por linha."""
-
-    def __init__(self, erros: list[str]) -> None:
-        self.erros = erros
-        super().__init__("; ".join(erros))
-
-
-@dataclass
-class ResultadoImportacaoEap:
-    disciplinas_criadas: int
-    servicos_criados: int
 
 
 def importar_eap_de_arquivo(projeto, arquivo) -> ResultadoImportacaoEap:
@@ -66,6 +45,7 @@ def importar_eap_de_arquivo(projeto, arquivo) -> ResultadoImportacaoEap:
         raise ArquivoInvalido(msg)
 
     planilhas = _ler_planilhas_brutas(arquivo)
+
     linhas, indice_cabecalho, colunas = _localizar_cabecalho_em_planilhas(planilhas)
     linhas_validas, erros = _validar_linhas(linhas, indice_cabecalho, colunas)
     if erros:
@@ -74,17 +54,17 @@ def importar_eap_de_arquivo(projeto, arquivo) -> ResultadoImportacaoEap:
     return _criar_disciplinas_e_servicos(projeto, linhas_validas)
 
 
-def _ler_planilhas_brutas(arquivo) -> list[list[list[str]]]:
+def _ler_planilhas_brutas(arquivo) -> list[tuple[str, list[list[str]]]]:
     nome = (arquivo.name or "").lower()
     if nome.endswith(".xlsx"):
         return _ler_planilhas_xlsx(arquivo)
     if nome.endswith(".csv"):
-        return [_ler_linhas_csv(arquivo)]
+        return [("", _ler_linhas_csv(arquivo))]
     msg = str(_("Formato não suportado. Envie um arquivo .csv ou .xlsx."))
     raise ArquivoInvalido(msg)
 
 
-def _ler_planilhas_xlsx(arquivo) -> list[list[list[str]]]:
+def _ler_planilhas_xlsx(arquivo) -> list[tuple[str, list[list[str]]]]:
     try:
         workbook = openpyxl.load_workbook(
             io.BytesIO(arquivo.read()),
@@ -96,10 +76,13 @@ def _ler_planilhas_xlsx(arquivo) -> list[list[list[str]]]:
         raise ArquivoInvalido(msg) from exc
 
     return [
-        [
-            ["" if valor is None else str(valor).strip() for valor in row]
-            for row in planilha.iter_rows(values_only=True)
-        ]
+        (
+            planilha.title,
+            [
+                ["" if valor is None else str(valor).strip() for valor in row]
+                for row in planilha.iter_rows(values_only=True)
+            ],
+        )
         for planilha in workbook.worksheets
     ]
 
@@ -116,9 +99,9 @@ def _ler_linhas_csv(arquivo) -> list[list[str]]:
 
 
 def _localizar_cabecalho_em_planilhas(
-    planilhas: list[list[list[str]]],
+    planilhas: list[tuple[str, list[list[str]]]],
 ) -> tuple[list[list[str]], int, dict[str, int]]:
-    for linhas in planilhas:
+    for _nome_aba, linhas in planilhas:
         resultado = _tentar_localizar_cabecalho(linhas)
         if resultado is not None:
             indice, colunas = resultado
@@ -158,22 +141,6 @@ def _resolver_colunas(celulas_normalizadas: list[str]) -> dict[str, int] | None:
     return colunas
 
 
-def _celula(linha: list[str], indice: int) -> str:
-    return linha[indice].strip() if indice < len(linha) else ""
-
-
-def _parse_quantidade(valor: str) -> Decimal | None:
-    if not valor:
-        return None
-    try:
-        quantidade = Decimal(valor.replace(",", "."))
-    except InvalidOperation:
-        return None
-    if not quantidade.is_finite() or quantidade < 0 or quantidade > QUANTIDADE_MAXIMA:
-        return None
-    return quantidade
-
-
 def _validar_linhas(
     linhas: list[list[str]],
     indice_cabecalho: int,
@@ -185,10 +152,6 @@ def _validar_linhas(
 
     for offset, linha in enumerate(linhas[indice_cabecalho + 1 :], start=1):
         numero_linha = indice_cabecalho + offset + 1
-        # So considera as colunas obrigatorias pra decidir se a linha esta em
-        # branco — planilhas reais tem linhas de nota/rodape com texto solto
-        # numa coluna ignorada (ex.: CHAVE) e nada nas colunas que importam,
-        # o que nao deveria contar como uma linha de dados malformada.
         if not any(_celula(linha, indice) for indice in colunas.values()):
             continue
 
@@ -246,13 +209,6 @@ def _validar_linhas(
         )
 
     return linhas_validas, erros
-
-
-def _obter_ou_criar_unidade(sigla: str) -> Unidade:
-    unidade = Unidade.objects.filter(sigla__iexact=sigla).first()
-    if unidade is not None:
-        return unidade
-    return Unidade.objects.create(sigla=sigla)
 
 
 def _criar_disciplinas_e_servicos(projeto, linhas_validas: list[dict]) -> ResultadoImportacaoEap:
