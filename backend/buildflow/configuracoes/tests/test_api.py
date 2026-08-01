@@ -758,6 +758,23 @@ def test_criar_disciplina_com_pai_de_outro_projeto_e_rejeitada():
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
+def test_patch_disciplina_pai_de_outro_projeto_e_rejeitada():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    outro_projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    pai_de_outro_projeto = DisciplinaFactory(projeto=outro_projeto)
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/disciplinas/{disciplina.id}/",
+        {"pai": str(pai_de_outro_projeto.id)},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
 def test_patch_disciplina_pai_de_si_mesma_e_rejeitado():
     usuario = UsuarioFactory()
     projeto = ProjetoParaRdoFactory(criado_por=usuario)
@@ -804,3 +821,23 @@ def test_configuracao_projeto_retorna_subdisciplinas_aninhadas():
     assert body["disciplinas"][0]["nome"] == "Terraplenagem"
     assert len(body["disciplinas"][0]["subdisciplinas"]) == 1
     assert body["disciplinas"][0]["subdisciplinas"][0]["nome"] == "Movimento de Terra"
+
+
+def test_configuracao_projeto_retorna_subdisciplinas_tres_niveis():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    avo = DisciplinaFactory(projeto=projeto, nome="Terraplenagem")
+    pai = DisciplinaFactory(projeto=projeto, nome="Movimento de Terra", pai=avo)
+    DisciplinaFactory(projeto=projeto, nome="Escavação", pai=pai)
+    client = _authenticated_client(usuario)
+
+    response = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+
+    assert response.status_code == HTTPStatus.OK
+    body = response.json()
+    nivel1 = body["disciplinas"][0]
+    assert nivel1["nome"] == "Terraplenagem"
+    nivel2 = nivel1["subdisciplinas"][0]
+    assert nivel2["nome"] == "Movimento de Terra"
+    nivel3 = nivel2["subdisciplinas"][0]
+    assert nivel3["nome"] == "Escavação"

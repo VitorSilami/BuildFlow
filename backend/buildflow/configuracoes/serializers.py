@@ -189,7 +189,9 @@ class DisciplinaSerializer(serializers.ModelSerializer):
         if pai is None:
             return pai
 
-        projeto_id = self.instance.projeto_id if self.instance else self.context["projeto"].id
+        projeto_id = (
+            self.instance.projeto_id if self.instance else self.context["projeto"].id
+        )
         if pai.projeto_id != projeto_id:
             msg = "A disciplina pai deve pertencer ao mesmo projeto."
             raise serializers.ValidationError(msg)

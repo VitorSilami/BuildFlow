@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pytest
+from django.core.exceptions import ValidationError
 
 from buildflow.configuracoes.models import CatalogoServico
 from buildflow.configuracoes.models import Disciplina
@@ -97,3 +98,14 @@ def test_deletar_disciplina_pai_remove_subdisciplinas_em_cascata():
     pai.delete()
 
     assert not Disciplina.objects.filter(id=filha.id).exists()
+
+
+def test_disciplina_clean_rejeita_ciclo_de_ancestralidade():
+    projeto = _criar_projeto()
+    a = Disciplina.objects.create(projeto=projeto, nome="A")
+    b = Disciplina.objects.create(projeto=projeto, nome="B", pai=a)
+
+    a.pai = b
+
+    with pytest.raises(ValidationError):
+        a.full_clean()

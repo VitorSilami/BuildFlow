@@ -95,6 +95,7 @@ export function GanttChart({ disciplinas }: GanttChartProps) {
   const linhas = achatarDisciplinas(disciplinas)
     .filter((d) => d.data_inicio_prevista !== null && d.data_fim_prevista !== null)
     .map((d) => ({
+      id: d.id,
       nome: d.nome,
       inicio: parseDataLocal(d.data_inicio_prevista as string).getTime(),
       // data_fim_prevista e inclusiva (o servico ainda esta em andamento durante
@@ -111,6 +112,7 @@ export function GanttChart({ disciplinas }: GanttChartProps) {
   const dominioMaximo = Math.max(...linhas.map((l) => l.fim))
 
   const dados = linhas.map((l) => ({
+    id: l.id,
     nome: l.nome,
     offset: l.inicio - dominioMinimo,
     duracao: l.fim - l.inicio,
@@ -142,7 +144,9 @@ export function GanttChart({ disciplinas }: GanttChartProps) {
           />
           <YAxis
             type="category"
-            dataKey="nome"
+            dataKey="id"
+            tickFormatter={(id: string) => dados.find((d) => d.id === id)?.nome ?? ''}
+            // 180px cabe nomes de subdisciplina mais longos sem quebra de linha no Recharts
             width={180}
             stroke="var(--color-muted-foreground)"
             fontSize={12}

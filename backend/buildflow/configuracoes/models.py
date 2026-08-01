@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -84,6 +85,15 @@ class Disciplina(models.Model):
 
     def __str__(self) -> str:
         return self.nome
+
+    def clean(self) -> None:
+        super().clean()
+        cursor: Disciplina | None = self.pai
+        while cursor is not None:
+            if cursor.id == self.id:
+                msg = _("Uma disciplina não pode ser sua própria ancestral.")
+                raise ValidationError(msg)
+            cursor = cursor.pai
 
 
 class CatalogoServico(models.Model):

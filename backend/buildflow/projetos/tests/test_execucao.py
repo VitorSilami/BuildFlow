@@ -215,6 +215,35 @@ def test_dois_servicos_pesos_diferentes_dentro_da_disciplina():
     assert calcular_execucao_percentual(projeto) == Decimal("60.00")
 
 
+def test_subdisciplina_com_peso_mas_sem_avanco_calculavel_nao_conta_no_pai():
+    projeto = _criar_projeto()
+    pai = Disciplina.objects.create(
+        projeto=projeto, nome="Terraplenagem", peso_percentual=Decimal("100.00"),
+    )
+    # Subdisciplina com peso definido mas sem nenhum filho (nem servico nem
+    # subdisciplina) -- calcular_avanco_disciplina retorna None pra ela.
+    Disciplina.objects.create(
+        projeto=projeto,
+        nome="Movimento de Terra",
+        pai=pai,
+        peso_percentual=Decimal("50.00"),
+    )
+    CatalogoServico.objects.create(
+        disciplina=pai,
+        nome="Compactação",
+        unidade=_criar_unidade(),
+        peso_percentual=Decimal("50.00"),
+        quantidade_planejada=Decimal("1000.000"),
+        quantidade_executada_manual=Decimal("400.000"),
+    )
+
+    # Se a subdisciplina vazia contasse como peso 50 com avanco 0, o resultado
+    # seria (50*0 + 50*40)/100 = 20.00. Como ela e corretamente excluida (avanco
+    # None), o pai usa so o servico direto: peso 50, avanco 40 -> 100% do peso
+    # que sobra depois de excluir a subdisciplina vazia -> 40.00.
+    assert calcular_avanco_disciplina(pai) == Decimal("40.00")
+
+
 def test_quantidade_executada_total_soma_producoes_diarias_do_servico():
     projeto = _criar_projeto()
     disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")

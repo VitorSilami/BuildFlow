@@ -812,7 +812,7 @@ test('aviso de soma de pesos considera subdisciplinas e servicos juntos', async 
   await page.getByRole('tab', { name: 'EAP' }).click()
   await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
 
-  await expect(page.getByText(/a soma dos pesos dos filhos desta disciplina não fecha 100%/)).toBeVisible()
+  await expect(page.getByText(/a soma dos pesos dos filhos desta disciplina não fecha 100% \(60%\)/)).toBeVisible()
 })
 
 test('Gantt mostra uma barra para disciplina raiz e outra para a subdisciplina', async ({ page }) => {
@@ -882,4 +882,80 @@ test('Gantt mostra uma barra para disciplina raiz e outra para a subdisciplina',
   await expect(grafico).toBeVisible()
   await expect(grafico.getByText('Terraplenagem')).toBeVisible()
   await expect(grafico.getByText('Movimento de Terra')).toBeVisible()
+})
+
+test('Gantt nao colapsa subdisciplinas com o mesmo nome em pais diferentes', async ({ page }) => {
+  await page.route(SESSION_URL, (route) =>
+    route.fulfill({ json: { status: 200, data: { user: USUARIO }, meta: { is_authenticated: true } } }),
+  )
+
+  await page.route(CONFIG_URL, (route) =>
+    route.fulfill({
+      json: {
+        disciplinas: [
+          {
+            id: 'disc-1',
+            nome: 'Terraplenagem',
+            peso_percentual: '100.00',
+            avanco_percentual: null,
+            avanco_previsto_percentual: null,
+            status_eap: null,
+            data_inicio_prevista: '2026-01-01',
+            data_fim_prevista: '2026-03-01',
+            servicos: [],
+            subdisciplinas: [
+              {
+                id: 'disc-1a',
+                nome: 'Escavação',
+                peso_percentual: '100.00',
+                avanco_percentual: '30.00',
+                avanco_previsto_percentual: null,
+                status_eap: null,
+                data_inicio_prevista: '2026-01-01',
+                data_fim_prevista: '2026-01-31',
+                subdisciplinas: [],
+                servicos: [],
+              },
+            ],
+          },
+          {
+            id: 'disc-2',
+            nome: 'Drenagem',
+            peso_percentual: '100.00',
+            avanco_percentual: null,
+            avanco_previsto_percentual: null,
+            status_eap: null,
+            data_inicio_prevista: '2026-01-01',
+            data_fim_prevista: '2026-03-01',
+            servicos: [],
+            subdisciplinas: [
+              {
+                id: 'disc-2a',
+                nome: 'Escavação',
+                peso_percentual: '100.00',
+                avanco_percentual: '70.00',
+                avanco_previsto_percentual: null,
+                status_eap: null,
+                data_inicio_prevista: '2026-02-01',
+                data_fim_prevista: '2026-02-28',
+                subdisciplinas: [],
+                servicos: [],
+              },
+            ],
+          },
+        ],
+        equipes: [],
+        valores_custo: [],
+        soma_pesos_disciplinas: 100,
+      },
+    }),
+  )
+
+  await page.goto('/projetos/projeto-1/configuracoes')
+  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.getByRole('button', { name: 'Ver cronograma (Gantt)' }).click()
+
+  const grafico = page.getByLabel('Cronograma da EAP')
+  await expect(grafico).toBeVisible()
+  await expect(grafico.getByText('Escavação')).toHaveCount(2)
 })
