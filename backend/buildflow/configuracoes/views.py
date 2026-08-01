@@ -134,6 +134,11 @@ class DisciplinaViewSet(
     def get_queryset(self):
         return super().get_queryset().filter(projeto_id=self.kwargs["projeto_pk"])
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["projeto"] = self._get_projeto()
+        return context
+
     def perform_create(self, serializer):
         serializer.save(projeto=self._get_projeto())
 

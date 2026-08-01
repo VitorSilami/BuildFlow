@@ -67,3 +67,33 @@ def test_catalogo_servico_aceita_peso_e_quantidades():
     assert servico.peso_percentual == Decimal("60.00")
     assert servico.quantidade_planejada == Decimal("1000.000")
     assert servico.quantidade_executada_manual == Decimal("250.000")
+
+
+def test_disciplina_e_raiz_por_padrao():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+
+    assert disciplina.pai is None
+
+
+def test_disciplina_pode_ter_subdisciplina():
+    projeto = _criar_projeto()
+    pai = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    filha = Disciplina.objects.create(
+        projeto=projeto, nome="Movimento de Terra", pai=pai,
+    )
+
+    assert filha.pai_id == pai.id
+    assert list(pai.subdisciplinas.all()) == [filha]
+
+
+def test_deletar_disciplina_pai_remove_subdisciplinas_em_cascata():
+    projeto = _criar_projeto()
+    pai = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    filha = Disciplina.objects.create(
+        projeto=projeto, nome="Movimento de Terra", pai=pai,
+    )
+
+    pai.delete()
+
+    assert not Disciplina.objects.filter(id=filha.id).exists()

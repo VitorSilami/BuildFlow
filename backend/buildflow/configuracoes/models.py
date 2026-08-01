@@ -51,6 +51,14 @@ class Disciplina(models.Model):
         on_delete=models.CASCADE,
         related_name="disciplinas",
     )
+    pai = models.ForeignKey(
+        "self",
+        verbose_name=_("disciplina pai"),
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="subdisciplinas",
+    )
     nome = models.CharField(_("nome"), max_length=255)
     peso_percentual = models.DecimalField(
         _("peso percentual"),

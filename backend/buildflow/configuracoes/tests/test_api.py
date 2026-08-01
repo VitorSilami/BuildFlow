@@ -724,3 +724,66 @@ def test_configuracao_rdo_disciplina_nao_expoe_janela_do_gantt():
     disciplina_body = response.json()["disciplinas"][0]
     assert "data_inicio_prevista" not in disciplina_body
     assert "data_fim_prevista" not in disciplina_body
+
+
+def test_criar_subdisciplina_com_pai():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    pai = DisciplinaFactory(projeto=projeto, nome="Terraplenagem")
+    client = _authenticated_client(usuario)
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/disciplinas/",
+        {"nome": "Movimento de Terra", "pai": str(pai.id)},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.CREATED, response.data
+    assert response.json()["pai"] == str(pai.id)
+
+
+def test_criar_disciplina_com_pai_de_outro_projeto_e_rejeitada():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    outro_projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    pai_de_outro_projeto = DisciplinaFactory(projeto=outro_projeto)
+    client = _authenticated_client(usuario)
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/disciplinas/",
+        {"nome": "Movimento de Terra", "pai": str(pai_de_outro_projeto.id)},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_patch_disciplina_pai_de_si_mesma_e_rejeitado():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    disciplina = DisciplinaFactory(projeto=projeto)
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/disciplinas/{disciplina.id}/",
+        {"pai": str(disciplina.id)},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_patch_disciplina_pai_formando_ciclo_indireto_e_rejeitado():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    avo = DisciplinaFactory(projeto=projeto, nome="Terraplenagem")
+    pai = DisciplinaFactory(projeto=projeto, nome="Movimento de Terra", pai=avo)
+    client = _authenticated_client(usuario)
+
+    response = client.patch(
+        f"/api/v1/configuracoes/disciplinas/{avo.id}/",
+        {"pai": str(pai.id)},
+        format="json",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST

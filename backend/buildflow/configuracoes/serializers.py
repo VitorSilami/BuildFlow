@@ -169,6 +169,7 @@ class DisciplinaSerializer(serializers.ModelSerializer):
             "id",
             "nome",
             "peso_percentual",
+            "pai",
             "servicos",
             "avanco_percentual",
             "avanco_previsto_percentual",
@@ -176,6 +177,25 @@ class DisciplinaSerializer(serializers.ModelSerializer):
             "data_inicio_prevista",
             "data_fim_prevista",
         ]
+
+    def validate_pai(self, pai: Disciplina | None) -> Disciplina | None:
+        if pai is None:
+            return pai
+
+        projeto_id = self.instance.projeto_id if self.instance else self.context["projeto"].id
+        if pai.projeto_id != projeto_id:
+            msg = "A disciplina pai deve pertencer ao mesmo projeto."
+            raise serializers.ValidationError(msg)
+
+        if self.instance is not None:
+            cursor: Disciplina | None = pai
+            while cursor is not None:
+                if cursor.id == self.instance.id:
+                    msg = "Uma disciplina não pode ser sua própria ancestral."
+                    raise serializers.ValidationError(msg)
+                cursor = cursor.pai
+
+        return pai
 
     def _avanco_real(self, obj: Disciplina) -> Decimal | None:
         cache = self.context.setdefault("_avanco_real_disciplina_cache", {})
