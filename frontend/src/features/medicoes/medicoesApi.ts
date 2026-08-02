@@ -35,22 +35,32 @@ export function useCriarMedicao(projetoId: string) {
 }
 
 export function useAprovarMedicao(projetoId: string) {
+  const queryClient = useQueryClient()
   const invalidar = useInvalidarMedicoes(projetoId)
   return useMutation({
     mutationFn: (medicaoId: string) =>
       apiClient.post<Medicao>(`/api/v1/projetos/${projetoId}/medicoes/${medicaoId}/aprovar/`),
-    onSuccess: invalidar,
+    onSuccess: (data, medicaoId) => {
+      // A resposta do POST /aprovar/ ja traz o status atualizado — grava direto no
+      // cache da query de detalhe em vez de invalidar, pra nao depender de um refetch.
+      queryClient.setQueryData(['medicao', projetoId, medicaoId], data)
+      invalidar()
+    },
   })
 }
 
 export function useRejeitarMedicao(projetoId: string) {
+  const queryClient = useQueryClient()
   const invalidar = useInvalidarMedicoes(projetoId)
   return useMutation({
     mutationFn: ({ medicaoId, motivoRejeicao }: { medicaoId: string; motivoRejeicao: string }) =>
       apiClient.post<Medicao>(`/api/v1/projetos/${projetoId}/medicoes/${medicaoId}/rejeitar/`, {
         motivo_rejeicao: motivoRejeicao,
       }),
-    onSuccess: invalidar,
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(['medicao', projetoId, variables.medicaoId], data)
+      invalidar()
+    },
   })
 }
 

@@ -117,3 +117,50 @@ test('botão de nova medição fica desabilitado quando já existe uma pendente'
 
   await expect(page.getByRole('button', { name: 'Nova medição' })).toBeDisabled()
 })
+
+test('fiscal aprova uma medição pendente', async ({ page }) => {
+  const medicaoMock = {
+    id: 'medicao-1',
+    data_corte: '2026-07-31',
+    fiscal: 1,
+    fiscal_nome: 'Gerente Empresa A',
+    criado_por: 1,
+    criado_por_nome: 'Gerente Empresa A',
+    status: 'aguardando_aprovacao',
+    motivo_rejeicao: '',
+    aprovado_em: null,
+    created_at: '2026-07-31T10:00:00Z',
+    itens: [
+      {
+        id: 'item-1',
+        servico: 'servico-1',
+        servico_nome: 'Corte',
+        disciplina_nome: 'Terraplenagem',
+        quantidade_anterior: '0.000',
+        quantidade_acumulada: '100.000',
+        quantidade_periodo: '100.000',
+        preco_unitario_snapshot: '10.00',
+        valor_periodo: '1000.00',
+      },
+    ],
+    valor_total: '1000.00',
+    quantidade_itens_sem_preco: 0,
+  }
+
+  await page.route('**/api/v1/projetos/*/medicoes/medicao-1/', (route) => {
+    if (route.request().method() !== 'DELETE') return route.fulfill({ json: medicaoMock })
+    return route.fulfill({ status: 204 })
+  })
+  await page.route('**/api/v1/projetos/*/medicoes/medicao-1/aprovar/', (route) =>
+    route.fulfill({ json: { ...medicaoMock, status: 'aprovado', aprovado_em: '2026-07-31T12:00:00Z' } }),
+  )
+
+  await page.goto('/projetos/projeto-1/medicoes/medicao-1')
+
+  await expect(page.getByText('Corte')).toBeVisible()
+  await expect(page.getByText('R$ 1.000,00').first()).toBeVisible()
+
+  await page.getByRole('button', { name: 'Aprovar medição' }).click()
+
+  await expect(page.getByText('Aprovado', { exact: true })).toBeVisible()
+})

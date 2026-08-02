@@ -6,6 +6,7 @@ import { CustosOciosidadePage } from './pages/CustosOciosidadePage'
 import { DashboardPage } from './pages/DashboardPage'
 import { HistoricoAprovacoesPage } from './pages/HistoricoAprovacoesPage'
 import { LoginPage } from './pages/LoginPage'
+import { MedicaoDetailPage } from './pages/MedicaoDetailPage'
 import { MedicoesListPage } from './pages/MedicoesListPage'
 import { ProjetosListPage } from './pages/ProjetosListPage'
 import { RdoPage } from './pages/RdoPage'
@@ -36,6 +37,7 @@ function App() {
               <Route path="/projetos/:projetoId/registros-diarios" element={<RegistrosDiariosListPage />} />
               <Route path="/projetos/:projetoId/registros-diarios/novo" element={<RdoPage />} />
               <Route path="/projetos/:projetoId/medicoes" element={<MedicoesListPage />} />
+              <Route path="/projetos/:projetoId/medicoes/:medicaoId" element={<MedicaoDetailPage />} />
               <Route
                 path="/projetos/:projetoId/registros-diarios/:registroId"
                 element={<RegistroDiarioDetailPage />}
