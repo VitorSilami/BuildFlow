@@ -1,9 +1,11 @@
 import datetime
+import io
 from decimal import Decimal
 from http import HTTPStatus
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
+from openpyxl import Workbook
 from rest_framework.test import APIClient
 
 from buildflow.configuracoes.models import Equipe
@@ -976,3 +978,46 @@ def test_patch_servico_atualiza_preco_unitario():
 
     assert response.status_code == HTTPStatus.OK, response.data
     assert response.json()["preco_unitario"] == "18.50"
+
+
+def test_importar_eap_formato_hierarquico_retorna_201_e_reflete_valor_e_preco():
+    usuario = UsuarioFactory()
+    projeto = ProjetoParaRdoFactory(criado_por=usuario)
+    client = _authenticated_client(usuario)
+
+    workbook = Workbook()
+    principal = workbook.active
+    principal.title = "EXPORT_PROJECT"
+    principal.append(["CÓDIGO", "Task Name", "Peso Percentual", "unidade", "quantidade"])
+    principal.append(["001", "Mobilização", 100, "", ""])
+    principal.append(["001.001", "Canteiro", 100, "vb", 1])
+    resumo = workbook.create_sheet("RESUMO_VALORES")
+    resumo.append(["CÓDIGO", "VALOR BASE (R$)"])
+    resumo.append(["001", 500000])
+    custos = workbook.create_sheet("BASE_CUSTOS_SICRO")
+    custos.append(["CÓDIGO", "PREÇO UNITÁRIO BASE (R$)"])
+    custos.append(["001.001", 100000])
+    buffer = io.BytesIO()
+    workbook.save(buffer)
+    arquivo = SimpleUploadedFile(
+        "import.xlsx",
+        buffer.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    response = client.post(
+        f"/api/v1/projetos/{projeto.id}/configuracao/eap/importar/",
+        {"arquivo": arquivo},
+        format="multipart",
+    )
+
+    assert response.status_code == HTTPStatus.CREATED, response.data
+    assert response.json() == {"disciplinas_criadas": 1, "servicos_criados": 1}
+
+    configuracao = client.get(f"/api/v1/projetos/{projeto.id}/configuracao/")
+    disciplina = configuracao.json()["disciplinas"][0]
+    assert disciplina["nome"] == "Mobilização"
+    assert disciplina["valor_base"] == "500000.00"
+    servico = disciplina["servicos"][0]
+    assert servico["nome"] == "Canteiro"
+    assert servico["preco_unitario"] == "100000.00"

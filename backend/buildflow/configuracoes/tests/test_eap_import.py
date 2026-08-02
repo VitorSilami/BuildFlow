@@ -315,3 +315,20 @@ def test_linha_com_nota_em_coluna_ignorada_e_tratada_como_branco():
 
     assert resultado.disciplinas_criadas == 1
     assert resultado.servicos_criados == 1
+
+
+def test_arquivo_com_formato_hierarquico_e_detectado_automaticamente():
+    projeto = ProjetoParaRdoFactory()
+    arquivo = _xlsx_upload(
+        "import.xlsx",
+        [
+            ["CÓDIGO", "Task Name", "UNIDADE", "QUANTIDADE"],
+            ["001", "Mobilização", "", ""],
+            ["001.001", "Canteiro", "vb", 1],
+        ],
+    )
+
+    resultado = importar_eap_de_arquivo(projeto, arquivo)
+
+    assert resultado.disciplinas_criadas == 1
+    assert resultado.servicos_criados == 1

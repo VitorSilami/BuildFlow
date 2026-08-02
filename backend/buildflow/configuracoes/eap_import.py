@@ -9,6 +9,7 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from openpyxl.utils.exceptions import InvalidFileException
 
+from . import eap_import_hierarquico
 from .eap_import_shared import LINHAS_MAX_BUSCA_CABECALHO
 from .eap_import_shared import NOME_MAX_LENGTH
 from .eap_import_shared import UNIDADE_MAX_LENGTH
@@ -45,6 +46,13 @@ def importar_eap_de_arquivo(projeto, arquivo) -> ResultadoImportacaoEap:
         raise ArquivoInvalido(msg)
 
     planilhas = _ler_planilhas_brutas(arquivo)
+
+    resultado_hierarquico = eap_import_hierarquico.localizar_cabecalho(planilhas)
+    if resultado_hierarquico is not None:
+        _nome_aba, linhas, indice_cabecalho, colunas = resultado_hierarquico
+        return eap_import_hierarquico.importar(
+            projeto, planilhas, linhas, indice_cabecalho, colunas,
+        )
 
     linhas, indice_cabecalho, colunas = _localizar_cabecalho_em_planilhas(planilhas)
     linhas_validas, erros = _validar_linhas(linhas, indice_cabecalho, colunas)
@@ -110,7 +118,9 @@ def _localizar_cabecalho_em_planilhas(
     msg = str(
         _(
             "Cabeçalho não encontrado ou incompleto. Colunas obrigatórias: "
-            "DISCIPLINA, ATIVIDADE, UN/UNIDADE, TOTAL/QUANTIDADE.",
+            "DISCIPLINA, ATIVIDADE, UN/UNIDADE, TOTAL/QUANTIDADE (formato de "
+            "2 níveis) ou CÓDIGO, TASK NAME, UNIDADE, QUANTIDADE (formato "
+            "hierárquico).",
         ),
     )
     raise ArquivoInvalido(msg)
