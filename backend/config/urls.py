@@ -25,6 +25,7 @@ urlpatterns += [
     path("api/v1/", include("config.api_router")),
     # Rotas aninhadas (registros diarios sob projeto) - fora do router flat
     path("api/v1/", include("buildflow.registros_diarios.urls")),
+    path("api/v1/", include("buildflow.medicoes.urls")),
     path("api/v1/", include("buildflow.configuracoes.urls")),
     path("api/v1/", include("buildflow.custos_ociosidade.urls")),
     path("api/v1/", include("buildflow.rnc.urls")),
