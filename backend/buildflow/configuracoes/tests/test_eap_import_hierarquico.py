@@ -303,3 +303,19 @@ def test_erros_de_folha_saem_em_ordem_de_linha_do_arquivo():
         "Linha 3: UNIDADE em branco.",
         "Linha 4: UNIDADE em branco.",
     ]
+
+
+def test_linha_com_texto_solto_em_peso_e_tratada_como_branco():
+    projeto = ProjetoParaRdoFactory()
+    principal = [
+        CABECALHO_PRINCIPAL,
+        ["001", "Mobilização", 100, 1, "", "", "", ""],
+        ["001.001", "Canteiro", 100, 2, "", "", "vb", 1],
+        ["", "", "Nota: revisar pesos depois.", "", "", "", "", ""],
+    ]
+    arquivo = _workbook_upload("import.xlsx", {"EXPORT_PROJECT": principal})
+
+    resultado = _importar(projeto, arquivo)
+
+    assert resultado.disciplinas_criadas == 1
+    assert resultado.servicos_criados == 1

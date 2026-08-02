@@ -162,6 +162,10 @@ def _validar_linhas(
 
     for offset, linha in enumerate(linhas[indice_cabecalho + 1 :], start=1):
         numero_linha = indice_cabecalho + offset + 1
+        # So considera as colunas obrigatorias pra decidir se a linha esta em
+        # branco — planilhas reais tem linhas de nota/rodape com texto solto
+        # numa coluna ignorada (ex.: CHAVE) e nada nas colunas que importam,
+        # o que nao deveria contar como uma linha de dados malformada.
         if not any(_celula(linha, indice) for indice in colunas.values()):
             continue
 

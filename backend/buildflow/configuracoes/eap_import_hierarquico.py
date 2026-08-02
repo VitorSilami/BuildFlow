@@ -122,7 +122,12 @@ def _parsear_linhas(
 
     for offset, linha in enumerate(linhas[indice_cabecalho + 1 :], start=1):
         numero_linha = indice_cabecalho + offset + 1
-        if not any(_celula(linha, indice) for indice in colunas.values()):
+        # So considera CODIGO e TASK NAME pra decidir se a linha esta em
+        # branco — planilhas reais tem linhas de nota/rodape com texto solto
+        # numa coluna secundaria (ex.: PESO PERCENTUAL, uma data) e nada nas
+        # duas colunas que identificam a linha, o que nao deveria contar
+        # como uma linha de dados malformada.
+        if not _celula(linha, colunas["codigo"]) and not _celula(linha, colunas["nome"]):
             continue
 
         codigo = _celula(linha, colunas["codigo"])
