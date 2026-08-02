@@ -148,7 +148,7 @@ def test_bloqueia_criacao_com_medicao_pendente_existente():
 def test_bloqueia_data_de_corte_no_futuro():
     projeto = ProjetoParaRdoFactory()
     fiscal = UsuarioFactory(empresa=projeto.empresa)
-    amanha = datetime.date.today() + datetime.timedelta(days=1)
+    amanha = datetime.date.today() + datetime.timedelta(days=1)  # noqa: DTZ011
 
     with pytest.raises(MedicaoInvalida):
         services.criar_medicao(

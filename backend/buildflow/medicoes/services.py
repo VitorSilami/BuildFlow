@@ -4,6 +4,7 @@ import datetime
 from decimal import Decimal
 
 from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from buildflow.configuracoes.models import CatalogoServico
@@ -37,7 +38,7 @@ def criar_medicao(
         )
         raise MedicaoInvalida(msg)
 
-    if data_corte > datetime.date.today():
+    if data_corte > timezone.now().date():
         msg = str(_("A data de corte não pode ser no futuro."))
         raise MedicaoInvalida(msg)
 
