@@ -80,6 +80,21 @@ def test_criacao_exige_perfil_gerente():
     assert resposta.status_code == HTTPStatus.FORBIDDEN
 
 
+def test_criacao_com_fiscal_nao_escalar_retorna_400():
+    gerente = UsuarioFactory(perfil=PerfilChoices.GERENTE)
+    projeto = ProjetoParaRdoFactory(empresa=gerente.empresa, criado_por=gerente)
+    client = _autenticar(gerente)
+
+    resposta = client.post(
+        f"/api/v1/projetos/{projeto.id}/medicoes/",
+        {"data_corte": "2026-07-31", "fiscal": []},
+        format="json",
+    )
+
+    assert resposta.status_code == HTTPStatus.BAD_REQUEST
+    assert "fiscal" in resposta.data
+
+
 def test_criacao_com_pendencia_existente_retorna_400():
     medicao = MedicaoFactory()
     gerente = medicao.criado_por

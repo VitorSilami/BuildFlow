@@ -50,7 +50,7 @@ class MedicaoViewSet(
     pagination_class = None
 
     def get_queryset(self):
-        projeto = self._get_projeto()  # 404 antecipado se o projeto nao existe/nao e da empresa
+        projeto = self._get_projeto()  # 404 antecipado se o projeto nao e da empresa
         queryset = super().get_queryset()
         return queryset.filter(projeto_id=projeto.id).order_by(
             "-data_corte",
@@ -76,7 +76,7 @@ class MedicaoViewSet(
                 User.objects.filter(empresa=projeto.empresa, is_active=True),
                 pk=request.data.get("fiscal"),
             )
-        except ValueError as exc:
+        except (TypeError, ValueError) as exc:
             msg = "Selecione um fiscal válido."
             raise ValidationError({"fiscal": msg}) from exc
         try:
