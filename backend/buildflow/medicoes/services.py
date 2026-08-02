@@ -3,12 +3,15 @@ from __future__ import annotations
 import datetime
 from decimal import Decimal
 
+from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from buildflow.configuracoes.models import CatalogoServico
 from buildflow.projetos.services import calcular_quantidade_executada_total
+from buildflow.usuarios.models import PerfilChoices
 
 from .models import ItemMedicao
 from .models import Medicao
@@ -92,3 +95,39 @@ def criar_medicao(
             )
 
     return medicao
+
+
+def transicionar_status_medicao(
+    *,
+    medicao: Medicao,
+    novo_status: str,
+    usuario,
+    motivo_rejeicao: str = "",
+) -> Medicao:
+    if usuario.id != medicao.fiscal_id:
+        msg = _("Só o fiscal designado pode aprovar ou rejeitar esta medição.")
+        raise PermissionDenied(msg)
+    if medicao.status != StatusMedicaoChoices.AGUARDANDO_APROVACAO:
+        msg = _("Esta medição já foi analisada.")
+        raise ValidationError(msg)
+    if novo_status == StatusMedicaoChoices.REJEITADO and not motivo_rejeicao:
+        msg = _("Informe o motivo da rejeição.")
+        raise ValidationError(msg)
+
+    medicao.status = novo_status
+    medicao.aprovado_em = timezone.now()
+    if novo_status == StatusMedicaoChoices.REJEITADO:
+        medicao.motivo_rejeicao = motivo_rejeicao
+    medicao.save(update_fields=["status", "aprovado_em", "motivo_rejeicao"])
+    return medicao
+
+
+def cancelar_medicao(*, medicao: Medicao, usuario) -> None:
+    pode_cancelar = usuario.id == medicao.criado_por_id or usuario.perfil == PerfilChoices.GERENTE
+    if not pode_cancelar:
+        msg = _("Só quem criou a medição ou um Gerente pode cancelá-la.")
+        raise PermissionDenied(msg)
+    if medicao.status != StatusMedicaoChoices.AGUARDANDO_APROVACAO:
+        msg = _("Só é possível cancelar uma medição aguardando aprovação.")
+        raise ValidationError(msg)
+    medicao.delete()
