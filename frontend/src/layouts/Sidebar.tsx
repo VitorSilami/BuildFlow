@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   ListTree,
+  Receipt,
   Settings,
 } from 'lucide-react'
 import { useParams } from 'react-router-dom'
@@ -60,6 +61,12 @@ export function SidebarNav() {
                 icon={<History size={18} aria-hidden="true" />}
               >
                 Histórico & Aprovações
+              </SidebarNavItem>
+              <SidebarNavItem
+                to={`/projetos/${projetoId}/medicoes`}
+                icon={<Receipt size={18} aria-hidden="true" />}
+              >
+                Medições
               </SidebarNavItem>
             </SidebarGroup>
 
