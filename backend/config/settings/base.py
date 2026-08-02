@@ -99,6 +99,7 @@ LOCAL_APPS = [
     "buildflow.projetos",
     "buildflow.configuracoes",
     "buildflow.registros_diarios",
+    "buildflow.medicoes",
     "buildflow.custos_ociosidade",
     "buildflow.rnc",
     # Your stuff: custom apps go here
