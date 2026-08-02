@@ -1165,3 +1165,68 @@ def test_janela_disciplina_considera_servicos_de_subdisciplina():
         datetime.date(2026, 1, 1),
         datetime.date(2026, 5, 1),
     )
+
+
+def test_quantidade_executada_total_com_corte_de_data_ignora_producao_posterior():
+    projeto = _criar_projeto()
+    disciplina = Disciplina.objects.create(projeto=projeto, nome="Terraplenagem")
+    unidade = _criar_unidade()
+    servico = CatalogoServico.objects.create(
+        disciplina=disciplina,
+        nome="Corte",
+        unidade=unidade,
+        quantidade_planejada=Decimal("1000.000"),
+    )
+    equipe = Equipe.objects.create(projeto=projeto, nome="Equipe A")
+    usuario = projeto.criado_por
+    registro_antes_do_corte = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-01",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+        status="aprovado",
+    )
+    registro_depois_do_corte = RegistroDiario.objects.create(
+        projeto=projeto,
+        data_referencia="2026-07-15",
+        turno="diurno",
+        clima="sol",
+        equipe=equipe,
+        fiscal=usuario,
+        autor=usuario,
+        status="aprovado",
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_antes_do_corte,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("0.000"),
+        km_final=Decimal("1.000"),
+        quantidade=Decimal("100.000"),
+        unidade=unidade,
+    )
+    ProducaoDiaria.objects.create(
+        registro_diario=registro_depois_do_corte,
+        rodovia="BR-365",
+        sentido="crescente",
+        disciplina=disciplina,
+        servico=servico,
+        km_inicial=Decimal("1.000"),
+        km_final=Decimal("2.000"),
+        quantidade=Decimal("150.000"),
+        unidade=unidade,
+    )
+
+    total_ate_corte = calcular_quantidade_executada_total(
+        servico,
+        ate=datetime.date(2026, 7, 10),
+    )
+    total_sem_corte = calcular_quantidade_executada_total(servico)
+
+    assert total_ate_corte == Decimal("100.000")
+    assert total_sem_corte == Decimal("250.000")

@@ -97,17 +97,28 @@ def calcular_carta_controle(servico: CatalogoServico) -> CartaControle | None:
     )
 
 
-def calcular_quantidade_executada_total(servico: CatalogoServico) -> Decimal:
+def calcular_quantidade_executada_total(
+    servico: CatalogoServico,
+    ate: datetime.date | None = None,
+) -> Decimal:
     """Quantidade executada de um servico: soma dos lancamentos de ProducaoDiaria
     de RDOs aprovados vinculados a ele, mais o ajuste manual (producao anterior
     ao uso do sistema ou correcoes pontuais). RDO rejeitado ou aguardando
     aprovacao nao conta — so producao formalmente aprovada e um numero real.
-    Sempre recalculada, nunca armazenada.
+    `ate`, quando informado, ignora producao de RDOs com data_referencia
+    posterior a essa data (usado por medicoes.services.criar_medicao para
+    congelar o executado ate uma data de corte). Sempre recalculada, nunca
+    armazenada.
     """
-    soma_rdo = ProducaoDiaria.objects.filter(
-        servico=servico,
-        registro_diario__status=StatusRegistroChoices.APROVADO,
-    ).aggregate(total=Sum("quantidade"))["total"] or Decimal("0")
+    filtros = {
+        "servico": servico,
+        "registro_diario__status": StatusRegistroChoices.APROVADO,
+    }
+    if ate is not None:
+        filtros["registro_diario__data_referencia__lte"] = ate
+    soma_rdo = ProducaoDiaria.objects.filter(**filtros).aggregate(
+        total=Sum("quantidade"),
+    )["total"] or Decimal("0")
     return servico.quantidade_executada_manual + soma_rdo
 
 
