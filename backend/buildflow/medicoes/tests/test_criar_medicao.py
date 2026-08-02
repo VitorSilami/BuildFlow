@@ -133,6 +133,48 @@ def test_segunda_medicao_usa_primeira_aprovada_como_base():
     assert item.valor_periodo == Decimal("1500.00")
 
 
+def test_medicao_rejeitada_nao_e_usada_como_base():
+    projeto = ProjetoParaRdoFactory()
+    unidade = UnidadeFactory()
+    disciplina = DisciplinaFactory(projeto=projeto)
+    servico = CatalogoServicoFactory(
+        disciplina=disciplina,
+        unidade=unidade,
+        preco_unitario=Decimal("10.00"),
+    )
+    _aprovar_producao(
+        projeto=projeto,
+        disciplina=disciplina,
+        servico=servico,
+        unidade=unidade,
+        data_referencia="2026-07-01",
+        quantidade=Decimal("100.000"),
+    )
+    fiscal = UsuarioFactory(empresa=projeto.empresa)
+    primeira = services.criar_medicao(
+        projeto=projeto,
+        data_corte=datetime.date(2026, 7, 10),
+        fiscal=fiscal,
+        criado_por=projeto.criado_por,
+    )
+    primeira.status = StatusMedicaoChoices.REJEITADO
+    primeira.motivo_rejeicao = "Quantidade incorreta."
+    primeira.aprovado_em = timezone.now()
+    primeira.save(update_fields=["status", "motivo_rejeicao", "aprovado_em"])
+
+    segunda = services.criar_medicao(
+        projeto=projeto,
+        data_corte=datetime.date(2026, 7, 31),
+        fiscal=fiscal,
+        criado_por=projeto.criado_por,
+    )
+
+    item = segunda.itens.get(servico=servico)
+    assert item.quantidade_anterior == Decimal("0")
+    assert item.quantidade_acumulada == Decimal("100.000")
+    assert item.quantidade_periodo == Decimal("100.000")
+
+
 def test_bloqueia_criacao_com_medicao_pendente_existente():
     medicao_pendente = MedicaoFactory()
 

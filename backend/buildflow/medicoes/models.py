@@ -133,6 +133,7 @@ class ItemMedicao(models.Model):
     class Meta:
         verbose_name = _("item de medição")
         verbose_name_plural = _("itens de medição")
+        ordering = ["servico__disciplina__nome", "servico__nome"]
 
     def __str__(self) -> str:
         return f"{self.servico.nome} — {self.quantidade_periodo}"

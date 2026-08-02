@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -22,6 +23,14 @@ class MedicaoInvalida(Exception):
     """Erro de pre-condicao ao criar uma medicao (pendencia existente, data invalida)."""
 
 
+_MSG_MEDICAO_PENDENTE = str(
+    _(
+        "Este projeto já possui uma medição aguardando aprovação. "
+        "Aprove ou rejeite antes de criar outra.",
+    ),
+)
+
+
 def criar_medicao(
     *,
     projeto,
@@ -33,13 +42,7 @@ def criar_medicao(
         projeto=projeto,
         status=StatusMedicaoChoices.AGUARDANDO_APROVACAO,
     ).exists():
-        msg = str(
-            _(
-                "Este projeto já possui uma medição aguardando aprovação. "
-                "Aprove ou rejeite antes de criar outra.",
-            ),
-        )
-        raise MedicaoInvalida(msg)
+        raise MedicaoInvalida(_MSG_MEDICAO_PENDENTE)
 
     if data_corte > timezone.now().date():
         msg = str(_("A data de corte não pode ser no futuro."))
@@ -64,12 +67,15 @@ def criar_medicao(
         }
 
     with transaction.atomic():
-        medicao = Medicao.objects.create(
-            projeto=projeto,
-            data_corte=data_corte,
-            fiscal=fiscal,
-            criado_por=criado_por,
-        )
+        try:
+            medicao = Medicao.objects.create(
+                projeto=projeto,
+                data_corte=data_corte,
+                fiscal=fiscal,
+                criado_por=criado_por,
+            )
+        except IntegrityError as exc:
+            raise MedicaoInvalida(_MSG_MEDICAO_PENDENTE) from exc
         servicos = CatalogoServico.objects.filter(disciplina__projeto=projeto)
         for servico in servicos:
             quantidade_anterior = quantidades_anteriores.get(servico.id, Decimal("0"))

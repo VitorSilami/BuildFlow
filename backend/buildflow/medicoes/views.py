@@ -45,13 +45,14 @@ class MedicaoViewSet(
     queryset = (
         Medicao.objects.all()
         .select_related("fiscal", "criado_por")
-        .prefetch_related("itens")
+        .prefetch_related("itens__servico__disciplina")
     )
     pagination_class = None
 
     def get_queryset(self):
+        projeto = self._get_projeto()  # 404 antecipado se o projeto nao existe/nao e da empresa
         queryset = super().get_queryset()
-        return queryset.filter(projeto_id=self.kwargs["projeto_pk"]).order_by(
+        return queryset.filter(projeto_id=projeto.id).order_by(
             "-data_corte",
         )
 
@@ -62,14 +63,22 @@ class MedicaoViewSet(
 
     def create(self, request, *args, **kwargs):
         projeto = self._get_projeto()
-        data_corte = parse_date(str(request.data.get("data_corte", "")))
+        try:
+            data_corte = parse_date(str(request.data.get("data_corte", "")))
+        except ValueError as exc:
+            msg = "Informe uma data de corte válida (YYYY-MM-DD)."
+            raise ValidationError({"data_corte": msg}) from exc
         if data_corte is None:
             msg = "Informe uma data de corte válida (YYYY-MM-DD)."
             raise ValidationError({"data_corte": msg})
-        fiscal = get_object_or_404(
-            User.objects.filter(empresa=projeto.empresa),
-            pk=request.data.get("fiscal"),
-        )
+        try:
+            fiscal = get_object_or_404(
+                User.objects.filter(empresa=projeto.empresa, is_active=True),
+                pk=request.data.get("fiscal"),
+            )
+        except ValueError as exc:
+            msg = "Selecione um fiscal válido."
+            raise ValidationError({"fiscal": msg}) from exc
         try:
             medicao = services.criar_medicao(
                 projeto=projeto,
