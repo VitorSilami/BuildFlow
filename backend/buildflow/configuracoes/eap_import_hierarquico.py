@@ -127,11 +127,10 @@ def _parsear_linhas(
         # numa coluna secundaria (ex.: PESO PERCENTUAL, uma data) e nada nas
         # duas colunas que identificam a linha, o que nao deveria contar
         # como uma linha de dados malformada.
-        if not _celula(linha, colunas["codigo"]) and not _celula(linha, colunas["nome"]):
-            continue
-
         codigo = _celula(linha, colunas["codigo"])
         nome = _celula(linha, colunas["nome"])
+        if not codigo and not nome:
+            continue
 
         if not codigo:
             erros.append(f"Linha {numero_linha}: CÓDIGO em branco.")
