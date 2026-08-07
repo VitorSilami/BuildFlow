@@ -54,7 +54,7 @@ function MedicaoDetailSkeleton() {
 
 function InfoTile({ label, valor, destaque = false }: { label: string; valor: string; destaque?: boolean }) {
   return (
-    <div className={`rounded-lg border p-3 ${destaque ? 'border-primary/30 bg-primary/5' : 'border-border bg-background'}`}>
+    <div className={`rounded-lg border p-3 ${destaque ? 'border-info/30 bg-info/5' : 'border-border bg-surface'}`}>
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className="mt-1 font-semibold text-ink">{valor}</p>
     </div>
@@ -228,12 +228,12 @@ export function MedicaoDetailPage() {
           </div>
 
           {medicao.motivo_rejeicao && (
-            <p className="mt-4 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700">
+            <p className="mt-4 rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
               <strong>Motivo da rejeição:</strong> {medicao.motivo_rejeicao}
             </p>
           )}
           {medicao.quantidade_itens_sem_preco > 0 && (
-            <p className="mt-4 flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700">
+            <p className="mt-4 flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
               {medicao.quantidade_itens_sem_preco} serviço(s) sem preço não entram no total.
             </p>

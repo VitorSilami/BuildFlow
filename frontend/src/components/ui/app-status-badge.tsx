@@ -2,22 +2,21 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Badge } from './badge'
 
-export type BadgeTone = 'neutral' | 'success' | 'warning' | 'danger'
+export type BadgeTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'blocked'
 
-// hover:bg-*/15 (idêntico ao estado normal) neutraliza o hover:bg-primary/80 do
-// variant "default" do Badge — sem isso, passar o mouse faria o badge piscar de
-// volta pra cor primária, já que tailwind-merge só agrupa conflito entre
-// classes do mesmo prefixo de variante (hover: vs sem hover: não é o mesmo
-// grupo). Mesmo problema já resolvido em features/projetos/statusBadge.ts.
 const TONE_CLASS: Record<BadgeTone, string> = {
   neutral:
-    'border-transparent bg-slate-500/15 text-slate-700 hover:bg-slate-500/15 dark:bg-slate-500/20 dark:text-slate-400 dark:hover:bg-slate-500/20',
+    'border-border bg-muted text-muted-foreground hover:bg-muted',
   success:
-    'border-transparent bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/15 dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500/20',
+    'border-success/20 bg-success/10 text-success hover:bg-success/10',
   warning:
-    'border-transparent bg-amber-500/15 text-amber-700 hover:bg-amber-500/15 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/20',
+    'border-warning/25 bg-warning/15 text-warning hover:bg-warning/15',
   danger:
-    'border-transparent bg-red-500/15 text-red-700 hover:bg-red-500/15 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20',
+    'border-danger/20 bg-danger/10 text-danger hover:bg-danger/10',
+  info:
+    'border-info/20 bg-info/10 text-info hover:bg-info/10',
+  blocked:
+    'border-blocked/20 bg-blocked/10 text-blocked hover:bg-blocked/10',
 }
 
 interface AppStatusBadgeProps {
@@ -29,7 +28,7 @@ interface AppStatusBadgeProps {
 
 export function AppStatusBadge({ tone, label, icon, className }: AppStatusBadgeProps) {
   return (
-    <Badge className={cn('gap-1', TONE_CLASS[tone], className)}>
+    <Badge className={cn('gap-1 border font-semibold shadow-none', TONE_CLASS[tone], className)}>
       {icon}
       {label}
     </Badge>

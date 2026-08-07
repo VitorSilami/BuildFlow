@@ -1,15 +1,15 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 const CORES_STATUS = {
-  ativo: 'var(--color-emerald-500)',
-  pausado: 'var(--color-amber-500)',
-  concluido: 'var(--color-slate-500)',
+  ativo: 'var(--color-success)',
+  pausado: 'var(--color-warning)',
+  concluido: 'var(--color-baseline)',
 } as const
 
 const CLASSE_LEGENDA_STATUS = {
-  ativo: 'bg-emerald-500',
-  pausado: 'bg-amber-500',
-  concluido: 'bg-slate-500',
+  ativo: 'bg-success',
+  pausado: 'bg-warning',
+  concluido: 'bg-baseline',
 } as const
 
 interface StatusDonutChartProps {

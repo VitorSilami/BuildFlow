@@ -15,8 +15,8 @@ export const LABEL_TURNO: Record<Turno, string> = {
 }
 
 export const ICONE_CLIMA: Record<Clima, ReactNode> = {
-  sol: <Sun size={16} className="text-amber-500" aria-hidden="true" />,
-  nublado: <Cloud size={16} className="text-slate-400" aria-hidden="true" />,
-  chuva: <CloudRain size={16} className="text-blue-500" aria-hidden="true" />,
-  chuva_forte: <CloudLightning size={16} className="text-blue-700" aria-hidden="true" />,
+  sol: <Sun size={16} className="text-warning" aria-hidden="true" />,
+  nublado: <Cloud size={16} className="text-baseline" aria-hidden="true" />,
+  chuva: <CloudRain size={16} className="text-info" aria-hidden="true" />,
+  chuva_forte: <CloudLightning size={16} className="text-brand-blue" aria-hidden="true" />,
 }

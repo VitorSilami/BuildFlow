@@ -16,7 +16,7 @@ export function SidebarGroup({ title, children }: SidebarGroupProps) {
         type="button"
         onClick={() => setExpandido((atual) => !atual)}
         aria-expanded={expandido}
-        className="flex min-h-8 items-center justify-between rounded-md px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:bg-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-h-8 items-center justify-between rounded-md px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="truncate">{title}</span>
         <ChevronDown

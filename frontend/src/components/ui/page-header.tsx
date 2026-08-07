@@ -15,29 +15,31 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, breadcrumbs, actions }: PageHeaderProps) {
   return (
-    <div className="mb-6 flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
+    <div className="mb-6 flex flex-col gap-4 border-b border-border/80 pb-5 md:flex-row md:items-end md:justify-between">
       <div>
         <nav aria-label="breadcrumb" className="mb-2">
-          <ol className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+          <ol className="flex flex-wrap items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             {breadcrumbs.map((crumb, index) => {
               const isLast = index === breadcrumbs.length - 1
               return (
                 <li key={crumb.label} className="flex items-center gap-2">
-                  {index > 0 && <span aria-hidden="true">/</span>}
+                  {index > 0 && <span aria-hidden="true" className="text-border">/</span>}
                   {crumb.to && !isLast ? (
-                    <Link to={crumb.to} className="hover:text-ink">
+                    <Link to={crumb.to} className="transition-colors hover:text-primary">
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span aria-current={isLast ? 'page' : undefined}>{crumb.label}</span>
+                    <span className={isLast ? 'text-brand-steel' : undefined} aria-current={isLast ? 'page' : undefined}>
+                      {crumb.label}
+                    </span>
                   )}
                 </li>
               )
             })}
           </ol>
         </nav>
-        <h3 className="font-display text-2xl font-bold tracking-tight text-ink">{title}</h3>
-        {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+        <h3 className="font-display text-2xl font-bold leading-tight text-ink">{title}</h3>
+        {subtitle && <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>

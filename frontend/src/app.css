@@ -38,6 +38,13 @@
   --color-surface-strong: var(--surface-strong);
   --color-ink: var(--ink);
   --color-signal: var(--signal);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-brand-steel: var(--brand-steel);
+  --color-brand-slate: var(--brand-slate);
+  --color-road-graphite: var(--road-graphite);
+  --color-concrete: var(--concrete);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -59,85 +66,101 @@
 :root {
   --radius: 0.5rem;
 
-  --background: oklch(0.985 0.006 250);
-  --foreground: oklch(0.22 0.08 260);
-  --surface: oklch(0.97 0.012 250);
-  --surface-strong: oklch(0.94 0.02 250);
-  --ink: oklch(0.18 0.09 262);
-  --signal: oklch(0.68 0.16 240);
-  --success: oklch(0.47 0.13 145);
-  --success-foreground: oklch(0.985 0.006 250);
-  --warning: oklch(0.55 0.13 65);
-  --warning-foreground: oklch(0.985 0.006 250);
-  --danger: oklch(0.50 0.20 27);
-  --danger-foreground: oklch(0.985 0.006 250);
-  --info: oklch(0.45 0.13 240);
-  --info-foreground: oklch(0.985 0.006 250);
-  --planned: oklch(0.70 0.13 220);
-  --actual: oklch(0.47 0.13 145);
-  --baseline: oklch(0.56 0.04 260);
-  --critical: oklch(0.50 0.20 27);
-  --blocked: oklch(0.46 0.08 285);
+  --brand-navy: #0b1f3a;
+  --brand-blue: #124c8f;
+  --brand-cyan: #19a7ce;
+  --brand-steel: #5d6b7a;
+  --brand-slate: #1d2733;
+  --road-graphite: #2b3036;
+  --concrete: #eef2f5;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.08 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.08 260);
+  --background: #fafbfc;
+  --foreground: #1d2733;
+  --surface: #f3f6f8;
+  --surface-strong: #e6ebf0;
+  --ink: #111827;
+  --signal: var(--brand-cyan);
+  --success: #12805c;
+  --success-foreground: #ffffff;
+  --warning: #9a640f;
+  --warning-foreground: #111827;
+  --danger: #c93636;
+  --danger-foreground: #ffffff;
+  --info: #0e7490;
+  --info-foreground: #0b1f3a;
+  --planned: #3e78b8;
+  --actual: var(--success);
+  --baseline: #7a8794;
+  --critical: #a92f2f;
+  --blocked: #6f5aa7;
 
-  --primary: oklch(0.35 0.14 258);
-  --primary-foreground: oklch(0.985 0.006 250);
-  --secondary: oklch(0.94 0.02 250);
-  --secondary-foreground: oklch(0.22 0.08 260);
-  --muted: oklch(0.94 0.02 250);
-  --muted-foreground: oklch(0.5 0.04 258);
-  --accent: oklch(0.68 0.16 240);
-  --accent-foreground: oklch(0.18 0.09 262);
-  --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(0.985 0.006 250);
+  --card: #ffffff;
+  --card-foreground: #1d2733;
+  --popover: #ffffff;
+  --popover-foreground: #1d2733;
 
-  --border: oklch(0.62 0.02 250);
-  --input: oklch(0.62 0.02 250);
-  --ring: oklch(0.55 0.14 250);
+  --primary: var(--brand-blue);
+  --primary-foreground: #ffffff;
+  --secondary: #e6ebf0;
+  --secondary-foreground: #1d2733;
+  --muted: #eef2f5;
+  --muted-foreground: #5d6b7a;
+  --accent: #dff5fa;
+  --accent-foreground: #0b1f3a;
+  --destructive: var(--danger);
+  --destructive-foreground: #ffffff;
+
+  --border: #ccd5de;
+  --input: #b9c4cf;
+  --ring: var(--brand-cyan);
 }
 
 .dark {
-  --background: oklch(0.16 0.05 260);
-  --foreground: oklch(0.97 0.01 250);
-  --surface: oklch(0.2 0.06 260);
-  --surface-strong: oklch(0.26 0.07 260);
-  --ink: oklch(0.97 0.01 250);
-  --signal: oklch(0.72 0.16 240);
-  --success: oklch(0.72 0.14 145);
-  --success-foreground: oklch(0.16 0.05 260);
-  --warning: oklch(0.78 0.14 75);
-  --warning-foreground: oklch(0.16 0.05 260);
-  --danger: oklch(0.68 0.20 27);
-  --danger-foreground: oklch(0.16 0.05 260);
-  --info: oklch(0.74 0.13 230);
-  --info-foreground: oklch(0.16 0.05 260);
-  --planned: oklch(0.75 0.13 220);
-  --actual: oklch(0.72 0.14 145);
-  --baseline: oklch(0.72 0.04 260);
-  --critical: oklch(0.68 0.20 27);
-  --blocked: oklch(0.72 0.08 285);
+  --brand-navy: #d8e6f5;
+  --brand-blue: #7eb6f2;
+  --brand-cyan: #58d4ee;
+  --brand-steel: #aab8c7;
+  --brand-slate: #eef4fa;
+  --road-graphite: #0b1220;
+  --concrete: #1c2a38;
 
-  --card: oklch(0.2 0.06 260);
-  --card-foreground: oklch(0.97 0.01 250);
-  --popover: oklch(0.2 0.06 260);
-  --popover-foreground: oklch(0.97 0.01 250);
-  --primary: oklch(0.72 0.16 240);
-  --primary-foreground: oklch(0.16 0.05 260);
-  --secondary: oklch(0.26 0.07 260);
-  --secondary-foreground: oklch(0.97 0.01 250);
-  --muted: oklch(0.26 0.07 260);
-  --muted-foreground: oklch(0.7 0.04 250);
-  --accent: oklch(0.72 0.16 240);
-  --accent-foreground: oklch(0.16 0.05 260);
-  --destructive: oklch(0.55 0.2 27);
-  --destructive-foreground: oklch(0.97 0.01 250);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.55 0.14 250);
+  --background: #0b1220;
+  --foreground: #eef4fa;
+  --surface: #111c2b;
+  --surface-strong: #1c2a38;
+  --ink: #f8fbfd;
+  --signal: var(--brand-cyan);
+  --success: #58c795;
+  --success-foreground: #06150f;
+  --warning: #f2be58;
+  --warning-foreground: #1f1400;
+  --danger: #f06f6f;
+  --danger-foreground: #230606;
+  --info: var(--brand-cyan);
+  --info-foreground: #06151a;
+  --planned: #89bdf2;
+  --actual: var(--success);
+  --baseline: #aab8c7;
+  --critical: #f06f6f;
+  --blocked: #b8a5f2;
+
+  --card: #111c2b;
+  --card-foreground: #eef4fa;
+  --popover: #111c2b;
+  --popover-foreground: #eef4fa;
+  --primary: var(--brand-cyan);
+  --primary-foreground: #06151a;
+  --secondary: #1c2a38;
+  --secondary-foreground: #eef4fa;
+  --muted: #1c2a38;
+  --muted-foreground: #aab8c7;
+  --accent: #17384a;
+  --accent-foreground: #eef4fa;
+  --destructive: var(--danger);
+  --destructive-foreground: #230606;
+  --border: rgb(238 244 250 / 16%);
+  --input: rgb(238 244 250 / 22%);
+  --ring: var(--brand-cyan);
 }
 
 @layer base {
@@ -153,7 +176,9 @@
 
   body {
     margin: 0;
-    background-color: var(--color-background);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-concrete) 48%, transparent), transparent 360px),
+      var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -177,7 +202,7 @@
 
 @utility grid-blueprint {
   background-image:
-    linear-gradient(to right, oklch(0.35 0.14 258 / 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.35 0.14 258 / 0.06) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in srgb, var(--color-brand-blue) 12%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-brand-blue) 12%, transparent) 1px, transparent 1px);
   background-size: 48px 48px;
 }

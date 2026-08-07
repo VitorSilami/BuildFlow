@@ -62,7 +62,7 @@ function RegistroDiaLink({ projetoId, registro }: { projetoId: string | undefine
   return (
     <Link
       to={`/projetos/${projetoId}/registros-diarios/${registro.id}`}
-      className="flex items-center justify-between gap-4 rounded-lg border border-border bg-background p-3 transition-colors hover:border-primary/40 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-3 transition-colors hover:border-brand-cyan/45 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span className="min-w-0">
         <span className="flex items-center gap-2 font-medium text-ink">

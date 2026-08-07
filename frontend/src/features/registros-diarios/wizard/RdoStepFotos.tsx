@@ -130,13 +130,13 @@ export function RdoStepFotos({ fotos, onFotosChange }: RdoStepFotosProps) {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {fotos.map((foto, index) => (
-              <figure key={`${foto.arquivo.name}-${index}`} className="m-0 overflow-hidden rounded-lg border border-border bg-background">
+              <figure key={`${foto.arquivo.name}-${index}`} className="m-0 overflow-hidden rounded-lg border border-border bg-card">
                 <div className="relative">
                   <button
                     type="button"
                     aria-label={`Remover foto ${index + 1}`}
                     onClick={() => removerFoto(index)}
-                    className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 text-ink shadow-sm transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="absolute right-2 top-2 rounded-full bg-card/90 p-1.5 text-ink shadow-sm transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <X size={14} aria-hidden="true" />
                   </button>

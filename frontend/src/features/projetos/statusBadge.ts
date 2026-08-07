@@ -24,16 +24,16 @@ export const STATUS_ICON: Record<ProjetoStatus, typeof PlayCircle> = {
 // cabeçalho de projeto atual na sidebar — mesma paleta do STATUS_BADGE_CLASS,
 // sem o peso visual de um badge com borda.
 export const STATUS_DOT_CLASS: Record<ProjetoStatus, string> = {
-  ativo: 'bg-emerald-500',
-  pausado: 'bg-amber-500',
-  concluido: 'bg-slate-400',
+  ativo: 'bg-success',
+  pausado: 'bg-warning',
+  concluido: 'bg-baseline',
 }
 
 // Acento na borda esquerda do card de projeto — mesma paleta do badge, dando
 // leitura de status mesmo antes de ler o texto (reforca a hierarquia visual
 // do card sem precisar de um fundo colorido cheio).
 export const STATUS_ACCENT_CLASS: Record<ProjetoStatus, string> = {
-  ativo: 'border-l-4 border-l-emerald-500',
-  pausado: 'border-l-4 border-l-amber-500',
-  concluido: 'border-l-4 border-l-slate-400',
+  ativo: 'border-l-4 border-l-success',
+  pausado: 'border-l-4 border-l-warning',
+  concluido: 'border-l-4 border-l-baseline',
 }

@@ -65,7 +65,7 @@ export function FotoUpload({ registroId }: FotoUploadProps) {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr]">
         <div>
           {preview ? (
-            <figure className="m-0 overflow-hidden rounded-lg border border-border bg-background">
+            <figure className="m-0 overflow-hidden rounded-lg border border-border bg-card">
               <img src={preview} alt="Pré-visualização da foto selecionada" className="aspect-square w-full object-cover" />
               <figcaption className="flex items-center justify-between gap-2 border-t border-border px-3 py-2 text-xs text-muted-foreground">
                 <span className="truncate">{arquivo?.name}</span>

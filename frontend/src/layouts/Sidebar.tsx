@@ -31,7 +31,7 @@ export function SidebarNav() {
       </SidebarSection>
 
       {projetoId && (
-        <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-card/70 p-2 shadow-sm">
+        <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/5 p-2 shadow-sm">
           <SidebarGroup title="Planejamento">
             <SidebarNavItem
               to={`/projetos/${projetoId}/planejamento/eap`}
@@ -101,16 +101,16 @@ export function SidebarNav() {
 
 export function Sidebar() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[17rem] shrink-0 border-r border-border bg-surface/55 lg:flex lg:flex-col">
-      <div className="flex h-16 items-center gap-3 border-b border-border bg-background/75 px-4">
-        <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
+    <aside className="sticky top-0 hidden h-screen w-[17rem] shrink-0 border-r border-brand-navy bg-brand-navy text-white lg:flex lg:flex-col">
+      <div className="flex h-16 items-center gap-3 border-b border-white/10 bg-road-graphite/35 px-4">
+        <span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-cyan text-brand-navy shadow-sm">
           <LayoutGrid size={18} aria-hidden="true" />
         </span>
         <span className="min-w-0">
-          <span className="block font-display text-lg font-bold leading-5 tracking-tight text-ink">
+          <span className="block font-display text-lg font-bold leading-5 tracking-tight text-white">
             Build<span className="text-signal">Flow</span>
           </span>
-          <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+          <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-white/55">
             Field OS
           </span>
         </span>

@@ -18,15 +18,15 @@ const STATUS_OPCOES: { value: StatusPresenca; label: string }[] = [
 ]
 
 const CARTAO_BORDA: Record<StatusPresenca, string> = {
-  presente: 'border-emerald-500/40 bg-emerald-500/5',
-  falta: 'border-red-500/40 bg-red-500/5',
-  atestado: 'border-amber-500/40 bg-amber-500/5',
+  presente: 'border-success/35 bg-success/5',
+  falta: 'border-danger/35 bg-danger/5',
+  atestado: 'border-warning/35 bg-warning/10',
 }
 
 const BOTAO_ATIVO: Record<StatusPresenca, string> = {
-  presente: 'border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-  falta: 'border-red-500 bg-red-500/10 text-red-700 dark:text-red-300',
-  atestado: 'border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  presente: 'border-success bg-success/10 text-success',
+  falta: 'border-danger bg-danger/10 text-danger',
+  atestado: 'border-warning bg-warning/10 text-warning',
 }
 
 function iniciais(nome: string): string {
@@ -111,7 +111,7 @@ export function RdoStepEquipe({ presencas, onPresencasChange, equipeSelecionada 
                     type="button"
                     aria-label={`Remover pessoa ${index + 1}`}
                     onClick={() => removerPresenca(index)}
-                    className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-background hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-card hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <X size={14} aria-hidden="true" />
                   </button>
@@ -162,7 +162,7 @@ export function RdoStepEquipe({ presencas, onPresencasChange, equipeSelecionada 
                       className={`min-h-9 rounded-md border px-2 text-[11px] font-bold uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                         presenca.status === opcao.value
                           ? BOTAO_ATIVO[opcao.value]
-                          : 'border-border bg-background text-muted-foreground hover:bg-surface'
+                          : 'border-border bg-card text-muted-foreground hover:bg-surface'
                       }`}
                     >
                       {opcao.label}

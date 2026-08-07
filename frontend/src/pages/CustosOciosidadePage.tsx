@@ -100,7 +100,7 @@ function CustosOciosidadeSkeleton() {
 
 function SemValorDefinido() {
   return (
-    <span className="ml-2 inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-amber-700 dark:text-amber-300">
+    <span className="ml-2 inline-flex rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-warning">
       sem valor definido
     </span>
   )
@@ -120,14 +120,14 @@ function LinhaDiagnostico({
   tone: 'danger' | 'warning' | 'success' | 'neutral'
 }) {
   const corBarra = {
-    danger: 'bg-red-500',
-    warning: 'bg-amber-500',
-    success: 'bg-emerald-500',
-    neutral: 'bg-primary',
+    danger: 'bg-danger',
+    warning: 'bg-warning',
+    success: 'bg-success',
+    neutral: 'bg-info',
   }[tone]
 
   return (
-    <div className="rounded-lg border border-border bg-background p-3">
+    <div className="rounded-lg border border-border bg-surface p-3">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-ink">{label}</p>
@@ -154,14 +154,14 @@ function RankingItem({
   tone?: 'warning' | 'danger' | 'neutral'
 }) {
   const toneClass = {
-    warning: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300',
-    danger: 'border-red-500/30 bg-red-500/5 text-red-700 dark:text-red-300',
-    neutral: 'border-border bg-background text-ink',
+    warning: 'border-warning/30 bg-warning/10 text-warning',
+    danger: 'border-danger/30 bg-danger/10 text-danger',
+    neutral: 'border-border bg-card text-ink',
   }[tone]
 
   return (
-    <li className="flex items-start gap-3 rounded-lg border border-border bg-background p-3">
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-xs font-bold text-primary">
+    <li className="flex items-start gap-3 rounded-lg border border-border bg-surface p-3">
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-info/10 font-mono text-xs font-bold text-info">
         {posicao}
       </span>
       <div className="min-w-0 flex-1">
@@ -194,7 +194,7 @@ function BarraComparativa({
   const pctSecundario = percentual(secundario, maximo)
 
   return (
-    <div className="rounded-lg border border-border bg-background p-3">
+    <div className="rounded-lg border border-border bg-surface p-3">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-ink">{label}</p>
@@ -203,11 +203,11 @@ function BarraComparativa({
             {formatMoeda(String(secundario))}
           </p>
         </div>
-        {secundario > 0 && <TrendingDown className="size-4 shrink-0 text-red-500" aria-hidden="true" />}
+        {secundario > 0 && <TrendingDown className="size-4 shrink-0 text-danger" aria-hidden="true" />}
       </div>
       <div className="flex h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full bg-emerald-500" style={{ width: `${pctPrincipal}%` }} />
-        <div className="h-full bg-red-500" style={{ width: `${pctSecundario}%` }} />
+        <div className="h-full bg-success" style={{ width: `${pctPrincipal}%` }} />
+        <div className="h-full bg-danger" style={{ width: `${pctSecundario}%` }} />
       </div>
     </div>
   )
@@ -215,12 +215,12 @@ function BarraComparativa({
 
 function BarraHoras({ item, maximo }: { item: HorasOciosasPorCausa; maximo: number }) {
   return (
-    <div className="rounded-lg border border-border bg-background p-3">
+    <div className="rounded-lg border border-border bg-surface p-3">
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className="text-sm font-semibold text-ink">{item.motivo}</span>
         <span className="font-mono text-xs text-muted-foreground">{item.horas}h</span>
       </div>
-      <Progress value={percentual(numero(item.horas), maximo)} indicatorClassName="bg-amber-500" className="h-2 bg-muted" />
+      <Progress value={percentual(numero(item.horas), maximo)} indicatorClassName="bg-warning" className="h-2 bg-muted" />
     </div>
   )
 }
@@ -329,7 +329,7 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
       className: 'text-right',
       cell: (item) => (
         <>
-          <span className="font-semibold text-red-600 dark:text-red-400">
+          <span className="font-semibold text-danger">
             {formatMoeda(item.custo_ocioso)}
           </span>
           {!item.tem_valor_cadastrado && <SemValorDefinido />}
@@ -368,7 +368,7 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
       className: 'text-right',
       cell: (item) => (
         <>
-          <span className="font-semibold text-red-600 dark:text-red-400">
+          <span className="font-semibold text-danger">
             {formatMoeda(item.valor_perdido)}
           </span>
           {!item.tem_valor_cadastrado && <SemValorDefinido />}
@@ -405,12 +405,12 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
                   evitável entre faltas, déficit de mão de obra e máquinas paradas.
                 </p>
               </div>
-              <div className="rounded-lg border border-red-500/25 bg-red-500/5 p-4">
-                <p className="flex items-center gap-2 text-sm font-semibold text-red-700 dark:text-red-300">
+              <div className="rounded-lg border border-danger/25 bg-danger/5 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-danger">
                   <ArrowDownRight className="size-4" aria-hidden="true" />
                   Dinheiro em risco
                 </p>
-                <p className="mt-2 font-display text-3xl font-bold text-red-700 dark:text-red-300">
+                <p className="mt-2 font-display text-3xl font-bold text-danger">
                   {formatMoeda(dados.ociosidade_evitavel_total)}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -503,7 +503,7 @@ function CustosOciosidadeConteudo({ dados }: { dados: CustosOciosidade }) {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Máquinas ociosas</span>
-              <span className="font-semibold text-red-600 dark:text-red-400">
+              <span className="font-semibold text-danger">
                 {formatMoeda(dados.custo_ocioso_maquinas)}
               </span>
             </div>

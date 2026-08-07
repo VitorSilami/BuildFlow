@@ -150,7 +150,7 @@ export function RdoStepMaquinas({
                   <legend className="sr-only">Máquina {index + 1}</legend>
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-info/10 text-brand-blue">
                         <Truck size={18} aria-hidden="true" />
                       </span>
                       {maquina.maquina ? (
@@ -273,7 +273,7 @@ export function RdoStepMaquinas({
             type="button"
             onClick={adicionarMaquina}
             disabled={disponiveisNoPool === 0}
-            className="flex min-h-[3.5rem] items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:text-muted-foreground"
+            className="flex min-h-[3.5rem] items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 text-sm text-muted-foreground transition-colors hover:border-brand-cyan/45 hover:text-brand-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:text-muted-foreground"
           >
             <Plus size={16} aria-hidden="true" />
             Adicionar máquina do pool ({disponiveisNoPool} disponíve{disponiveisNoPool === 1 ? 'l' : 'is'})
@@ -281,7 +281,7 @@ export function RdoStepMaquinas({
           <button
             type="button"
             onClick={adicionarMaquina}
-            className="flex min-h-[3.5rem] items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex min-h-[3.5rem] items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 text-sm text-muted-foreground transition-colors hover:border-brand-cyan/45 hover:text-brand-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Plus size={16} aria-hidden="true" />
             Cadastrar máquina avulsa (não está no pool)

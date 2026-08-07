@@ -143,9 +143,9 @@ test('barra de execucao usa cor por faixa', async ({ page }) => {
 
   await page.goto('/dashboard')
 
-  const indicadorBaixa = page.locator('li', { hasText: 'Baixa' }).locator('[data-max="100"] [class*="bg-red-500"]')
-  const indicadorMedia = page.locator('li', { hasText: 'Media' }).locator('[data-max="100"] [class*="bg-amber-500"]')
-  const indicadorAlta = page.locator('li', { hasText: 'Alta' }).locator('[data-max="100"] [class*="bg-emerald-500"]')
+  const indicadorBaixa = page.locator('li', { hasText: 'Baixa' }).locator('[data-max="100"] [class*="bg-danger"]')
+  const indicadorMedia = page.locator('li', { hasText: 'Media' }).locator('[data-max="100"] [class*="bg-warning"]')
+  const indicadorAlta = page.locator('li', { hasText: 'Alta' }).locator('[data-max="100"] [class*="bg-success"]')
 
   await expect(indicadorBaixa).toBeVisible()
   await expect(indicadorMedia).toBeVisible()

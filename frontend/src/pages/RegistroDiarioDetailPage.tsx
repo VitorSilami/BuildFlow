@@ -103,7 +103,7 @@ function eficienciaMedia(maquinas: ApontamentoMaquina[]): number {
 
 function CampoResumo({ label, valor, icon }: { label: string; valor: string; icon?: ReactNode }) {
   return (
-    <div className="rounded-lg border border-border bg-background p-3">
+    <div className="rounded-lg border border-border bg-surface p-3">
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className="mt-1 flex items-center gap-2 font-medium text-ink">
         {icon}
@@ -355,7 +355,7 @@ export function RegistroDiarioDetailPage() {
           {registro.fotos.length === 0 && <EmptyState>Nenhuma foto anexada ainda.</EmptyState>}
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" aria-label="Fotos">
             {registro.fotos.map((foto) => (
-              <figure className="m-0 overflow-hidden rounded-lg border border-border bg-background" key={foto.id}>
+              <figure className="m-0 overflow-hidden rounded-lg border border-border bg-card" key={foto.id}>
                 <img
                   src={foto.arquivo}
                   alt={foto.km ? `Foto do registro diário no km ${foto.km}` : 'Foto do registro diário'}

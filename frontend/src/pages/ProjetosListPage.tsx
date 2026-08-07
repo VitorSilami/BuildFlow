@@ -34,6 +34,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '../components/ui'
+import type { BadgeTone } from '../components/ui'
 import { ProjetoForm } from '../features/projetos/ProjetoForm'
 import { STATUS_ICON, STATUS_LABEL, STATUS_TONE } from '../features/projetos/statusBadge'
 import { useProjetos } from '../features/projetos/projetosApi'
@@ -114,17 +115,19 @@ function MetricTile({
   label: string
   value: string | number
   detail?: string
-  tone?: 'neutral' | 'success' | 'warning' | 'danger'
+  tone?: BadgeTone
 }) {
-  const toneClass = {
-    neutral: 'border-border bg-background text-ink',
-    success: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300',
-    warning: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300',
-    danger: 'border-red-500/30 bg-red-500/5 text-red-700 dark:text-red-300',
-  }[tone]
+  const toneClass: Record<BadgeTone, string> = {
+    neutral: 'border-border bg-card text-ink',
+    success: 'border-success/25 bg-success/5 text-success',
+    warning: 'border-warning/30 bg-warning/10 text-warning',
+    danger: 'border-danger/25 bg-danger/5 text-danger',
+    info: 'border-info/25 bg-info/5 text-info',
+    blocked: 'border-blocked/25 bg-blocked/5 text-blocked',
+  }
 
   return (
-    <div className={`rounded-lg border p-3 ${toneClass}`}>
+    <div className={`rounded-lg border p-3 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-card)_80%,transparent)] ${toneClass[tone]}`}>
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className="mt-2 font-display text-2xl font-bold">{value}</p>
       {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
@@ -160,9 +163,9 @@ function ProjetoExecucao({ projeto }: { projeto: Projeto }) {
 }
 
 function statusAccentClass(status: ProjetoStatus): string {
-  if (status === 'ativo') return 'bg-emerald-500'
-  if (status === 'pausado') return 'bg-amber-500'
-  return 'bg-slate-400'
+  if (status === 'ativo') return 'bg-success'
+  if (status === 'pausado') return 'bg-warning'
+  return 'bg-baseline'
 }
 
 function ProjetoCard({
@@ -181,8 +184,8 @@ function ProjetoCard({
   return (
     <li
       className={cn(
-        'projeto-row group relative overflow-hidden rounded-lg border border-border bg-card p-4 shadow-sm outline-none transition-all duration-200 ease-out hover:-translate-y-1 hover:border-primary/45 hover:shadow-lg focus-within:border-primary/50',
-        selecionado && 'is-selected -translate-y-1 border-primary/70 bg-primary/5 shadow-lg ring-1 ring-primary/30',
+        'projeto-row group relative overflow-hidden rounded-lg border border-border bg-card p-4 shadow-sm outline-none transition-all duration-200 ease-out hover:-translate-y-1 hover:border-brand-cyan/45 hover:shadow-lg focus-within:border-brand-cyan/50',
+        selecionado && 'is-selected -translate-y-1 border-brand-cyan/70 bg-info/5 shadow-lg ring-1 ring-brand-cyan/30',
       )}
       data-selected={selecionado ? 'true' : 'false'}
       onClick={onSelecionar}
@@ -211,7 +214,7 @@ function ProjetoCard({
             <Link
               to={`/projetos/${projeto.id}/registros-diarios`}
               onClick={(event) => event.stopPropagation()}
-              className="block truncate font-display text-lg font-bold text-ink hover:text-primary"
+              className="block truncate font-display text-lg font-bold text-ink hover:text-brand-blue"
             >
               {projeto.nome}
             </Link>
@@ -225,8 +228,8 @@ function ProjetoCard({
               onSelecionar()
             }}
             className={cn(
-              'grid size-8 shrink-0 place-items-center rounded-full border border-border bg-background text-muted-foreground transition-all',
-              selecionado && 'border-primary bg-primary text-primary-foreground',
+              'grid size-8 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted-foreground transition-all hover:border-brand-cyan/55 hover:text-brand-blue',
+              selecionado && 'border-brand-cyan bg-brand-cyan text-brand-navy',
             )}
           >
             <CheckCircle2 size={16} aria-hidden="true" />
@@ -264,13 +267,13 @@ function ProjetoCard({
           <ProjetoExecucao projeto={projeto} />
 
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-md border border-border bg-background p-2">
+            <div className="rounded-md border border-border bg-surface p-2">
               <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Operação</p>
               <p className="mt-1 text-sm font-semibold text-ink">
                 {projeto.ultimo_rdo_data === null ? 'Sem RDO' : 'Em dia'}
               </p>
             </div>
-            <div className="rounded-md border border-border bg-background p-2">
+            <div className="rounded-md border border-border bg-surface p-2">
               <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Seleção</p>
               <p className="mt-1 text-sm font-semibold text-ink">{selecionado ? 'Selecionado' : 'Disponível'}</p>
             </div>
@@ -364,7 +367,7 @@ export function ProjetosListPage() {
           }
           .projeto-row:hover .projeto-progress,
           .projeto-row[data-selected="true"] .projeto-progress {
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-cyan) 16%, transparent);
           }
         `}
       </style>

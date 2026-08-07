@@ -137,7 +137,7 @@ export function CalendarioMensal({
               !dia.doMesCorrente && 'cursor-default border-transparent text-muted-foreground/40',
               dia.doMesCorrente &&
                 !dia.statusPrioritario && [
-                  'border-border bg-background hover:bg-surface',
+                  'border-border bg-card hover:bg-surface',
                   dia.fimDeSemana && 'bg-muted/40',
                 ],
               dia.doMesCorrente &&
@@ -145,18 +145,18 @@ export function CalendarioMensal({
                   STATUS_REGISTRO_COR_CELULA[dia.statusPrioritario],
                   'hover:brightness-95',
                 ],
-              dia.hoje && (dia.statusPrioritario ? 'ring-2 ring-primary ring-offset-1' : 'border-primary bg-primary/10'),
+              dia.hoje && (dia.statusPrioritario ? 'ring-2 ring-brand-cyan ring-offset-1' : 'border-brand-cyan bg-info/10'),
             )}
           >
-            <span className={cn('flex w-full items-center justify-between', dia.hoje ? 'font-semibold text-primary' : 'text-ink')}>
+            <span className={cn('flex w-full items-center justify-between', dia.hoje ? 'font-semibold text-brand-blue' : 'text-ink')}>
               {dia.numeroDia}
-              {dia.hoje && <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">hoje</span>}
+              {dia.hoje && <span className="rounded-full bg-brand-blue px-1.5 py-0.5 text-[10px] text-primary-foreground">hoje</span>}
             </span>
             {dia.registros.length > 0 && (
               <span
                 className={cn(
                   'inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-                  dia.statusPrioritario ? 'bg-background/70 text-ink' : 'bg-primary/15 text-primary',
+                  dia.statusPrioritario ? 'bg-card/80 text-ink' : 'bg-info/15 text-brand-blue',
                 )}
               >
                 <Circle size={6} fill="currentColor" aria-hidden="true" />

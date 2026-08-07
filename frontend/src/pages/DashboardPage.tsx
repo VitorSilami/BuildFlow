@@ -13,9 +13,10 @@ import {
   Plus,
   TrendingUp,
 } from 'lucide-react'
-import { Badge, Button, EmptyState, ErrorRetry, PageHeader, Progress, Skeleton } from '../components/ui'
+import { AppStatusBadge, Badge, Button, EmptyState, ErrorRetry, PageHeader, Progress, Skeleton } from '../components/ui'
 import { useDashboard } from '../features/dashboard/dashboardApi'
 import { execucaoCorClasse, formatExecucao } from '../lib/format'
+import type { BadgeTone } from '../components/ui'
 import type { DashboardAlerta, DashboardAtividadeDia, DashboardProjeto } from '../types/dashboard'
 
 const STATUS_PROJETO_LABEL: Record<DashboardProjeto['status'], string> = {
@@ -24,10 +25,10 @@ const STATUS_PROJETO_LABEL: Record<DashboardProjeto['status'], string> = {
   concluido: 'Concluído',
 }
 
-const STATUS_PROJETO_BADGE: Record<DashboardProjeto['status'], string> = {
-  ativo: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-  pausado: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  concluido: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300',
+const STATUS_PROJETO_TONE: Record<DashboardProjeto['status'], BadgeTone> = {
+  ativo: 'success',
+  pausado: 'warning',
+  concluido: 'neutral',
 }
 
 function DashboardSkeleton() {
@@ -67,11 +68,11 @@ function diaCurto(iso: string): string {
   return `${dia}/${mes}`
 }
 
-function prioridadeCarteira(alertas: DashboardAlerta[], pausados: number): { titulo: string; tom: string; texto: string } {
+function prioridadeCarteira(alertas: DashboardAlerta[], pausados: number): { titulo: string; tom: BadgeTone; texto: string } {
   if (alertas.length > 0) {
     return {
       titulo: 'Atenção no apontamento',
-      tom: 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300',
+      tom: 'danger',
       texto: `${alertas.length} frente(s) sem RDO dentro do prazo.`,
     }
   }
@@ -79,14 +80,14 @@ function prioridadeCarteira(alertas: DashboardAlerta[], pausados: number): { tit
   if (pausados > 0) {
     return {
       titulo: 'Carteira com pausa',
-      tom: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+      tom: 'warning',
       texto: `${pausados} projeto(s) pausado(s) para acompanhar.`,
     }
   }
 
   return {
     titulo: 'Operação estável',
-    tom: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+    tom: 'success',
     texto: 'Sem alerta crítico de RDO no momento.',
   }
 }
@@ -114,22 +115,24 @@ function MetricTile({
   value: string | number
   detail?: string
   icon: ReactNode
-  tone?: 'neutral' | 'success' | 'warning' | 'danger'
+  tone?: BadgeTone
 }) {
-  const toneClass = {
-    neutral: 'border-border bg-background text-ink',
-    success: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300',
-    warning: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300',
-    danger: 'border-red-500/30 bg-red-500/5 text-red-700 dark:text-red-300',
-  }[tone]
+  const toneClass: Record<BadgeTone, string> = {
+    neutral: 'border-border bg-card text-ink',
+    success: 'border-success/25 bg-success/5 text-success',
+    warning: 'border-warning/30 bg-warning/10 text-warning',
+    danger: 'border-danger/25 bg-danger/5 text-danger',
+    info: 'border-info/25 bg-info/5 text-info',
+    blocked: 'border-blocked/25 bg-blocked/5 text-blocked',
+  }
 
   return (
-    <div className={`rounded-lg border p-3 ${toneClass}`}>
+    <div className={`min-w-0 rounded-lg border p-3 shadow-sm ${toneClass[tone]}`}>
       <div className="flex items-center justify-between gap-2">
-        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
-        <span className="text-muted-foreground">{icon}</span>
+        <p className="min-w-0 truncate font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+        <span>{icon}</span>
       </div>
-      <p className="mt-2 font-display text-2xl font-bold">{value}</p>
+      <p className="mt-2 truncate font-display text-2xl font-bold">{value}</p>
       {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
     </div>
   )
@@ -156,7 +159,7 @@ function RdoWeekStrip({ atividade }: { atividade: DashboardAtividadeDia[] }) {
           <div key={dia.data} className="flex h-full min-w-0 flex-col justify-end gap-2">
             <div className="flex h-full items-end rounded-md bg-surface px-1">
               <div
-                className="w-full rounded-t bg-primary transition-all"
+                className="w-full rounded-t bg-brand-blue transition-all"
                 style={{ height: `${altura}%` }}
                 title={`${dia.quantidade} RDO(s) em ${diaCurto(dia.data)}`}
               />
@@ -200,7 +203,7 @@ function ProjetoLinha({
     <li>
       <Link
         to={`/projetos/${projeto.id}/registros-diarios`}
-        className="grid gap-3 rounded-lg border border-border bg-background p-3 transition-colors hover:border-primary/40 hover:bg-surface lg:grid-cols-[minmax(0,1fr)_9rem_14rem_9rem_auto] lg:items-center"
+        className="grid gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-brand-cyan/45 hover:bg-surface lg:grid-cols-[minmax(0,1fr)_9rem_14rem_9rem_auto] lg:items-center"
       >
         <span className="min-w-0">
           <span className="block truncate font-medium text-ink">{projeto.nome}</span>
@@ -208,12 +211,10 @@ function ProjetoLinha({
             {alerta ? labelAlerta(alerta) : 'Calendário de RDOs em dia'}
           </span>
         </span>
-        <Badge variant="outline" className={STATUS_PROJETO_BADGE[projeto.status]}>
-          {STATUS_PROJETO_LABEL[projeto.status]}
-        </Badge>
+        <AppStatusBadge tone={STATUS_PROJETO_TONE[projeto.status]} label={STATUS_PROJETO_LABEL[projeto.status]} />
         <ProjetoProgresso projeto={projeto} />
         <span className="text-sm text-muted-foreground">{alerta ? 'RDO pendente' : 'Sem alerta'}</span>
-        <span className="flex items-center gap-1 text-sm font-medium text-primary lg:justify-end">
+        <span className="flex items-center gap-1 text-sm font-medium text-brand-blue lg:justify-end">
           Abrir
           <ArrowRight size={14} aria-hidden="true" />
         </span>
@@ -274,22 +275,23 @@ export function DashboardPage() {
       {!isLoading && !isError && data && (
         <div className="space-y-5">
           <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_31rem] xl:items-stretch">
-              <div className="flex flex-col justify-between gap-6">
+            <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,31rem)] xl:items-stretch">
+              <div className="min-w-0 flex flex-col justify-between gap-6">
                 <div>
                   <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                     Pulso da operação
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <h2 className="font-display text-3xl font-bold text-ink">{resumo.prioridade.titulo}</h2>
-                    <Badge variant="outline" className={resumo.prioridade.tom}>
-                      {data.alertas.length > 0 ? 'RDO em risco' : 'Monitorado'}
-                    </Badge>
+                    <AppStatusBadge
+                      tone={resumo.prioridade.tom}
+                      label={data.alertas.length > 0 ? 'RDO em risco' : 'Monitorado'}
+                    />
                   </div>
                   <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{resumo.prioridade.texto}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3 lg:grid-cols-4">
                   <MetricTile
                     label="Alertas"
                     value={data.alertas.length}
@@ -318,7 +320,7 @@ export function DashboardPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-border bg-background p-4">
+              <div className="min-w-0 rounded-lg border border-border bg-surface p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold text-ink">
                   <CalendarCheck2 size={16} aria-hidden="true" />
                   Próxima ação recomendada
@@ -326,19 +328,19 @@ export function DashboardPage() {
                 {data.alertas[0] ? (
                   <Link
                     to={`/projetos/${data.alertas[0].projeto_id}/registros-diarios/novo`}
-                    className="mt-3 block rounded-lg border border-red-500/25 bg-red-500/5 p-4 transition-colors hover:border-red-500/50"
+                    className="mt-3 block rounded-lg border border-danger/25 bg-danger/5 p-4 transition-colors hover:border-danger/45"
                   >
                     <span className="block truncate font-display text-xl font-bold text-ink">
                       {data.alertas[0].projeto_nome}
                     </span>
                     <span className="mt-1 block text-sm text-muted-foreground">{labelAlerta(data.alertas[0])}</span>
-                    <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-blue">
                       Criar RDO agora
                       <ArrowRight size={15} aria-hidden="true" />
                     </span>
                   </Link>
                 ) : (
-                  <div className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
+                  <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-4">
                     <p className="font-display text-xl font-bold text-ink">Fila limpa</p>
                     <p className="mt-1 text-sm text-muted-foreground">Nenhuma frente atrasada para registrar RDO.</p>
                   </div>
@@ -384,7 +386,7 @@ export function DashboardPage() {
                     <li key={alerta.projeto_id}>
                       <Link
                         to={`/projetos/${alerta.projeto_id}/registros-diarios/novo`}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 p-3 transition-colors hover:border-red-500/40"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-danger/20 bg-danger/5 p-3 transition-colors hover:border-danger/40"
                       >
                         <span className="min-w-0">
                           <span className="block truncate font-medium text-ink">{alerta.projeto_nome}</span>
@@ -428,7 +430,7 @@ export function DashboardPage() {
             {data.projetos.length === 0 ? (
               <EmptyState icon={<FolderKanban size={32} aria-hidden="true" />} title="Nenhum projeto ativo">
                 Crie um projeto para começar a registrar RDOs.{' '}
-                <Link to="/projetos" className="font-medium text-primary hover:underline">
+                <Link to="/projetos" className="font-medium text-brand-blue hover:underline">
                   Ir para Projetos
                 </Link>
               </EmptyState>

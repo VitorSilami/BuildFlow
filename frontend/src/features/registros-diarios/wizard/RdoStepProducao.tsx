@@ -79,7 +79,7 @@ export function RdoStepProducao({ producoes, onProducoesChange, disciplinas, uni
                   title="Localização"
                   description="Identifique a rodovia, sentido e intervalo executado."
                   icon={<MapPin size={17} aria-hidden="true" />}
-                  className="mb-0 bg-background"
+                  className="mb-0 bg-surface"
                 >
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField id={`producao-rodovia-${index}`} label="Rodovia" className="sm:col-span-2">
@@ -145,7 +145,7 @@ export function RdoStepProducao({ producoes, onProducoesChange, disciplinas, uni
                   title="Serviço executado"
                   description="Escolha o item de catálogo e informe o volume do dia."
                   icon={<Route size={17} aria-hidden="true" />}
-                  className="mb-0 bg-background"
+                  className="mb-0 bg-surface"
                 >
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FormField id={`producao-disciplina-${index}`} label="Disciplina">

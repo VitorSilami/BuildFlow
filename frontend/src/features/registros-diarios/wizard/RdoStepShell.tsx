@@ -1,13 +1,16 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import type { BadgeTone } from '../../../components/ui'
 
-type RdoMetricTone = 'neutral' | 'success' | 'warning' | 'danger'
+type RdoMetricTone = BadgeTone
 
 const METRIC_CLASS: Record<RdoMetricTone, string> = {
-  neutral: 'border-border bg-background text-ink',
-  success: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300',
-  warning: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300',
-  danger: 'border-red-500/30 bg-red-500/5 text-red-700 dark:text-red-300',
+  neutral: 'border-border bg-card text-ink',
+  success: 'border-success/25 bg-success/5 text-success',
+  warning: 'border-warning/30 bg-warning/10 text-warning',
+  danger: 'border-danger/25 bg-danger/5 text-danger',
+  info: 'border-info/25 bg-info/5 text-info',
+  blocked: 'border-blocked/25 bg-blocked/5 text-blocked',
 }
 
 interface RdoStepShellProps {
@@ -61,11 +64,11 @@ interface RdoSectionProps {
 
 export function RdoSection({ title, description, icon, actions, children, className }: RdoSectionProps) {
   return (
-    <div className={cn('rounded-lg border border-border bg-background p-4', className)}>
+    <div className={cn('rounded-lg border border-border bg-card p-4', className)}>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           {icon && (
-            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-info/10 text-brand-blue">
               {icon}
             </span>
           )}
@@ -91,7 +94,7 @@ interface RdoEmptyStateProps {
 export function RdoEmptyState({ title, description, icon, children }: RdoEmptyStateProps) {
   return (
     <div className="rounded-lg border border-dashed border-border bg-surface/40 p-5 text-center">
-      {icon && <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">{icon}</div>}
+      {icon && <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-md bg-info/10 text-brand-blue">{icon}</div>}
       <p className="font-display text-base font-semibold text-ink">{title}</p>
       <p className="mx-auto mt-1 max-w-xl text-sm leading-6 text-muted-foreground">{description}</p>
       {children && <div className="mt-4 flex justify-center">{children}</div>}

@@ -65,7 +65,7 @@ export function EapDisciplinaCard({ projetoId, disciplina, unidades }: EapDiscip
         >
           {expandido ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}
         </button>
-        <ListChecks size={14} className="text-primary" aria-hidden="true" />
+        <ListChecks size={14} className="text-brand-blue" aria-hidden="true" />
         <span className="flex-1 font-display font-semibold">{disciplina.nome}</span>
         <div className="flex w-40 items-center gap-2">
           <Progress
@@ -123,7 +123,7 @@ export function EapDisciplinaCard({ projetoId, disciplina, unidades }: EapDiscip
           )}
 
           {somaFilhosForaDoAlvo && (
-            <p className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-xs text-amber-700">
+            <p className="mb-3 rounded-md border border-warning/30 bg-warning/10 p-2 text-xs text-warning">
               Atenção: a soma dos pesos dos filhos desta disciplina não fecha 100% ({somaFilhos}%).
             </p>
           )}

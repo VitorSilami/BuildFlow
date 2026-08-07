@@ -27,6 +27,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  type BadgeTone,
 } from '../components/ui'
 import {
   useConfiguracaoProjeto,
@@ -102,16 +103,19 @@ function MetricTile({
   label: string
   value: string | number
   detail?: string
-  tone?: 'neutral' | 'success' | 'warning'
+  tone?: BadgeTone
 }) {
-  const toneClass = {
-    neutral: 'border-border bg-background text-ink',
-    success: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300',
-    warning: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300',
-  }[tone]
+  const toneClass: Record<BadgeTone, string> = {
+    neutral: 'border-border bg-card text-ink',
+    success: 'border-success/25 bg-success/5 text-success',
+    warning: 'border-warning/30 bg-warning/10 text-warning',
+    danger: 'border-danger/25 bg-danger/5 text-danger',
+    info: 'border-info/25 bg-info/5 text-info',
+    blocked: 'border-blocked/25 bg-blocked/5 text-blocked',
+  }
 
   return (
-    <div className={`rounded-lg border p-3 ${toneClass}`}>
+    <div className={`rounded-lg border p-3 ${toneClass[tone]}`}>
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className="mt-2 font-display text-2xl font-bold">{value}</p>
       {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
@@ -121,10 +125,10 @@ function MetricTile({
 
 function DisciplinaItem({ disciplina }: { disciplina: Disciplina }) {
   return (
-    <li className="rounded-lg border border-border bg-background p-3 text-sm transition-colors hover:border-primary/35">
+    <li className="rounded-lg border border-border bg-surface p-3 text-sm transition-colors hover:border-brand-cyan/45">
       <div className="flex items-start justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 font-semibold text-ink">
-          <BookOpen size={15} className="shrink-0 text-primary" aria-hidden="true" />
+          <BookOpen size={15} className="shrink-0 text-brand-blue" aria-hidden="true" />
           <span className="truncate">{disciplina.nome}</span>
         </span>
         <Badge variant="outline">{disciplina.servicos.length} serviço(s)</Badge>
@@ -147,10 +151,10 @@ function DisciplinaItem({ disciplina }: { disciplina: Disciplina }) {
 
 function EquipeItem({ equipe }: { equipe: Equipe }) {
   return (
-    <li className="rounded-lg border border-border bg-background p-3 text-sm transition-colors hover:border-primary/35">
+    <li className="rounded-lg border border-border bg-surface p-3 text-sm transition-colors hover:border-brand-cyan/45">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-2 font-display font-bold text-ink">
-          <HardHat size={15} className="text-primary" aria-hidden="true" />
+          <HardHat size={15} className="text-brand-blue" aria-hidden="true" />
           {equipe.nome}
         </p>
         <div className="flex gap-2">
@@ -187,12 +191,12 @@ function EquipeItem({ equipe }: { equipe: Equipe }) {
 
 function ValorItem({ valor }: { valor: ValorCusto }) {
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3 text-sm text-ink transition-colors hover:border-primary/35 sm:flex-row sm:items-center sm:justify-between">
+    <li className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-sm text-ink transition-colors hover:border-brand-cyan/45 sm:flex-row sm:items-center sm:justify-between">
       <span className="flex items-center gap-2">
         {valor.tipo === 'mao_de_obra' ? (
-          <Users size={14} className="text-primary" aria-hidden="true" />
+          <Users size={14} className="text-brand-blue" aria-hidden="true" />
         ) : (
-          <Truck size={14} className="text-primary" aria-hidden="true" />
+          <Truck size={14} className="text-brand-blue" aria-hidden="true" />
         )}
         <span>
           <span className="font-medium">{valor.descricao}</span>
@@ -200,7 +204,7 @@ function ValorItem({ valor }: { valor: ValorCusto }) {
         </span>
       </span>
       <span className="flex items-center gap-1 font-mono text-xs font-semibold text-ink">
-        <DollarSign size={12} className="text-emerald-600" aria-hidden="true" />
+        <DollarSign size={12} className="text-success" aria-hidden="true" />
         {valor.valor}
       </span>
     </li>

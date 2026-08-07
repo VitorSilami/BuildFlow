@@ -24,9 +24,9 @@ export const STATUS_REGISTRO_ICON: Record<StatusRegistro, typeof Clock> = {
 }
 
 export const STATUS_REGISTRO_COR_CELULA: Record<StatusRegistro, string> = {
-  aguardando_aprovacao: 'border-amber-500/50 bg-amber-500/10',
-  aprovado: 'border-emerald-500/50 bg-emerald-500/10',
-  rejeitado: 'border-red-500/50 bg-red-500/10',
+  aguardando_aprovacao: 'border-warning/50 bg-warning/10',
+  aprovado: 'border-success/50 bg-success/10',
+  rejeitado: 'border-danger/50 bg-danger/10',
 }
 
 // Quando um dia tem RDOs em mais de um status, o que exige mais atencao vence

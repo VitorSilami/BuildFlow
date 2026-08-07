@@ -380,7 +380,7 @@ export function EapWorkspace({ projetoId, disciplinas, somaPesos, unidades }: Ea
               aria-controls={`eap-${aba.id}`}
               className={cn(
                 'inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                abaAtiva === aba.id && 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground',
+                abaAtiva === aba.id && 'bg-brand-blue text-primary-foreground shadow-sm hover:bg-brand-blue hover:text-primary-foreground',
               )}
               onClick={() => setAbaAtiva(aba.id)}
             >
@@ -602,7 +602,7 @@ function EapToolbar({
                 type="button"
                 className={cn(
                   'h-8 rounded px-3 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  zoom === opcao && 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground',
+                  zoom === opcao && 'bg-brand-blue text-primary-foreground hover:bg-brand-blue hover:text-primary-foreground',
                 )}
                 aria-pressed={zoom === opcao}
                 onClick={() => onZoomChange(opcao)}

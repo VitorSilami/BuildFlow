@@ -20,6 +20,7 @@ import {
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { formatData, formatMoeda } from '../lib/format'
 import type { Medicao } from '../types/medicao'
+import type { BadgeTone } from '../components/ui'
 
 function MedicoesListSkeleton() {
   return (
@@ -61,17 +62,19 @@ function MetricTile({
   label: string
   value: string | number
   detail?: string
-  tone?: 'neutral' | 'success' | 'warning' | 'danger'
+  tone?: BadgeTone
 }) {
-  const toneClass = {
-    neutral: 'border-border bg-background text-ink',
-    success: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300',
-    warning: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300',
-    danger: 'border-red-500/30 bg-red-500/5 text-red-700 dark:text-red-300',
-  }[tone]
+  const toneClass: Record<BadgeTone, string> = {
+    neutral: 'border-border bg-card text-ink',
+    success: 'border-success/25 bg-success/5 text-success',
+    warning: 'border-warning/30 bg-warning/10 text-warning',
+    danger: 'border-danger/25 bg-danger/5 text-danger',
+    info: 'border-info/25 bg-info/5 text-info',
+    blocked: 'border-blocked/25 bg-blocked/5 text-blocked',
+  }
 
   return (
-    <div className={`rounded-lg border p-3 ${toneClass}`}>
+    <div className={`rounded-lg border p-3 ${toneClass[tone]}`}>
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className="mt-2 font-display text-2xl font-bold">{value}</p>
       {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
@@ -84,14 +87,14 @@ function MedicaoCard({ medicao, projetoId }: { medicao: Medicao; projetoId: stri
   const temPendenciaPreco = medicao.quantidade_itens_sem_preco > 0
 
   return (
-    <li className="group rounded-lg border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/45 hover:shadow-lg">
+    <li className="group rounded-lg border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-brand-cyan/45 hover:shadow-lg">
       <div className="flex min-h-full flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Data de corte</p>
             <Link
               to={`/projetos/${projetoId}/medicoes/${medicao.id}`}
-              className="mt-1 block font-display text-xl font-bold text-ink hover:text-primary"
+              className="mt-1 block font-display text-xl font-bold text-ink hover:text-brand-blue"
             >
               {formatData(medicao.data_corte)}
             </Link>
@@ -104,11 +107,11 @@ function MedicaoCard({ medicao, projetoId }: { medicao: Medicao; projetoId: stri
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-md border border-border bg-background p-3">
+          <div className="rounded-md border border-border bg-surface p-3">
             <p className="text-xs text-muted-foreground">Valor total</p>
             <p className="mt-1 font-semibold text-ink">{formatMoeda(medicao.valor_total)}</p>
           </div>
-          <div className="rounded-md border border-border bg-background p-3">
+          <div className="rounded-md border border-border bg-surface p-3">
             <p className="text-xs text-muted-foreground">Itens</p>
             <p className="mt-1 font-semibold text-ink">{medicao.itens.length} serviço(s)</p>
           </div>
@@ -120,7 +123,7 @@ function MedicaoCard({ medicao, projetoId }: { medicao: Medicao; projetoId: stri
             Fiscal: {medicao.fiscal_nome}
           </span>
           {temPendenciaPreco && (
-            <span className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+            <span className="flex items-center gap-2 text-warning">
               <AlertTriangle size={14} aria-hidden="true" />
               {medicao.quantidade_itens_sem_preco} item(ns) sem preço
             </span>
@@ -196,7 +199,7 @@ export function MedicoesListPage() {
                 </p>
               </div>
 
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div className="rounded-lg border border-info/25 bg-info/5 p-3">
                 <p className="flex items-center gap-2 text-sm font-semibold text-ink">
                   <Clock size={15} aria-hidden="true" />
                   Próxima decisão
@@ -204,7 +207,7 @@ export function MedicoesListPage() {
                 {resumo.proximaPendente ? (
                   <Link
                     to={`/projetos/${projetoId}/medicoes/${resumo.proximaPendente.id}`}
-                    className="mt-2 flex items-center justify-between gap-3 rounded-md border border-border bg-background p-3 text-sm transition-colors hover:border-primary/40"
+                    className="mt-2 flex items-center justify-between gap-3 rounded-md border border-border bg-card p-3 text-sm transition-colors hover:border-brand-cyan/45"
                   >
                     <span>
                       <span className="block font-semibold text-ink">{formatData(resumo.proximaPendente.data_corte)}</span>
@@ -212,10 +215,10 @@ export function MedicoesListPage() {
                         {formatMoeda(resumo.proximaPendente.valor_total)}
                       </span>
                     </span>
-                    <ArrowRight size={16} className="text-primary" aria-hidden="true" />
+                    <ArrowRight size={16} className="text-brand-blue" aria-hidden="true" />
                   </Link>
                 ) : (
-                  <p className="mt-2 rounded-md border border-border bg-background p-3 text-sm text-muted-foreground">
+                  <p className="mt-2 rounded-md border border-border bg-card p-3 text-sm text-muted-foreground">
                     Nenhum corte aguardando aprovação.
                   </p>
                 )}
@@ -241,7 +244,7 @@ export function MedicoesListPage() {
           </section>
 
           {resumo.semPreco > 0 && (
-            <section className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
+            <section className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
               <AlertTriangle size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
               <p>{resumo.semPreco} item(ns) sem preço não entram no valor total das medições.</p>
             </section>

@@ -23,7 +23,7 @@ export function RdoWizardNav({ passoAtual, onAnterior, onProximo }: RdoWizardNav
   const proximoPasso = NOMES_PASSOS[passoAtual + 1]
 
   return (
-    <nav aria-label="Passos do registro diário" className="mb-5 rounded-lg border border-border bg-background p-4 shadow-sm">
+    <nav aria-label="Passos do registro diário" className="mb-5 rounded-lg border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -59,7 +59,7 @@ export function RdoWizardNav({ passoAtual, onAnterior, onProximo }: RdoWizardNav
         aria-valuenow={progresso}
         className="mt-3 h-1 overflow-hidden rounded-full bg-muted"
       >
-        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progresso}%` }} />
+        <div className="h-full rounded-full bg-brand-blue transition-all" style={{ width: `${progresso}%` }} />
       </div>
 
       <div className="-mx-1 mt-4 overflow-x-auto px-1 pb-1">
@@ -72,30 +72,30 @@ export function RdoWizardNav({ passoAtual, onAnterior, onProximo }: RdoWizardNav
                 {index > 0 && (
                   <span
                     aria-hidden="true"
-                    className={`absolute left-0 top-3 h-0.5 w-1/2 ${index <= passoAtual ? 'bg-emerald-500' : 'bg-border'}`}
+                    className={`absolute left-0 top-3 h-0.5 w-1/2 ${index <= passoAtual ? 'bg-success' : 'bg-border'}`}
                   />
                 )}
                 {index < NOMES_PASSOS.length - 1 && (
                   <span
                     aria-hidden="true"
-                    className={`absolute right-0 top-3 h-0.5 w-1/2 ${concluido ? 'bg-emerald-500' : 'bg-border'}`}
+                    className={`absolute right-0 top-3 h-0.5 w-1/2 ${concluido ? 'bg-success' : 'bg-border'}`}
                   />
                 )}
                 <span
                   aria-current={atual ? 'step' : undefined}
                   className={`relative z-10 flex size-6 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
                     concluido
-                      ? 'border-emerald-500 bg-emerald-500 text-white'
+                      ? 'border-success bg-success text-success-foreground'
                       : atual
-                        ? 'border-primary bg-primary text-primary-foreground ring-4 ring-primary/15'
-                        : 'border-border bg-background text-muted-foreground'
+                        ? 'border-brand-blue bg-brand-blue text-primary-foreground ring-4 ring-brand-cyan/20'
+                        : 'border-border bg-card text-muted-foreground'
                   }`}
                 >
                   {concluido ? <Check size={13} aria-hidden="true" /> : index + 1}
                 </span>
                 <span
                   className={`mt-2 max-w-24 truncate text-xs font-semibold ${
-                    atual ? 'text-primary' : concluido ? 'text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground'
+                    atual ? 'text-brand-blue' : concluido ? 'text-success' : 'text-muted-foreground'
                   }`}
                 >
                   {nome}

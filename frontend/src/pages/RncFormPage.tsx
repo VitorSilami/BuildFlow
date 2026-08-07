@@ -44,9 +44,9 @@ import { toast } from '../hooks/use-toast'
 import type { Categoria, Gravidade, Origem, RncInput, TipoRnc } from '../types/rnc'
 
 const GRAVIDADE_COR_SELECIONADA: Record<Gravidade, string> = {
-  alta: 'border-red-500 bg-red-500/10 text-red-600',
-  media: 'border-amber-500 bg-amber-500/10 text-amber-600',
-  baixa: 'border-emerald-500 bg-emerald-500/10 text-emerald-600',
+  alta: 'border-danger bg-danger/10 text-danger',
+  media: 'border-warning bg-warning/10 text-warning',
+  baixa: 'border-success bg-success/10 text-success',
 }
 
 const CAMPOS_VAZIOS: RncInput = {

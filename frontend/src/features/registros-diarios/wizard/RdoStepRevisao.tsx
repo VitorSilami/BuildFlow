@@ -28,7 +28,7 @@ interface RdoStepRevisaoProps {
 function LinhaChecklist({ children }: { children: ReactNode }) {
   return (
     <li className="flex items-start gap-2 border-b border-border py-2.5 text-sm last:border-b-0">
-      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-500" aria-hidden="true" />
+      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />
       <span className="text-ink">{children}</span>
     </li>
   )
@@ -109,8 +109,8 @@ export function RdoStepRevisao({
         </ul>
       </RdoSection>
 
-      <p className="flex items-start gap-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-3 text-sm text-muted-foreground">
-        <Camera size={16} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+      <p className="flex items-start gap-2 rounded-md border border-dashed border-info/30 bg-info/5 p-3 text-sm text-muted-foreground">
+        <Camera size={16} className="mt-0.5 shrink-0 text-brand-blue" aria-hidden="true" />
         <span>
           {totalFotos > 0
             ? 'As fotos serão enviadas assim que o registro for salvo.'

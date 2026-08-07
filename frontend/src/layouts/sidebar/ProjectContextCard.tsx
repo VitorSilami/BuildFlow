@@ -47,11 +47,11 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
         aria-expanded={aberto}
         aria-label="Trocar de projeto"
         className={cn(
-          'group flex w-full items-center gap-2 rounded-md border border-border bg-card px-2.5 py-2 text-left shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-primary/35 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-          aberto && 'border-primary/45 bg-primary/5',
+          'group flex w-full items-center gap-2 rounded-md border border-border bg-card px-2.5 py-2 text-left shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-brand-cyan/45 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          aberto && 'border-brand-cyan/60 bg-info/5',
         )}
       >
-        <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+        <span className="grid size-8 shrink-0 place-items-center rounded-md bg-info/10 text-brand-blue">
           <FolderKanban size={16} aria-hidden="true" />
         </span>
         <span className="min-w-0">
@@ -105,7 +105,7 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
           </ul>
           <Link
             to="/projetos"
-            className="mt-1 block rounded-md border-t border-border px-2 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
+            className="mt-1 block rounded-md border-t border-border px-2 py-2 text-sm font-semibold text-brand-blue transition-colors hover:bg-info/5"
             onClick={() => setAberto(false)}
           >
             Ver todos os projetos →

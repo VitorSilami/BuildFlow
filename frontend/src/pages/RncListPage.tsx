@@ -48,7 +48,7 @@ function CardRnc({ rnc, projetoId }: { rnc: Rnc; projetoId: string }) {
   return (
     <Link
       to={`/projetos/${projetoId}/rncs/${rnc.id}`}
-      className="flex flex-col gap-3 rounded-lg border border-border bg-background p-4 no-underline shadow-sm transition-colors hover:border-primary/40 hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 no-underline shadow-sm transition-colors hover:border-brand-cyan/45 hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -59,7 +59,7 @@ function CardRnc({ rnc, projetoId }: { rnc: Rnc; projetoId: string }) {
             icon={<StatusIcon size={12} aria-hidden="true" />}
           />
           {rnc.reincidencia && (
-            <span className="rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+            <span className="rounded-full border border-danger/30 bg-danger/10 px-2 py-0.5 text-[11px] font-semibold text-danger">
               reincidente
             </span>
           )}

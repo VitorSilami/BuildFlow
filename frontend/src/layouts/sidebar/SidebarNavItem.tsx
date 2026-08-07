@@ -7,8 +7,8 @@ const navItemClass = (isActive: boolean) =>
   cn(
     'group relative flex min-h-10 items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring',
     isActive
-      ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_var(--color-primary)]'
-      : 'text-muted-foreground hover:bg-surface hover:text-ink',
+      ? 'bg-white/10 text-white ring-1 ring-brand-cyan/35'
+      : 'text-white/70 hover:bg-white/10 hover:text-white',
   )
 
 interface SidebarNavItemProps {
@@ -30,13 +30,13 @@ export function SidebarNavItem({ to, icon, children, isActive, end }: SidebarNav
           aria-hidden="true"
           className={cn(
             'grid size-7 shrink-0 place-items-center rounded-md border transition-colors',
-            ativo ? 'border-primary/25 bg-primary text-primary-foreground' : 'border-border bg-background',
+            ativo ? 'border-brand-cyan/30 bg-brand-cyan text-brand-navy' : 'border-white/15 bg-white/5 text-white/70',
           )}
         >
           {icon}
         </span>
         <span className="min-w-0 truncate">{children}</span>
-        {ativo && <span aria-hidden="true" className="ml-auto h-5 w-1 rounded-full bg-primary" />}
+        {ativo && <span aria-hidden="true" className="ml-auto h-5 w-1 rounded-full bg-brand-cyan" />}
       </NavLink>
     )
   }
@@ -50,14 +50,14 @@ export function SidebarNavItem({ to, icon, children, isActive, end }: SidebarNav
             className={cn(
               'grid size-7 shrink-0 place-items-center rounded-md border transition-colors',
               ativo
-                ? 'border-primary/25 bg-primary text-primary-foreground'
-                : 'border-border bg-background text-muted-foreground group-hover:border-primary/25 group-hover:text-primary',
+                ? 'border-brand-cyan/30 bg-brand-cyan text-brand-navy'
+                : 'border-white/15 bg-white/5 text-white/70 group-hover:border-brand-cyan/35 group-hover:text-brand-cyan',
             )}
           >
             {icon}
           </span>
           <span className="min-w-0 truncate">{children}</span>
-          {ativo && <span aria-hidden="true" className="ml-auto h-5 w-1 rounded-full bg-primary" />}
+          {ativo && <span aria-hidden="true" className="ml-auto h-5 w-1 rounded-full bg-brand-cyan" />}
         </>
       )}
     </NavLink>

@@ -16,14 +16,14 @@ const LIMITE_EXECUCAO_MEDIA = 70
 export function execucaoCorClasse(valor: string | null): string {
   if (valor === null) return 'bg-muted-foreground'
   const numero = Number(valor)
-  if (numero < LIMITE_EXECUCAO_BAIXA) return 'bg-red-500'
-  if (numero < LIMITE_EXECUCAO_MEDIA) return 'bg-amber-500'
+  if (numero < LIMITE_EXECUCAO_BAIXA) return 'bg-danger'
+  if (numero < LIMITE_EXECUCAO_MEDIA) return 'bg-warning'
   // A barra (componente Progress) trava visualmente em 100% de largura, mas o
   // rótulo numérico ao lado continua mostrando o valor real (ex.: 277%) — sem
   // uma cor própria pra "acima da meta", a barra cheia parece idêntica a uma
   // execução de exatos 100%, e os dois pareciam discordar.
-  if (numero > 100) return 'bg-sky-500'
-  return 'bg-emerald-500'
+  if (numero > 100) return 'bg-info'
+  return 'bg-success'
 }
 
 const FORMATADOR_MOEDA = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -53,12 +53,12 @@ const STATUS_EAP_LABELS: Record<StatusEap, string> = {
 }
 
 const STATUS_EAP_CORES: Record<StatusEap, string> = {
-  concluido: 'bg-emerald-500',
-  no_prazo: 'bg-emerald-500',
-  atencao: 'bg-amber-500',
-  critico: 'bg-red-500',
+  concluido: 'bg-success',
+  no_prazo: 'bg-success',
+  atencao: 'bg-warning',
+  critico: 'bg-danger',
   nao_iniciado: 'bg-muted-foreground',
-  planejado: 'bg-cyan-500',
+  planejado: 'bg-planned',
 }
 
 export function statusEapLabel(status: StatusEap | null): string | null {

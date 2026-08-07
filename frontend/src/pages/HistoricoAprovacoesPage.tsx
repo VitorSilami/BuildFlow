@@ -143,7 +143,7 @@ function CardRegistro({
   const exigeAtencao = registro.ocorrencias.length > 0 || ausencias > 0 || horasParadas > 0
 
   return (
-    <article className="rounded-lg border border-border bg-background shadow-sm transition-colors hover:border-primary/30">
+    <article className="rounded-lg border border-border bg-card shadow-sm transition-colors hover:border-brand-cyan/45">
       <button
         type="button"
         onClick={onToggleExpandir}
@@ -170,7 +170,7 @@ function CardRegistro({
           </div>
         </div>
 
-        <span className="flex shrink-0 items-center gap-2 text-sm font-medium text-primary xl:justify-end">
+        <span className="flex shrink-0 items-center gap-2 text-sm font-medium text-brand-blue xl:justify-end">
           {expandido ? 'Ocultar análise' : 'Analisar'}
           <IconeExpandir size={16} aria-hidden="true" />
         </span>
@@ -210,7 +210,7 @@ function CardRegistro({
                   ) : (
                     <ul className="space-y-2 text-sm">
                       {registro.producoes.slice(0, 3).map((producao) => (
-                        <li key={producao.id} className="rounded-md border border-border bg-background p-2">
+                        <li key={producao.id} className="rounded-md border border-border bg-surface p-2">
                           <p className="font-medium text-ink">{producao.servico_nome}</p>
                           <p className="text-xs text-muted-foreground">
                             km {producao.km_inicial} a {producao.km_final} · {producao.quantidade}{' '}
@@ -233,21 +233,21 @@ function CardRegistro({
                     Sinais de atenção
                   </p>
                   <div className="grid gap-2 text-sm">
-                    <span className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2">
+                    <span className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2">
                       <span className="flex items-center gap-2 text-muted-foreground">
                         <AlertTriangle size={14} aria-hidden="true" />
                         Ocorrências
                       </span>
                       <strong className="text-ink">{registro.ocorrencias.length}</strong>
                     </span>
-                    <span className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2">
+                    <span className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2">
                       <span className="flex items-center gap-2 text-muted-foreground">
                         <Users size={14} aria-hidden="true" />
                         Ausências
                       </span>
                       <strong className="text-ink">{ausencias}</strong>
                     </span>
-                    <span className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2">
+                    <span className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2">
                       <span className="flex items-center gap-2 text-muted-foreground">
                         <Truck size={14} aria-hidden="true" />
                         Horas paradas
@@ -259,7 +259,7 @@ function CardRegistro({
               </div>
 
               {registro.motivo_rejeicao && (
-                <p className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700">
+                <p className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
                   <strong>Motivo da rejeição:</strong> {registro.motivo_rejeicao}
                 </p>
               )}
@@ -282,7 +282,7 @@ function CardRegistro({
               </Button>
 
               {podeDecidir && (
-                <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <div className="mt-4 rounded-lg border border-info/25 bg-info/5 p-3">
                   {rejeitando ? (
                     <div className="flex flex-col gap-2">
                       <Textarea
@@ -316,7 +316,7 @@ function CardRegistro({
               )}
 
               {!podeDecidir && (
-                <p className="mt-4 rounded-md border border-border bg-background p-3 text-xs text-muted-foreground">
+                <p className="mt-4 rounded-md border border-border bg-surface p-3 text-xs text-muted-foreground">
                   {registro.status === 'aguardando_aprovacao'
                     ? 'Somente o fiscal responsável pode aprovar ou rejeitar este RDO.'
                     : 'Este RDO já saiu da fila de decisão.'}
@@ -446,7 +446,7 @@ export function HistoricoAprovacoesPage() {
                 </p>
               </div>
 
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div className="rounded-lg border border-info/25 bg-info/5 p-3">
                 <p className="flex items-center gap-2 text-sm font-semibold text-ink">
                   <Clock3 size={15} aria-hidden="true" />
                   Próximo RDO
@@ -456,7 +456,7 @@ export function HistoricoAprovacoesPage() {
                     type="button"
                     onClick={() => alternarExpandir(resumo.proximoPendente!.id)}
                     aria-label="Selecionar próximo RDO pendente"
-                    className="mt-2 w-full rounded-md border border-border bg-background p-3 text-left text-sm transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="mt-2 w-full rounded-md border border-border bg-card p-3 text-left text-sm transition-colors hover:border-brand-cyan/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="block font-semibold text-ink">Selecionar próximo RDO</span>
                     <span className="mt-1 block text-xs text-muted-foreground">

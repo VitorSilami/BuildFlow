@@ -122,8 +122,8 @@ export function RdoStepGerais({
             value={turno}
             onChange={onTurnoChange}
             options={[
-              { value: 'diurno', label: 'Diurno', icon: <SunIcon size={16} className="text-amber-400" aria-hidden="true" /> },
-              { value: 'noturno', label: 'Noturno', icon: <Moon size={16} className="text-indigo-400" aria-hidden="true" /> },
+              { value: 'diurno', label: 'Diurno', icon: <SunIcon size={16} className="text-warning" aria-hidden="true" /> },
+              { value: 'noturno', label: 'Noturno', icon: <Moon size={16} className="text-blocked" aria-hidden="true" /> },
             ]}
           />
           <GrupoBotoes
@@ -144,14 +144,14 @@ export function RdoStepGerais({
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-dashed border-border p-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-              <UsersRound size={15} className="text-primary" aria-hidden="true" />
+              <UsersRound size={15} className="text-brand-blue" aria-hidden="true" />
               {equipeSelecionada.pessoas.length} pessoa(s) no pool da equipe
             </div>
             <p className="mt-1 text-xs text-muted-foreground">Elas entram pré-marcadas como presentes na próxima etapa.</p>
           </div>
           <div className="rounded-lg border border-dashed border-border p-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-              <UserRound size={15} className="text-primary" aria-hidden="true" />
+              <UserRound size={15} className="text-brand-blue" aria-hidden="true" />
               Fiscal responsável: {fiscalSelecionado?.nome ?? 'selecione um fiscal'}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">Esse nome aparece na revisão e no detalhe do RDO.</p>

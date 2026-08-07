@@ -26,7 +26,7 @@ export function Topbar() {
   }, [])
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background px-4">
+    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur-md">
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -62,7 +62,7 @@ export function Topbar() {
         {termoBusca && (
           <ul
             aria-label="Resultados da busca"
-            className="absolute z-10 mt-1 w-full rounded-md border border-border bg-background py-1 shadow-md"
+            className="absolute z-10 mt-1 w-full rounded-md border border-border bg-popover py-1 shadow-lg"
           >
             {resultadosBusca.length === 0 ? (
               <li className="px-3 py-2 text-sm text-muted-foreground">Nenhum projeto encontrado.</li>
@@ -71,7 +71,7 @@ export function Topbar() {
                 <li key={projeto.id}>
                   <Link
                     to={`/projetos/${projeto.id}/registros-diarios`}
-                    className="block px-3 py-2 text-sm hover:bg-surface"
+                    className="block px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface"
                     onClick={() => setTermoBusca('')}
                   >
                     {projeto.nome}
@@ -94,16 +94,16 @@ export function Topbar() {
       </div>
 
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <SheetContent side="left" className="flex w-[17rem] flex-col bg-surface/55 p-0">
-          <SheetHeader className="flex h-16 flex-row items-center gap-3 border-b border-border bg-background/75 px-4 text-left">
-            <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
+        <SheetContent side="left" className="flex w-[17rem] flex-col border-brand-navy bg-brand-navy p-0 text-white">
+          <SheetHeader className="flex h-16 flex-row items-center gap-3 border-b border-white/10 bg-road-graphite/35 px-4 text-left">
+            <span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand-cyan text-brand-navy shadow-sm">
               <Menu size={18} aria-hidden="true" />
             </span>
             <span className="min-w-0">
-              <SheetTitle className="font-display text-lg font-bold leading-5 tracking-tight text-ink">
+              <SheetTitle className="font-display text-lg font-bold leading-5 tracking-tight text-white">
                 Build<span className="text-signal">Flow</span>
               </SheetTitle>
-              <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-white/55">
                 Field OS
               </span>
             </span>

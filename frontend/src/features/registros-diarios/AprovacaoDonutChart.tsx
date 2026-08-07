@@ -1,9 +1,9 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 const CORES_STATUS = {
-  aguardando_aprovacao: 'var(--color-amber-500)',
-  aprovado: 'var(--color-emerald-500)',
-  rejeitado: 'var(--color-red-500)',
+  aguardando_aprovacao: 'var(--color-warning)',
+  aprovado: 'var(--color-success)',
+  rejeitado: 'var(--color-danger)',
 } as const
 
 interface AprovacaoDonutChartProps {
