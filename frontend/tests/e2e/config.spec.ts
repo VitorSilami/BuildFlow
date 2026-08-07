@@ -248,8 +248,7 @@ test('define peso da disciplina e adiciona serviço na aba EAP', async ({ page }
     })
   })
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
 
   await page.getByLabel('Peso (%)').first().fill('100')
   await page.getByLabel('Peso (%)').first().blur()
@@ -262,7 +261,7 @@ test('define peso da disciplina e adiciona serviço na aba EAP', async ({ page }
   await page.getByLabel('Novo serviço').fill('Corte')
   await page.getByRole('button', { name: 'Adicionar serviço' }).click()
 
-  await expect(page.getByText('Corte')).toBeVisible()
+  await expect(page.getByLabel('Editor detalhado da EAP').getByText('Corte')).toBeVisible()
 })
 
 test('mostra total executado combinando RDO e ajuste manual, com lançamentos vinculados', async ({ page }) => {
@@ -305,8 +304,7 @@ test('mostra total executado combinando RDO e ajuste manual, com lançamentos vi
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
 
   await expect(page.getByText(/Executado:\s*250\.000/)).toBeVisible()
@@ -372,8 +370,7 @@ test('mostra a carta de controle quando o servico tem amostra suficiente de RDOs
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
   await page.getByRole('button', { name: 'Ver lançamentos (5)' }).click()
 
@@ -424,8 +421,7 @@ test('mostra badge de status e avanco previsto quando o servico tem datas previs
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
 
   await expect(page.getByText('Atenção').first()).toBeVisible()
@@ -499,8 +495,7 @@ test('limpar a data de inicio previsto envia null no PATCH, nao string vazia', a
     })
   })
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
 
   await page.getByLabel('Início previsto').fill('')
@@ -554,8 +549,7 @@ test('nao mostra badge nem previsto quando o servico nao tem datas previstas', a
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
 
   await expect(page.getByText(/Previsto:/)).toHaveCount(0)
@@ -607,8 +601,7 @@ test('toggle do Gantt fica oculto por padrao e mostra o cronograma ao clicar', a
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
 
   await expect(page.getByLabel('Cronograma da EAP')).not.toBeVisible()
   await page.getByRole('button', { name: 'Ver cronograma (Gantt)' }).click()
@@ -644,8 +637,7 @@ test('disciplina sem janela valida nao aparece no Gantt', async ({ page }) => {
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
 
   await expect(page.getByRole('button', { name: 'Ver cronograma (Gantt)' })).not.toBeVisible()
 })
@@ -696,8 +688,7 @@ test('disciplina com status_eap nulo renderiza no Gantt sem quebrar', async ({ p
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Ver cronograma (Gantt)' }).click()
 
   await expect(page.getByLabel('Cronograma da EAP')).toBeVisible()
@@ -750,14 +741,13 @@ test('cria subdisciplina e ela aparece aninhada dentro do card do pai', async ({
     })
   })
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
 
   await page.getByLabel('Nova subdisciplina').fill('Movimento de Terra')
   await page.getByRole('button', { name: '+ Subdisciplina' }).click()
 
-  await expect(page.getByText('Movimento de Terra')).toBeVisible()
+  await expect(page.getByLabel('Editor detalhado da EAP').getByText('Movimento de Terra')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Expandir Movimento de Terra' })).toBeVisible()
 })
 
@@ -808,8 +798,7 @@ test('aviso de soma de pesos considera subdisciplinas e servicos juntos', async 
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Expandir Terraplenagem' }).click()
 
   await expect(page.getByText(/a soma dos pesos dos filhos desta disciplina não fecha 100% \(60%\)/)).toBeVisible()
@@ -874,8 +863,7 @@ test('Gantt mostra uma barra para disciplina raiz e outra para a subdisciplina',
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Ver cronograma (Gantt)' }).click()
 
   const grafico = page.getByLabel('Cronograma da EAP')
@@ -951,8 +939,7 @@ test('Gantt nao colapsa subdisciplinas com o mesmo nome em pais diferentes', asy
     }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
   await page.getByRole('button', { name: 'Ver cronograma (Gantt)' }).click()
 
   const grafico = page.getByLabel('Cronograma da EAP')
@@ -1003,8 +990,7 @@ test('importa planilha CSV e popula a EAP com as disciplinas do arquivo', async 
     return route.fulfill({ status: 201, json: { disciplinas_criadas: 1, servicos_criados: 1 } })
   })
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
 
   await expect(page.getByRole('button', { name: 'Importar planilha' })).toBeVisible()
 
@@ -1014,7 +1000,7 @@ test('importa planilha CSV e popula a EAP com as disciplinas do arquivo', async 
     buffer: Buffer.from('DISCIPLINA,ATIVIDADE,UN,TOTAL\nTerraplenagem,Corte,m3,1500\n'),
   })
 
-  await expect(page.getByText('Terraplenagem')).toBeVisible()
+  await expect(page.getByLabel('Editor detalhado da EAP').getByText('Terraplenagem')).toBeVisible()
 })
 
 test('mostra lista de erros quando a planilha tem linha inválida e não altera a EAP', async ({ page }) => {
@@ -1028,8 +1014,7 @@ test('mostra lista de erros quando a planilha tem linha inválida e não altera 
     route.fulfill({ status: 400, json: { erros: ['Linha 2: TOTAL/QUANTIDADE inválido.'] } }),
   )
 
-  await page.goto('/projetos/projeto-1/configuracoes')
-  await page.getByRole('tab', { name: 'EAP' }).click()
+  await page.goto('/projetos/projeto-1/planejamento/eap')
 
   await page.getByLabel('Importar planilha', { exact: true }).setInputFiles({
     name: 'import.csv',

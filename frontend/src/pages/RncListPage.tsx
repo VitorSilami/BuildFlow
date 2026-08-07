@@ -1,6 +1,19 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Alert, AppStatCard, AppStatusBadge, Button, EmptyState, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
+import { AlertTriangle, CalendarDays, Filter, Plus, Repeat2, ShieldAlert } from 'lucide-react'
+import {
+  AppStatCard,
+  AppStatusBadge,
+  Button,
+  Card,
+  EmptyState,
+  ErrorRetry,
+  ForbiddenState,
+  FormField,
+  Input,
+  PageHeader,
+  Skeleton,
+} from '../components/ui'
 import { useAuth } from '../features/auth/AuthContext'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { CATEGORIA_LABELS } from '../features/rnc/categoriaItens'
@@ -15,7 +28,9 @@ import type { Rnc } from '../types/rnc'
 function RncListSkeleton() {
   return (
     <>
-      <span role="status" className="sr-only">Carregando…</span>
+      <span role="status" className="sr-only">
+        Carregando…
+      </span>
       <div aria-hidden="true" className="space-y-4">
         <Skeleton className="h-9 w-48" />
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -33,19 +48,35 @@ function CardRnc({ rnc, projetoId }: { rnc: Rnc; projetoId: string }) {
   return (
     <Link
       to={`/projetos/${projetoId}/rncs/${rnc.id}`}
-      className="mb-3 flex items-center justify-between gap-4 rounded-lg border border-border p-4 no-underline hover:bg-accent"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-background p-4 no-underline shadow-sm transition-colors hover:border-primary/40 hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
     >
-      <div>
-        <p className="font-mono text-sm font-medium text-ink">RNC-{String(rnc.numero_sequencial).padStart(3, '0')}</p>
-        <p className="text-sm text-muted-foreground">
-          {CATEGORIA_LABELS[rnc.categoria]} — {rnc.descricao.slice(0, 100)}
-        </p>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-mono text-sm font-bold text-ink">RNC-{String(rnc.numero_sequencial).padStart(3, '0')}</p>
+          <AppStatusBadge
+            tone={STATUS_EFETIVO_TONE[rnc.status_efetivo]}
+            label={STATUS_EFETIVO_LABEL[rnc.status_efetivo]}
+            icon={<StatusIcon size={12} aria-hidden="true" />}
+          />
+          {rnc.reincidencia && (
+            <span className="rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+              reincidente
+            </span>
+          )}
+        </div>
+        <p className="mt-1 truncate text-sm font-medium text-ink">{CATEGORIA_LABELS[rnc.categoria]}</p>
+        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{rnc.descricao}</p>
       </div>
-      <AppStatusBadge
-        tone={STATUS_EFETIVO_TONE[rnc.status_efetivo]}
-        label={STATUS_EFETIVO_LABEL[rnc.status_efetivo]}
-        icon={<StatusIcon size={12} aria-hidden="true" />}
-      />
+      <dl className="grid shrink-0 grid-cols-2 gap-2 text-xs sm:w-52">
+        <div className="rounded-md border border-dashed border-border p-2">
+          <dt className="text-muted-foreground">Item</dt>
+          <dd className="mt-0.5 truncate font-medium text-ink">{rnc.item || '—'}</dd>
+        </div>
+        <div className="rounded-md border border-dashed border-border p-2">
+          <dt className="text-muted-foreground">Prazo</dt>
+          <dd className="mt-0.5 truncate font-medium text-ink">{rnc.data_prazo || '—'}</dd>
+        </div>
+      </dl>
     </Link>
   )
 }
@@ -69,7 +100,7 @@ export function RncListPage() {
     return (
       <main aria-label="RNCs">
         <PageHeader title="RNCs" breadcrumbs={breadcrumbs} />
-        <Alert>Esta tela é restrita ao perfil Gerente.</Alert>
+        <ForbiddenState message="Esta tela é restrita ao perfil Gerente." />
       </main>
     )
   }
@@ -86,32 +117,26 @@ export function RncListPage() {
         title="RNCs"
         breadcrumbs={breadcrumbs}
         actions={
-          <div className="flex items-end gap-2">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="rnc-data-inicio" className="text-xs text-muted-foreground">
-                De
-              </label>
-              <input
-                id="rnc-data-inicio"
-                type="date"
-                value={dataInicio}
-                max={dataFim || undefined}
-                onChange={(event) => setDataInicio(event.target.value)}
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="rnc-data-fim" className="text-xs text-muted-foreground">
-                Até
-              </label>
-              <input
-                id="rnc-data-fim"
-                type="date"
-                value={dataFim}
-                min={dataInicio || undefined}
-                onChange={(event) => setDataFim(event.target.value)}
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-              />
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-end">
+            <div className="grid grid-cols-2 gap-2">
+              <FormField id="rnc-data-inicio" label="De" className="mb-0">
+                <Input
+                  id="rnc-data-inicio"
+                  type="date"
+                  value={dataInicio}
+                  max={dataFim || undefined}
+                  onChange={(event) => setDataInicio(event.target.value)}
+                />
+              </FormField>
+              <FormField id="rnc-data-fim" label="Até" className="mb-0">
+                <Input
+                  id="rnc-data-fim"
+                  type="date"
+                  value={dataFim}
+                  min={dataInicio || undefined}
+                  onChange={(event) => setDataFim(event.target.value)}
+                />
+              </FormField>
             </div>
             {(dataInicio || dataFim) && (
               <Button
@@ -125,7 +150,10 @@ export function RncListPage() {
               </Button>
             )}
             <Button asChild>
-              <Link to={`/projetos/${projetoId}/rncs/novo`}>Nova RNC</Link>
+              <Link to={`/projetos/${projetoId}/rncs/novo`}>
+                <Plus size={15} aria-hidden="true" />
+                Nova RNC
+              </Link>
             </Button>
           </div>
         }
@@ -133,37 +161,53 @@ export function RncListPage() {
 
       {rncs.isLoading && <RncListSkeleton />}
 
-      {rncs.isError && (
-        <ErrorRetry message="Não foi possível carregar as RNCs." onRetry={() => void rncs.refetch()} />
-      )}
+      {rncs.isError && <ErrorRetry message="Não foi possível carregar as RNCs." onRetry={() => void rncs.refetch()} />}
 
       {!rncs.isLoading && !rncs.isError && (
         <>
           <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-            <AppStatCard label="Total de RNCs" value={total} />
-            <AppStatCard label="Em aberto" value={emAberto} tone="warning" />
-            <AppStatCard label="Prazo excedido" value={prazoExcedido} tone="danger" />
-            <AppStatCard label="Reincidentes" value={reincidentes} />
+            <AppStatCard label="Total de RNCs" value={total} icon={<ShieldAlert size={18} />} />
+            <AppStatCard label="Em aberto" value={emAberto} tone="warning" icon={<AlertTriangle size={18} />} />
+            <AppStatCard label="Prazo excedido" value={prazoExcedido} tone="danger" icon={<CalendarDays size={18} />} />
+            <AppStatCard label="Reincidentes" value={reincidentes} icon={<Repeat2 size={18} />} />
           </div>
 
-          <div className="mb-4 flex flex-wrap gap-2">
-            {(['', 'pendente', 'concluida'] as const).map((valor) => (
-              <Button
-                key={valor || 'todas'}
-                size="sm"
-                variant={filtroStatus === valor ? 'default' : 'outline'}
-                onClick={() => setFiltroStatus(valor)}
-              >
-                {valor === '' ? 'Todas' : valor === 'pendente' ? 'Pendentes' : 'Concluídas'}
-              </Button>
-            ))}
-          </div>
-
-          {lista.length === 0 ? (
-            <EmptyState>Nenhuma RNC encontrada.</EmptyState>
-          ) : (
-            lista.map((rnc) => <CardRnc key={rnc.id} rnc={rnc} projetoId={projetoId ?? ''} />)
-          )}
+          <Card
+            title="Registro de não conformidades"
+            eyebrow={
+              <>
+                <Filter size={12} aria-hidden="true" />
+                {lista.length} RNC(s)
+              </>
+            }
+            actions={
+              <div className="flex flex-wrap gap-2">
+                {(['', 'pendente', 'concluida'] as const).map((valor) => (
+                  <Button
+                    key={valor || 'todas'}
+                    size="sm"
+                    variant={filtroStatus === valor ? 'default' : 'outline'}
+                    onClick={() => setFiltroStatus(valor)}
+                  >
+                    {valor === '' ? 'Todas' : valor === 'pendente' ? 'Pendentes' : 'Concluídas'}
+                  </Button>
+                ))}
+              </div>
+            }
+            className="mb-0"
+          >
+            {lista.length === 0 ? (
+              <EmptyState icon={<ShieldAlert size={32} aria-hidden="true" />} title="Nenhuma RNC encontrada.">
+                Ajuste o período ou registre a primeira não conformidade do projeto.
+              </EmptyState>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {lista.map((rnc) => (
+                  <CardRnc key={rnc.id} rnc={rnc} projetoId={projetoId ?? ''} />
+                ))}
+              </div>
+            )}
+          </Card>
         </>
       )}
     </main>

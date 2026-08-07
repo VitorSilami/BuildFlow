@@ -38,6 +38,19 @@
   --color-surface-strong: var(--surface-strong);
   --color-ink: var(--ink);
   --color-signal: var(--signal);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-planned: var(--planned);
+  --color-actual: var(--actual);
+  --color-baseline: var(--baseline);
+  --color-critical: var(--critical);
+  --color-blocked: var(--blocked);
   --transition-duration-fast: 120ms;
   --transition-duration-base: 200ms;
   --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
@@ -52,6 +65,19 @@
   --surface-strong: oklch(0.94 0.02 250);
   --ink: oklch(0.18 0.09 262);
   --signal: oklch(0.68 0.16 240);
+  --success: oklch(0.47 0.13 145);
+  --success-foreground: oklch(0.985 0.006 250);
+  --warning: oklch(0.55 0.13 65);
+  --warning-foreground: oklch(0.985 0.006 250);
+  --danger: oklch(0.50 0.20 27);
+  --danger-foreground: oklch(0.985 0.006 250);
+  --info: oklch(0.45 0.13 240);
+  --info-foreground: oklch(0.985 0.006 250);
+  --planned: oklch(0.70 0.13 220);
+  --actual: oklch(0.47 0.13 145);
+  --baseline: oklch(0.56 0.04 260);
+  --critical: oklch(0.50 0.20 27);
+  --blocked: oklch(0.46 0.08 285);
 
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.22 0.08 260);
@@ -81,6 +107,19 @@
   --surface-strong: oklch(0.26 0.07 260);
   --ink: oklch(0.97 0.01 250);
   --signal: oklch(0.72 0.16 240);
+  --success: oklch(0.72 0.14 145);
+  --success-foreground: oklch(0.16 0.05 260);
+  --warning: oklch(0.78 0.14 75);
+  --warning-foreground: oklch(0.16 0.05 260);
+  --danger: oklch(0.68 0.20 27);
+  --danger-foreground: oklch(0.16 0.05 260);
+  --info: oklch(0.74 0.13 230);
+  --info-foreground: oklch(0.16 0.05 260);
+  --planned: oklch(0.75 0.13 220);
+  --actual: oklch(0.72 0.14 145);
+  --baseline: oklch(0.72 0.04 260);
+  --critical: oklch(0.68 0.20 27);
+  --blocked: oklch(0.72 0.08 285);
 
   --card: oklch(0.2 0.06 260);
   --card-foreground: oklch(0.97 0.01 250);
@@ -123,11 +162,16 @@
 
   .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
 
   .font-mono {
     font-family: var(--font-mono);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
   }
 }
 

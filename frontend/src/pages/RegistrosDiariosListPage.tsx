@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { AlertTriangle, CalendarCheck2, ClipboardList, Clock3, Plus } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { AppStatusBadge, Button, Card, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
+import { AppStatCard, AppStatusBadge, Button, Card, ErrorRetry, PageHeader, Skeleton } from '../components/ui'
 import {
   CalendarioMensal,
   type DiaCalendario,
@@ -16,7 +16,7 @@ import {
 } from '../features/registros-diarios/statusRegistroBadge'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { formatData } from '../lib/format'
-import type { StatusRegistro } from '../types/registroDiario'
+import type { RegistroDiario, StatusRegistro } from '../types/registroDiario'
 
 function mesAnoAtual(): MesAno {
   const hoje = new Date()
@@ -50,16 +50,45 @@ function RegistroStatusBadge({ status }: { status: StatusRegistro }) {
   )
 }
 
+function contarPorStatus(registros: RegistroDiario[], status: StatusRegistro): number {
+  return registros.filter((registro) => registro.status === status).length
+}
+
+function diasComRegistro(registros: RegistroDiario[]): number {
+  return new Set(registros.map((registro) => registro.data_referencia)).size
+}
+
+function RegistroDiaLink({ projetoId, registro }: { projetoId: string | undefined; registro: RegistroDiario }) {
+  return (
+    <Link
+      to={`/projetos/${projetoId}/registros-diarios/${registro.id}`}
+      className="flex items-center justify-between gap-4 rounded-lg border border-border bg-background p-3 transition-colors hover:border-primary/40 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className="min-w-0">
+        <span className="flex items-center gap-2 font-medium text-ink">
+          {ICONE_CLIMA[registro.clima]}
+          {LABEL_TURNO[registro.turno]} · {LABEL_CLIMA[registro.clima]}
+        </span>
+        <span className="mt-1 block text-xs text-muted-foreground">
+          {registro.equipe_nome ? registro.equipe_nome : 'Equipe nao informada'}
+        </span>
+      </span>
+      <RegistroStatusBadge status={registro.status} />
+    </Link>
+  )
+}
+
 function CalendarioSkeleton() {
   return (
     <>
-      <span role="status" className="sr-only">Carregando registros…</span>
+      <span role="status" className="sr-only">Carregando registros...</span>
       <div aria-hidden="true">
-        <div className="mb-4 flex items-center justify-between">
-          <Skeleton className="h-8 w-20" />
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-8 w-16" />
+        <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
+          ))}
         </div>
+        <Skeleton className="mb-4 h-12 w-full" />
         <div className="grid grid-cols-7 gap-1">
           {Array.from({ length: 35 }, (_, i) => (
             <Skeleton key={i} className="h-20 rounded-md" />
@@ -98,18 +127,33 @@ export function RegistrosDiariosListPage() {
     setDiaSelecionado(dia)
   }
 
+  const registros = data?.results ?? []
+  const totalRegistros = registros.length
+  const aguardandoAprovacao = contarPorStatus(registros, 'aguardando_aprovacao')
+  const rejeitados = contarPorStatus(registros, 'rejeitado')
+  const aprovados = contarPorStatus(registros, 'aprovado')
+
   return (
     <main aria-label="Registros diários">
       <PageHeader
         title="Registros diários"
+        subtitle="Acompanhe a rotina de RDOs do mês, abra dias pendentes e consulte registros enviados."
         breadcrumbs={breadcrumbs}
         actions={
-          <Button asChild className="gap-2">
-            <Link to={`/projetos/${projetoId}/registros-diarios/novo`}>
-              <Plus size={16} aria-hidden="true" />
-              Novo registro diário
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link to={`/projetos/${projetoId}/historico-aprovacoes`}>
+                <Clock3 size={16} aria-hidden="true" />
+                Aprovações
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link to={`/projetos/${projetoId}/registros-diarios/novo`}>
+                <Plus size={16} aria-hidden="true" />
+                Novo registro diário
+              </Link>
+            </Button>
+          </div>
         }
       />
 
@@ -123,42 +167,75 @@ export function RegistrosDiariosListPage() {
       )}
 
       {!isLoading && !isError && data && (
-        <>
-          <Card>
-            <CalendarioMensal
-              mesAno={mesAno}
-              registros={data.results}
-              onMesAnteriorClick={() => irParaMes(mesAnterior(mesAno))}
-              onMesSeguinteClick={() => irParaMes(mesSeguinte(mesAno))}
-              onHojeClick={() => irParaMes(mesAnoAtual())}
-              onDiaClick={handleDiaClick}
-            />
-          </Card>
+        <section className="space-y-5" aria-labelledby="registros-diarios-resumo">
+          <h2 id="registros-diarios-resumo" className="sr-only">Resumo dos registros diários</h2>
 
-          {diaSelecionado && (
-            <Card title={`Registros de ${formatData(diaSelecionado.data)}`}>
-              <ul className="flex flex-col gap-2" aria-label="Registros do dia selecionado">
-                {diaSelecionado.registros.map((registro) => (
-                  <li key={registro.id}>
-                    <Link
-                      to={`/projetos/${projetoId}/registros-diarios/${registro.id}`}
-                      className="flex items-center justify-between gap-4 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-surface"
-                    >
-                      <span className="flex items-center gap-2 font-medium text-ink">
-                        {ICONE_CLIMA[registro.clima]}
-                        {LABEL_TURNO[registro.turno]} · {LABEL_CLIMA[registro.clima]}
-                      </span>
-                      <RegistroStatusBadge status={registro.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <Button variant="outline" className="mt-4" onClick={() => setDiaSelecionado(null)}>
-                Fechar
-              </Button>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <AppStatCard label="RDOs no mês" value={totalRegistros} icon={<ClipboardList size={18} />} />
+            <AppStatCard label="Dias cobertos" value={diasComRegistro(registros)} icon={<CalendarCheck2 size={18} />} />
+            <AppStatCard
+              label="Aguardando"
+              value={aguardandoAprovacao}
+              tone={aguardandoAprovacao > 0 ? 'warning' : 'neutral'}
+              icon={<Clock3 size={18} />}
+            />
+            <AppStatCard
+              label="Rejeitados"
+              value={rejeitados}
+              tone={rejeitados > 0 ? 'danger' : 'success'}
+              icon={<AlertTriangle size={18} />}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <Card
+              title="Calendário mensal"
+              eyebrow={`${aprovados} aprovado(s) no mês`}
+              actions={
+                <div className="hidden flex-wrap items-center gap-2 md:flex" aria-label="Legenda de status dos registros">
+                  {(Object.keys(STATUS_REGISTRO_LABEL) as StatusRegistro[]).map((status) => (
+                    <RegistroStatusBadge key={status} status={status} />
+                  ))}
+                </div>
+              }
+              className="mb-0"
+            >
+              <CalendarioMensal
+                mesAno={mesAno}
+                registros={registros}
+                onMesAnteriorClick={() => irParaMes(mesAnterior(mesAno))}
+                onMesSeguinteClick={() => irParaMes(mesSeguinte(mesAno))}
+                onHojeClick={() => irParaMes(mesAnoAtual())}
+                onDiaClick={handleDiaClick}
+              />
             </Card>
-          )}
-        </>
+
+            <Card
+              title={diaSelecionado ? `Registros de ${formatData(diaSelecionado.data)}` : 'Dia selecionado'}
+              eyebrow={diaSelecionado ? `${diaSelecionado.registros.length} RDO(s)` : 'Calendário'}
+              className="mb-0"
+            >
+              {diaSelecionado ? (
+                <>
+                  <ul className="flex flex-col gap-2" aria-label="Registros do dia selecionado">
+                    {diaSelecionado.registros.map((registro) => (
+                      <li key={registro.id}>
+                        <RegistroDiaLink projetoId={projetoId} registro={registro} />
+                      </li>
+                    ))}
+                  </ul>
+                  <Button variant="outline" className="mt-4 w-full" onClick={() => setDiaSelecionado(null)}>
+                    Fechar
+                  </Button>
+                </>
+              ) : (
+                <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                  Selecione um dia com múltiplos RDOs para comparar turnos e abrir o detalhe sem sair do calendário.
+                </div>
+              )}
+            </Card>
+          </div>
+        </section>
       )}
     </main>
   )

@@ -1,8 +1,10 @@
 import {
   CalendarClock,
+  CalendarDays,
   Gauge,
   Leaf,
   Package,
+  ShieldAlert,
   Truck,
   User as UserIcon,
   Users,
@@ -12,10 +14,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Alert,
+  AppStatCard,
+  AppStatusBadge,
   Button,
   Card,
   Checkbox,
   ErrorRetry,
+  ForbiddenState,
   FormField,
   GrupoBotoes,
   Input,
@@ -29,6 +34,11 @@ import { AdicionarAcaoCorretivaForm } from '../features/rnc/AdicionarAcaoCorreti
 import { CATEGORIA_ITENS, CATEGORIA_LABELS, GRAVIDADE_LABELS, ORIGEM_LABELS, TIPO_LABELS } from '../features/rnc/categoriaItens'
 import { NATIVE_SELECT_CLASSNAME } from '../features/rnc/nativeSelectClassName'
 import { useAtualizarRnc, useConcluirRnc, useCriarRnc, useRnc } from '../features/rnc/rncApi'
+import {
+  STATUS_EFETIVO_ICON,
+  STATUS_EFETIVO_LABEL,
+  STATUS_EFETIVO_TONE,
+} from '../features/rnc/statusEfetivoBadge'
 import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { toast } from '../hooks/use-toast'
 import type { Categoria, Gravidade, Origem, RncInput, TipoRnc } from '../types/rnc'
@@ -174,7 +184,7 @@ export function RncFormPage() {
     return (
       <main aria-label={ehEdicao ? 'Editar RNC' : 'Nova RNC'}>
         <PageHeader title={ehEdicao ? 'Editar RNC' : 'Nova RNC'} breadcrumbs={breadcrumbs} />
-        <Alert>Esta tela é restrita ao perfil Gerente.</Alert>
+        <ForbiddenState message="Esta tela é restrita ao perfil Gerente." />
       </main>
     )
   }
@@ -186,15 +196,37 @@ export function RncFormPage() {
 
   const somenteLeitura = ehEdicao && rnc.data?.status === 'concluida'
   const itensDaCategoria = CATEGORIA_ITENS[form.categoria]
+  const StatusIcon = rnc.data ? STATUS_EFETIVO_ICON[rnc.data.status_efetivo] : null
 
   return (
     <main aria-label={ehEdicao ? 'Editar RNC' : 'Nova RNC'}>
       <PageHeader
         title={ehEdicao && rnc.data ? `RNC-${String(rnc.data.numero_sequencial).padStart(3, '0')}` : 'Nova RNC'}
         breadcrumbs={breadcrumbs}
+        actions={
+          rnc.data && StatusIcon ? (
+            <AppStatusBadge
+              tone={STATUS_EFETIVO_TONE[rnc.data.status_efetivo]}
+              label={STATUS_EFETIVO_LABEL[rnc.data.status_efetivo]}
+              icon={<StatusIcon size={12} aria-hidden="true" />}
+            />
+          ) : undefined
+        }
       />
 
       {somenteLeitura && <Alert>Esta RNC já foi concluída e não pode mais ser editada.</Alert>}
+
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <AppStatCard label="Emissão" value={form.data_emissao || 'Pendente'} icon={<CalendarDays size={18} />} />
+        <AppStatCard label="Categoria" value={CATEGORIA_LABELS[form.categoria]} icon={<ShieldAlert size={18} />} />
+        <AppStatCard
+          label="Gravidade"
+          value={GRAVIDADE_LABELS[form.gravidade]}
+          tone={form.gravidade === 'alta' ? 'danger' : form.gravidade === 'media' ? 'warning' : 'success'}
+          icon={<Gauge size={18} />}
+        />
+        <AppStatCard label="Ações corretivas" value={rnc.data?.acoes_corretivas.length ?? 0} icon={<CalendarClock size={18} />} />
+      </div>
 
       <Card title="Identificação">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

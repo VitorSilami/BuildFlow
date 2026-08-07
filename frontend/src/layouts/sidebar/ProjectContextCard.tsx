@@ -1,9 +1,10 @@
-import { ChevronDown, Search } from 'lucide-react'
+import { ChevronDown, FolderKanban, Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Input } from '../../components/ui'
 import { useBuscaProjetos } from '../../features/projetos/useBuscaProjetos'
 import { useProjeto } from '../../features/projetos/projetosApi'
+import { cn } from '../../lib/utils'
 
 interface ProjectContextCardProps {
   projetoId: string
@@ -28,8 +29,10 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
 
   if (projeto.isLoading || !projeto.data) {
     return (
-      <div className="border-b border-border px-3 py-3">
-        <p className="text-xs text-muted-foreground">Carregando projeto…</p>
+      <div className="px-2 py-2">
+        <p className="h-12 animate-pulse rounded-md border border-border bg-surface" aria-label="Carregando projeto">
+          <span className="sr-only">Carregando projeto…</span>
+        </p>
       </div>
     )
   }
@@ -37,20 +40,35 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
   const dados = projeto.data
 
   return (
-    <div ref={painelRef} className="relative py-2">
+    <div ref={painelRef} className="relative px-2 py-2">
       <button
         type="button"
         onClick={() => setAberto((atual) => !atual)}
         aria-expanded={aberto}
         aria-label="Trocar de projeto"
-        className="flex w-full items-center gap-1.5 rounded-md px-3 py-1.5 text-left hover:bg-surface"
+        className={cn(
+          'group flex w-full items-center gap-2 rounded-md border border-border bg-card px-2.5 py-2 text-left shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-primary/35 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          aberto && 'border-primary/45 bg-primary/5',
+        )}
       >
-        <span className="truncate font-display text-sm font-bold text-ink">{dados.nome}</span>
-        <ChevronDown size={13} aria-hidden="true" className="ml-auto shrink-0 text-muted-foreground" />
+        <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+          <FolderKanban size={16} aria-hidden="true" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Projeto
+          </span>
+          <span className="block truncate font-display text-sm font-bold text-ink">{dados.nome}</span>
+        </span>
+        <ChevronDown
+          size={14}
+          aria-hidden="true"
+          className={cn('ml-auto shrink-0 text-muted-foreground transition-transform', aberto && 'rotate-180')}
+        />
       </button>
 
       {aberto && (
-        <div className="absolute left-0 top-full z-10 mt-1 w-[calc(100%-1.5rem)] rounded-md border border-border bg-background p-2 shadow-md ml-3">
+        <div className="absolute left-2 right-2 top-full z-20 mt-1 rounded-md border border-border bg-popover p-2 shadow-xl">
           <div className="relative mb-2">
             <Search
               size={14}
@@ -61,12 +79,12 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
               type="search"
               value={termo}
               onChange={(event) => setTermo(event.target.value)}
-              placeholder="Buscar projeto…"
+              placeholder="Buscar projeto..."
               aria-label="Buscar projeto para trocar"
               className="h-8 pl-8 text-sm"
             />
           </div>
-          <ul aria-label="Resultados da busca de projetos">
+          <ul aria-label="Resultados da busca de projetos" className="max-h-56 overflow-y-auto">
             {termo && resultados.length === 0 && (
               <li className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum projeto encontrado.</li>
             )}
@@ -74,7 +92,7 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
               <li key={resultado.id}>
                 <Link
                   to={`/projetos/${resultado.id}/registros-diarios`}
-                  className="block rounded-sm px-2 py-1.5 text-sm hover:bg-surface"
+                  className="block truncate rounded-md px-2 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-surface"
                   onClick={() => {
                     setAberto(false)
                     setTermo('')
@@ -87,7 +105,7 @@ export function ProjectContextCard({ projetoId }: ProjectContextCardProps) {
           </ul>
           <Link
             to="/projetos"
-            className="mt-1 block rounded-sm px-2 py-1.5 text-sm font-medium text-primary hover:underline"
+            className="mt-1 block rounded-md border-t border-border px-2 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
             onClick={() => setAberto(false)}
           >
             Ver todos os projetos →

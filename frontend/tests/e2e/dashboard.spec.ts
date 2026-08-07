@@ -50,11 +50,14 @@ test('dashboard mostra resumo, projetos ativos e alertas', async ({ page }) => {
   await page.goto('/dashboard')
 
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+  await expect(page.getByText('Pulso da operação')).toBeVisible()
+  await expect(page.getByText('1 frente(s) sem RDO dentro do prazo.')).toBeVisible()
   await expect(page.getByText('40.00%').first()).toBeVisible()
-  await expect(page.getByText('9 dias sem RDO')).toBeVisible()
+  await expect(page.getByText('9 dias sem RDO').first()).toBeVisible()
   await expect(page.getByRole('link', { name: 'Duplicação BR-365' }).first()).toBeVisible()
-  await expect(page.getByLabel('Gráfico de RDOs por dia')).toBeVisible()
-  await expect(page.getByLabel('Gráfico de distribuição de status')).toBeVisible()
+  await expect(page.getByText('Ritmo de campo')).toBeVisible()
+  await expect(page.getByText('Fila crítica')).toBeVisible()
+  await expect(page.getByText('Radar de projetos')).toBeVisible()
 })
 
 test('dashboard sem projetos ativos mostra estado vazio', async ({ page }) => {
@@ -76,10 +79,11 @@ test('dashboard sem projetos ativos mostra estado vazio', async ({ page }) => {
   await page.goto('/dashboard')
 
   await expect(page.getByText('Nenhum projeto ativo')).toBeVisible()
+  await expect(page.getByText('Fila limpa').first()).toBeVisible()
   // exact: true evita colisao com o em-dash que tambem aparece no texto do
   // Topbar ("Empresa A — Gerente Empresa A (gerente)").
   await expect(page.getByText('—', { exact: true })).toBeVisible()
-  await expect(page.getByLabel('Gráfico de distribuição de status')).not.toBeVisible()
+  await expect(page.getByText('Radar de projetos')).toBeVisible()
 })
 
 test('busca no Topbar filtra projetos e navega ao clicar', async ({ page }) => {
@@ -139,9 +143,9 @@ test('barra de execucao usa cor por faixa', async ({ page }) => {
 
   await page.goto('/dashboard')
 
-  const indicadorBaixa = page.locator('li', { hasText: 'Baixa' }).locator('[class*="bg-red-500"]')
-  const indicadorMedia = page.locator('li', { hasText: 'Media' }).locator('[class*="bg-amber-500"]')
-  const indicadorAlta = page.locator('li', { hasText: 'Alta' }).locator('[class*="bg-emerald-500"]')
+  const indicadorBaixa = page.locator('li', { hasText: 'Baixa' }).locator('[data-max="100"] [class*="bg-red-500"]')
+  const indicadorMedia = page.locator('li', { hasText: 'Media' }).locator('[data-max="100"] [class*="bg-amber-500"]')
+  const indicadorAlta = page.locator('li', { hasText: 'Alta' }).locator('[data-max="100"] [class*="bg-emerald-500"]')
 
   await expect(indicadorBaixa).toBeVisible()
   await expect(indicadorMedia).toBeVisible()

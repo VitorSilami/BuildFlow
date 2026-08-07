@@ -119,7 +119,7 @@ test('clicar no titulo do grupo colapsa e expande os itens', async ({ page }) =>
   await expect(itemRegistros).toBeVisible()
 })
 
-test('card de contexto e minimalista, mostrando so o nome do projeto', async ({ page }) => {
+test('sidebar nao exibe card de contexto do projeto', async ({ page }) => {
   await mockSessao(page, GERENTE)
   await mockProjetos(page)
   await page.route('**/api/v1/projetos/projeto-1/registros-diarios/**', (route) =>
@@ -128,53 +128,9 @@ test('card de contexto e minimalista, mostrando so o nome do projeto', async ({ 
 
   await page.goto('/projetos/projeto-1/registros-diarios')
 
-  const card = page.getByRole('button', { name: 'Trocar de projeto' })
-  await expect(card).toContainText('Duplicação BR-365')
-  await expect(card).not.toContainText('Ativo')
-  await expect(card).not.toContainText('52%')
-})
-
-test('switcher busca outro projeto e navega sem sair da tela', async ({ page }) => {
-  await mockSessao(page, GERENTE)
-  await page.route(PROJETOS_URL, (route) => {
-    const url = route.request().url()
-    if (url.endsWith('/projeto-1/')) return route.fulfill({ json: PROJETO_MOCK })
-    if (url.endsWith('/projeto-2/')) {
-      return route.fulfill({ json: { ...PROJETO_MOCK, id: 'projeto-2', nome: 'Contorno BR-101' } })
-    }
-    return route.fulfill({
-      json: {
-        count: 2,
-        next: null,
-        previous: null,
-        results: [PROJETO_MOCK, { ...PROJETO_MOCK, id: 'projeto-2', nome: 'Contorno BR-101' }],
-      },
-    })
-  })
-  await page.route('**/api/v1/projetos/*/registros-diarios/**', (route) => route.fulfill({ json: [] }))
-
-  await page.goto('/projetos/projeto-1/registros-diarios')
-
-  await page.getByRole('button', { name: 'Trocar de projeto' }).click()
-  await page.getByLabel('Buscar projeto para trocar').fill('Contorno')
-  await page.getByRole('link', { name: 'Contorno BR-101' }).click()
-
-  await expect(page).toHaveURL('/projetos/projeto-2/registros-diarios')
-})
-
-test('switcher tem link para ver todos os projetos', async ({ page }) => {
-  await mockSessao(page, GERENTE)
-  await mockProjetos(page)
-  await page.route('**/api/v1/projetos/projeto-1/registros-diarios/**', (route) =>
-    route.fulfill({ json: [] }),
-  )
-
-  await page.goto('/projetos/projeto-1/registros-diarios')
-
-  await page.getByRole('button', { name: 'Trocar de projeto' }).click()
-  await page.getByRole('link', { name: 'Ver todos os projetos →' }).click()
-
-  await expect(page).toHaveURL('/projetos')
+  const sidebar = page.getByRole('navigation', { name: 'Navegação principal' })
+  await expect(sidebar.getByRole('button', { name: 'Trocar de projeto' })).not.toBeVisible()
+  await expect(sidebar.getByText('Duplicação BR-365')).not.toBeVisible()
 })
 
 test('breadcrumb mostra o nome do projeto e linka para o projeto', async ({ page }) => {

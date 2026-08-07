@@ -185,7 +185,7 @@ export function RdoPage() {
         onProximo={() => setPassoAtual((atual) => Math.min(NOMES_PASSOS.length - 1, atual + 1))}
       />
 
-      <Card title={NOMES_PASSOS[passoAtual]}>
+      <Card className="mb-0">
         {passoAtual === 0 && (
           <RdoStepGerais
             dataReferencia={dataReferencia}

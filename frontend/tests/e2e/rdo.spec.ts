@@ -140,6 +140,8 @@ test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ p
   // mensagem solta — o registro fica de fato visivel/consultavel).
   await expect(page).toHaveURL(/\/registros-diarios\/rdo-1$/)
   await expect(page.getByRole('heading', { name: /Registro diário/ })).toBeVisible()
+  await expect(page.getByText('Produção total')).toBeVisible()
+  await expect(page.getByText('Fotos com km')).toBeVisible()
 
   // Momento de "dopamina": toast de sucesso aparece antes/durante a navegacao
   // pro detalhe (nao so a navegacao silenciosa que ja existia). Escopado pra
@@ -160,6 +162,7 @@ test('preencher wizard completo de RDO, ver o detalhe e anexar foto', async ({ p
       'hex',
     ),
   })
+  await expect(page.getByText('foto.png')).toBeVisible()
   await page.getByRole('button', { name: 'Anexar foto' }).click()
 })
 
@@ -287,4 +290,36 @@ test('data vem pre-preenchida quando a URL tem o parametro data', async ({ page 
   await page.goto('/projetos/projeto-1/registros-diarios/novo?data=2026-07-20')
 
   await expect(page.getByLabel('Data')).toHaveValue('2026-07-20')
+})
+
+test('etapa de fotos permite revisar km e remover imagem antes de salvar', async ({ page }) => {
+  await mockRotasBasicas(page)
+
+  await page.goto('/projetos/projeto-1/registros-diarios/novo')
+
+  for (let i = 0; i < 5; i += 1) {
+    await page.getByRole('button', { name: 'Próximo' }).click()
+  }
+
+  await expect(page.getByText('Evidências do RDO')).toBeVisible()
+
+  await page.locator('#rdo-foto-galeria').setInputFiles({
+    name: 'frente-km-10.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+      '89504e470d0a1a0a0000000d4948445200000001000000010806000000' +
+        '1f15c4890000000a4944415478da630001000005000105e2ff' +
+        '000000004945454e44ae426082',
+      'hex',
+    ),
+  })
+
+  await expect(page.getByText('frente-km-10.png')).toBeVisible()
+  await page.getByLabel('Km da foto 1').fill('10.250')
+  await expect(page.getByLabel('Km da foto 1')).toHaveValue('10.250')
+  await expect(page.getByText('1 foto anexada')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Remover foto 1' }).click()
+
+  await expect(page.getByText('Nenhuma foto selecionada ainda.')).toBeVisible()
 })

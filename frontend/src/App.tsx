@@ -4,6 +4,7 @@ import { DashboardLayout } from './layouts/DashboardLayout'
 import { ConfiguracaoPage } from './pages/ConfiguracaoPage'
 import { CustosOciosidadePage } from './pages/CustosOciosidadePage'
 import { DashboardPage } from './pages/DashboardPage'
+import { EapPage } from './pages/EapPage'
 import { HistoricoAprovacoesPage } from './pages/HistoricoAprovacoesPage'
 import { LoginPage } from './pages/LoginPage'
 import { MedicaoDetailPage } from './pages/MedicaoDetailPage'
@@ -35,6 +36,7 @@ function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/projetos" element={<ProjetosListPage />} />
               <Route path="/projetos/:projetoId/registros-diarios" element={<RegistrosDiariosListPage />} />
+              <Route path="/projetos/:projetoId/planejamento/eap" element={<EapPage />} />
               <Route path="/projetos/:projetoId/registros-diarios/novo" element={<RdoPage />} />
               <Route path="/projetos/:projetoId/medicoes" element={<MedicoesListPage />} />
               <Route path="/projetos/:projetoId/medicoes/:medicaoId" element={<MedicaoDetailPage />} />

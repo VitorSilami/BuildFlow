@@ -1,20 +1,19 @@
-import { BookOpen, DollarSign, HardHat, Truck, Users } from 'lucide-react'
 import { useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
-import { useConfiguracaoRdo } from '../features/registros-diarios/registrosDiariosApi'
+import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import {
-  useConfiguracaoProjeto,
-  useCriarDisciplina,
-  useCriarEquipe,
-  useCriarMaquina,
-  useCriarPessoa,
-  useCriarValorCusto,
-} from '../features/configuracoes/configuracaoApi'
-import { EapDisciplinaCard } from '../features/configuracoes/EapDisciplinaCard'
-import { GanttChart } from '../features/configuracoes/GanttChart'
-import { ImportarEapButton } from '../features/configuracoes/ImportarEapButton'
-import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
+  Banknote,
+  BookOpen,
+  DollarSign,
+  HardHat,
+  Layers3,
+  Plus,
+  Settings2,
+  Truck,
+  UserPlus,
+  Users,
+} from 'lucide-react'
 import {
+  Badge,
   Button,
   Card,
   EmptyState,
@@ -29,30 +28,190 @@ import {
   TabsList,
   TabsTrigger,
 } from '../components/ui'
+import {
+  useConfiguracaoProjeto,
+  useCriarDisciplina,
+  useCriarEquipe,
+  useCriarMaquina,
+  useCriarPessoa,
+  useCriarValorCusto,
+} from '../features/configuracoes/configuracaoApi'
+import { useProjetoBreadcrumbs } from '../features/projetos/useProjetoBreadcrumbs'
 import { toast } from '../hooks/use-toast'
+import type { Disciplina, ValorCusto } from '../types/configuracao'
+import type { Equipe } from '../types/registroDiario'
+
+type ConfigTab = 'disciplinas' | 'equipes' | 'valores'
 
 function ConfiguracaoSkeleton() {
   return (
     <>
-      <span role="status" className="sr-only">Carregando…</span>
-      <div aria-hidden="true">
-        <Skeleton className="h-9 w-80" />
-        <div className="mt-4 space-y-2">
-          {Array.from({ length: 4 }, (_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
-          ))}
+      <span role="status" className="sr-only">
+        Carregando...
+      </span>
+      <div aria-hidden="true" className="space-y-5">
+        <Skeleton className="h-36 w-full" />
+        <Skeleton className="h-20 w-full" />
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]">
+          <Skeleton className="h-96 w-full" />
+          <Skeleton className="h-96 w-full" />
         </div>
       </div>
     </>
   )
 }
 
+function contarServicos(disciplinas: Disciplina[]): number {
+  return disciplinas.reduce((total, disciplina) => total + disciplina.servicos.length, 0)
+}
+
+function contarPessoas(equipes: Equipe[]): number {
+  return equipes.reduce((total, equipe) => total + equipe.pessoas.length, 0)
+}
+
+function contarMaquinas(equipes: Equipe[]): number {
+  return equipes.reduce((total, equipe) => total + equipe.maquinas.length, 0)
+}
+
+function progressoConfiguracao({
+  disciplinas,
+  equipes,
+  valoresCusto,
+}: {
+  disciplinas: Disciplina[]
+  equipes: Equipe[]
+  valoresCusto: ValorCusto[]
+}): number {
+  const checks = [
+    disciplinas.length > 0,
+    contarServicos(disciplinas) > 0,
+    equipes.length > 0,
+    contarPessoas(equipes) > 0,
+    contarMaquinas(equipes) > 0,
+    valoresCusto.length > 0,
+  ]
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100)
+}
+
+function MetricTile({
+  label,
+  value,
+  detail,
+  tone = 'neutral',
+}: {
+  label: string
+  value: string | number
+  detail?: string
+  tone?: 'neutral' | 'success' | 'warning'
+}) {
+  const toneClass = {
+    neutral: 'border-border bg-background text-ink',
+    success: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300',
+    warning: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300',
+  }[tone]
+
+  return (
+    <div className={`rounded-lg border p-3 ${toneClass}`}>
+      <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="mt-2 font-display text-2xl font-bold">{value}</p>
+      {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
+    </div>
+  )
+}
+
+function DisciplinaItem({ disciplina }: { disciplina: Disciplina }) {
+  return (
+    <li className="rounded-lg border border-border bg-background p-3 text-sm transition-colors hover:border-primary/35">
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex min-w-0 items-center gap-2 font-semibold text-ink">
+          <BookOpen size={15} className="shrink-0 text-primary" aria-hidden="true" />
+          <span className="truncate">{disciplina.nome}</span>
+        </span>
+        <Badge variant="outline">{disciplina.servicos.length} serviço(s)</Badge>
+      </div>
+      {disciplina.servicos.length > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+          {disciplina.servicos.slice(0, 4).map((servico) => (
+            <li key={servico.id} className="rounded-md border border-border px-2 py-1">
+              {servico.nome}
+            </li>
+          ))}
+          {disciplina.servicos.length > 4 && (
+            <li className="rounded-md border border-border px-2 py-1">+{disciplina.servicos.length - 4}</li>
+          )}
+        </ul>
+      )}
+    </li>
+  )
+}
+
+function EquipeItem({ equipe }: { equipe: Equipe }) {
+  return (
+    <li className="rounded-lg border border-border bg-background p-3 text-sm transition-colors hover:border-primary/35">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="flex items-center gap-2 font-display font-bold text-ink">
+          <HardHat size={15} className="text-primary" aria-hidden="true" />
+          {equipe.nome}
+        </p>
+        <div className="flex gap-2">
+          <Badge variant="outline">{equipe.pessoas.length} pessoa(s)</Badge>
+          <Badge variant="outline">{equipe.maquinas.length} máquina(s)</Badge>
+        </div>
+      </div>
+
+      {equipe.pessoas.length === 0 && equipe.maquinas.length === 0 ? (
+        <p className="mt-3 text-xs text-muted-foreground">Sem pessoas ou máquinas ainda.</p>
+      ) : (
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <ul className="space-y-1 text-xs text-muted-foreground">
+            {equipe.pessoas.map((pessoa) => (
+              <li key={pessoa.id} className="flex items-center gap-2">
+                <Users size={12} aria-hidden="true" />
+                {pessoa.nome} — {pessoa.funcao}
+              </li>
+            ))}
+          </ul>
+          <ul className="space-y-1 text-xs text-muted-foreground">
+            {equipe.maquinas.map((maquina) => (
+              <li key={maquina.id} className="flex items-center gap-2">
+                <Truck size={12} aria-hidden="true" />
+                {maquina.nome} ({maquina.codigo})
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </li>
+  )
+}
+
+function ValorItem({ valor }: { valor: ValorCusto }) {
+  return (
+    <li className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3 text-sm text-ink transition-colors hover:border-primary/35 sm:flex-row sm:items-center sm:justify-between">
+      <span className="flex items-center gap-2">
+        {valor.tipo === 'mao_de_obra' ? (
+          <Users size={14} className="text-primary" aria-hidden="true" />
+        ) : (
+          <Truck size={14} className="text-primary" aria-hidden="true" />
+        )}
+        <span>
+          <span className="font-medium">{valor.descricao}</span>
+          {valor.funcao && <span className="text-muted-foreground"> — {valor.funcao}</span>}
+        </span>
+      </span>
+      <span className="flex items-center gap-1 font-mono text-xs font-semibold text-ink">
+        <DollarSign size={12} className="text-emerald-600" aria-hidden="true" />
+        {valor.valor}
+      </span>
+    </li>
+  )
+}
+
 export function ConfiguracaoPage() {
   const { projetoId } = useParams<{ projetoId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
-  const abaAtiva = searchParams.get('tab') ?? 'disciplinas'
+  const abaAtiva = (searchParams.get('tab') ?? 'disciplinas') as ConfigTab | 'eap'
   const configuracao = useConfiguracaoProjeto(projetoId ?? '')
-  const configuracaoRdo = useConfiguracaoRdo(projetoId ?? '')
   const breadcrumbs = useProjetoBreadcrumbs(projetoId, [{ label: 'Configurações' }])
 
   const criarDisciplina = useCriarDisciplina(projetoId ?? '')
@@ -74,7 +233,10 @@ export function ConfiguracaoPage() {
   const [valorValor, setValorValor] = useState('')
   const [valorFuncao, setValorFuncao] = useState('')
   const [valorMaquinaId, setValorMaquinaId] = useState('')
-  const [verGantt, setVerGantt] = useState(false)
+
+  if (abaAtiva === 'eap') {
+    return <Navigate to={`/projetos/${projetoId}/planejamento/eap`} replace />
+  }
 
   if (configuracao.isLoading) return <ConfiguracaoSkeleton />
   if (configuracao.isError || !configuracao.data) {
@@ -86,12 +248,52 @@ export function ConfiguracaoPage() {
     )
   }
 
-  const { disciplinas, equipes, valores_custo: valoresCusto, soma_pesos_disciplinas: somaPesos } =
-    configuracao.data
+  const { disciplinas, equipes, valores_custo: valoresCusto } = configuracao.data
+  const totalServicos = contarServicos(disciplinas)
+  const totalPessoas = contarPessoas(equipes)
+  const totalMaquinas = contarMaquinas(equipes)
+  const progresso = progressoConfiguracao({ disciplinas, equipes, valoresCusto })
+  const equipesOptions = equipes.map((equipe) => ({ value: equipe.id, label: equipe.nome }))
+  const maquinasOptions = equipes.flatMap((equipe) =>
+    equipe.maquinas.map((maquina) => ({
+      value: maquina.id,
+      label: `${maquina.nome} (${maquina.codigo})`,
+    })),
+  )
 
   return (
     <main aria-label="Configurações do projeto">
-      <PageHeader title="Configurações" breadcrumbs={breadcrumbs} />
+      <PageHeader
+        title="Configurações"
+        subtitle="Central de parametrização do projeto: disciplinas, equipes, recursos e custos usados nos RDOs."
+        breadcrumbs={breadcrumbs}
+      />
+
+      <section className="mb-5 rounded-lg border border-border bg-card p-4 shadow-sm">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_33rem]">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Setup operacional</p>
+            <h2 className="mt-1 font-display text-2xl font-bold text-ink">
+              Configuração {progresso}% pronta para campo
+            </h2>
+            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+              Cadastre o catálogo de serviços, monte as equipes e defina valores para transformar RDO em dado confiável.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <MetricTile label="Disciplinas" value={disciplinas.length} tone={disciplinas.length > 0 ? 'success' : 'warning'} />
+            <MetricTile label="Serviços" value={totalServicos} detail="catálogo" tone={totalServicos > 0 ? 'success' : 'warning'} />
+            <MetricTile label="Equipes" value={equipes.length} tone={equipes.length > 0 ? 'success' : 'warning'} />
+            <MetricTile
+              label="Recursos"
+              value={totalPessoas + totalMaquinas}
+              detail={`${totalPessoas} pessoas, ${totalMaquinas} máquinas`}
+              tone={totalPessoas + totalMaquinas > 0 ? 'success' : 'warning'}
+            />
+          </div>
+        </div>
+      </section>
 
       <Tabs
         value={abaAtiva}
@@ -103,39 +305,63 @@ export function ConfiguracaoPage() {
           })
         }}
       >
-        <TabsList aria-label="Seções de configuração">
-          <TabsTrigger value="disciplinas">Disciplinas</TabsTrigger>
-          <TabsTrigger value="eap">EAP</TabsTrigger>
-          <TabsTrigger value="equipes">Equipes</TabsTrigger>
-          <TabsTrigger value="valores">Valores</TabsTrigger>
-        </TabsList>
+        <section className="mb-5 rounded-lg border border-border bg-card p-3 shadow-sm">
+          <TabsList aria-label="Seções de configuração">
+            <TabsTrigger value="disciplinas">Disciplinas</TabsTrigger>
+            <TabsTrigger value="equipes">Equipes</TabsTrigger>
+            <TabsTrigger value="valores">Valores</TabsTrigger>
+          </TabsList>
+        </section>
 
         <TabsContent value="disciplinas">
-          <Card title="Disciplinas">
-            <div aria-label="Disciplinas">
-              {disciplinas.length === 0 && <EmptyState>Nenhuma disciplina cadastrada ainda.</EmptyState>}
-              <ul className="mb-4 flex flex-col gap-2">
-                {disciplinas.map((disciplina) => (
-                  <li
-                    className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm text-ink"
-                    key={disciplina.id}
-                  >
-                    <BookOpen size={14} className="text-primary" aria-hidden="true" />
-                    {disciplina.nome}
-                  </li>
-                ))}
-              </ul>
-              <div className="flex flex-wrap items-end gap-3">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]">
+            <Card
+              title="Disciplinas"
+              eyebrow={
+                <>
+                  <Layers3 size={12} aria-hidden="true" />
+                  Catálogo técnico
+                </>
+              }
+              className="mb-0"
+            >
+              <div aria-label="Disciplinas">
+                {disciplinas.length === 0 && <EmptyState>Nenhuma disciplina cadastrada ainda.</EmptyState>}
+                <ul className="flex flex-col gap-2">
+                  {disciplinas.map((disciplina) => (
+                    <DisciplinaItem key={disciplina.id} disciplina={disciplina} />
+                  ))}
+                </ul>
+              </div>
+            </Card>
+
+            <Card
+              title="Nova disciplina"
+              eyebrow={
+                <>
+                  <Plus size={12} aria-hidden="true" />
+                  Cadastro rápido
+                </>
+              }
+              className="mb-0"
+            >
+              <div className="space-y-3">
                 <FormField id="nova-disciplina" label="Nova disciplina">
-                  <Input id="nova-disciplina" value={nomeDisciplina} onChange={(event) => setNomeDisciplina(event.target.value)} />
+                  <Input
+                    id="nova-disciplina"
+                    value={nomeDisciplina}
+                    onChange={(event) => setNomeDisciplina(event.target.value)}
+                  />
                 </FormField>
                 <Button
+                  className="w-full"
                   onClick={() =>
                     criarDisciplina.mutate(
                       { nome: nomeDisciplina },
                       {
                         onSuccess: () => setNomeDisciplina(''),
-                        onError: () => toast({ title: 'Não foi possível criar a disciplina.', variant: 'destructive' }),
+                        onError: () =>
+                          toast({ title: 'Não foi possível criar a disciplina.', variant: 'destructive' }),
                       },
                     )
                   }
@@ -144,115 +370,81 @@ export function ConfiguracaoPage() {
                   Adicionar disciplina
                 </Button>
               </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="eap">
-          <Card title="EAP">
-            <div aria-label="EAP">
-              {disciplinas.length === 0 && (
-                <>
-                  <EmptyState>Cadastre uma disciplina na aba Disciplinas para começar a EAP.</EmptyState>
-                  <div className="mb-4 flex justify-center">
-                    <ImportarEapButton projetoId={projetoId ?? ''} />
-                  </div>
-                </>
-              )}
-              {disciplinas.some((d) => d.data_inicio_prevista !== null && d.data_fim_prevista !== null) && (
-                <div className="mb-4">
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setVerGantt((valor) => !valor)}>
-                    {verGantt ? 'Ocultar cronograma' : 'Ver cronograma (Gantt)'}
-                  </Button>
-                  {verGantt && <GanttChart disciplinas={disciplinas} />}
-                </div>
-              )}
-              <ul className="mb-4 flex flex-col gap-3">
-                {disciplinas.map((disciplina) => (
-                  <EapDisciplinaCard
-                    key={disciplina.id}
-                    projetoId={projetoId ?? ''}
-                    disciplina={disciplina}
-                    unidades={configuracaoRdo.data?.unidades ?? []}
-                  />
-                ))}
-              </ul>
-              <p className="text-sm text-muted-foreground">Soma dos pesos das disciplinas: {somaPesos}%</p>
-              {Math.abs(somaPesos - 100) > 0.01 && somaPesos > 0 && (
-                <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-700">
-                  Atenção: a soma dos pesos das disciplinas não fecha 100%.
-                </p>
-              )}
-            </div>
-          </Card>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="equipes">
-          <Card title="Equipes">
-            <div aria-label="Equipes">
-              {equipes.length === 0 && <EmptyState>Nenhuma equipe cadastrada ainda.</EmptyState>}
-              <ul className="mb-4 flex flex-col gap-2">
-                {equipes.map((equipe) => (
-                  <li className="rounded-lg border border-border p-3 text-sm" key={equipe.id}>
-                    <p className="mb-2 flex items-center gap-2 font-display font-bold text-ink">
-                      <HardHat size={14} className="text-primary" aria-hidden="true" />
-                      {equipe.nome}
-                    </p>
-                    {equipe.pessoas.length === 0 && equipe.maquinas.length === 0 ? (
-                      <p className="pl-5 text-xs text-muted-foreground">Sem pessoas ou máquinas ainda.</p>
-                    ) : (
-                      <ul className="flex flex-col gap-1 pl-5 text-muted-foreground">
-                        {equipe.pessoas.map((pessoa) => (
-                          <li key={pessoa.id} className="flex items-center gap-2">
-                            <Users size={12} aria-hidden="true" />
-                            {pessoa.nome} — {pessoa.funcao}
-                          </li>
-                        ))}
-                        {equipe.maquinas.map((maquina) => (
-                          <li key={maquina.id} className="flex items-center gap-2">
-                            <Truck size={12} aria-hidden="true" />
-                            {maquina.nome} ({maquina.codigo})
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mb-6 flex flex-wrap items-end gap-3">
-                <FormField id="nova-equipe" label="Nova equipe">
-                  <Input id="nova-equipe" value={nomeEquipe} onChange={(event) => setNomeEquipe(event.target.value)} />
-                </FormField>
-                <Button
-                  disabled={!nomeEquipe.trim() || criarEquipe.isPending}
-                  onClick={() =>
-                    criarEquipe.mutate(nomeEquipe, {
-                      onSuccess: () => setNomeEquipe(''),
-                      onError: () => toast({ title: 'Não foi possível criar a equipe.', variant: 'destructive' }),
-                    })
-                  }
-                >
-                  Adicionar equipe
-                </Button>
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]">
+            <Card
+              title="Equipes"
+              eyebrow={
+                <>
+                  <HardHat size={12} aria-hidden="true" />
+                  Frentes e recursos
+                </>
+              }
+              className="mb-0"
+            >
+              <div aria-label="Equipes">
+                {equipes.length === 0 && <EmptyState>Nenhuma equipe cadastrada ainda.</EmptyState>}
+                <ul className="flex flex-col gap-2">
+                  {equipes.map((equipe) => (
+                    <EquipeItem key={equipe.id} equipe={equipe} />
+                  ))}
+                </ul>
               </div>
+            </Card>
 
-              <h5 className="mb-3 font-display text-sm font-semibold text-ink">Adicionar pessoa</h5>
-              <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-                <SelectField
-                  id="pessoa-equipe"
-                  label="Equipe"
-                  value={pessoaEquipeId}
-                  onChange={setPessoaEquipeId}
-                  options={equipes.map((equipe) => ({ value: equipe.id, label: equipe.nome }))}
-                />
-                <FormField id="pessoa-nome" label="Nome">
-                  <Input id="pessoa-nome" value={pessoaNome} onChange={(event) => setPessoaNome(event.target.value)} />
-                </FormField>
-                <FormField id="pessoa-funcao" label="Função">
-                  <Input id="pessoa-funcao" value={pessoaFuncao} onChange={(event) => setPessoaFuncao(event.target.value)} />
-                </FormField>
-                <div className="flex items-end">
+            <div className="space-y-4">
+              <Card title="Nova equipe" eyebrow="Frente de trabalho" className="mb-0">
+                <div className="space-y-3">
+                  <FormField id="nova-equipe" label="Nova equipe">
+                    <Input id="nova-equipe" value={nomeEquipe} onChange={(event) => setNomeEquipe(event.target.value)} />
+                  </FormField>
+                  <Button
+                    className="w-full"
+                    disabled={!nomeEquipe.trim() || criarEquipe.isPending}
+                    onClick={() =>
+                      criarEquipe.mutate(nomeEquipe, {
+                        onSuccess: () => setNomeEquipe(''),
+                        onError: () => toast({ title: 'Não foi possível criar a equipe.', variant: 'destructive' }),
+                      })
+                    }
+                  >
+                    Adicionar equipe
+                  </Button>
+                </div>
+              </Card>
+
+              <Card
+                title="Adicionar pessoa"
+                eyebrow={
+                  <>
+                    <UserPlus size={12} aria-hidden="true" />
+                    Mão de obra
+                  </>
+                }
+                className="mb-0"
+              >
+                <div className="space-y-3">
+                  <SelectField
+                    id="pessoa-equipe"
+                    label="Equipe"
+                    value={pessoaEquipeId}
+                    onChange={setPessoaEquipeId}
+                    options={equipesOptions}
+                  />
+                  <FormField id="pessoa-nome" label="Nome">
+                    <Input id="pessoa-nome" value={pessoaNome} onChange={(event) => setPessoaNome(event.target.value)} />
+                  </FormField>
+                  <FormField id="pessoa-funcao" label="Função">
+                    <Input
+                      id="pessoa-funcao"
+                      value={pessoaFuncao}
+                      onChange={(event) => setPessoaFuncao(event.target.value)}
+                    />
+                  </FormField>
                   <Button
                     className="w-full"
                     disabled={!pessoaEquipeId || !pessoaNome.trim() || criarPessoa.isPending}
@@ -260,7 +452,10 @@ export function ConfiguracaoPage() {
                       criarPessoa.mutate(
                         { equipeId: pessoaEquipeId, nome: pessoaNome, funcao: pessoaFuncao },
                         {
-                          onSuccess: () => { setPessoaNome(''); setPessoaFuncao('') },
+                          onSuccess: () => {
+                            setPessoaNome('')
+                            setPessoaFuncao('')
+                          },
                           onError: () => toast({ title: 'Não foi possível adicionar a pessoa.', variant: 'destructive' }),
                         },
                       )
@@ -269,24 +464,40 @@ export function ConfiguracaoPage() {
                     Adicionar pessoa
                   </Button>
                 </div>
-              </div>
+              </Card>
 
-              <h5 className="mb-3 font-display text-sm font-semibold text-ink">Adicionar máquina</h5>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <SelectField
-                  id="maquina-equipe"
-                  label="Equipe"
-                  value={maquinaEquipeId}
-                  onChange={setMaquinaEquipeId}
-                  options={equipes.map((equipe) => ({ value: equipe.id, label: equipe.nome }))}
-                />
-                <FormField id="maquina-codigo" label="Código">
-                  <Input id="maquina-codigo" value={maquinaCodigo} onChange={(event) => setMaquinaCodigo(event.target.value)} />
-                </FormField>
-                <FormField id="maquina-nome" label="Nome">
-                  <Input id="maquina-nome" value={maquinaNome} onChange={(event) => setMaquinaNome(event.target.value)} />
-                </FormField>
-                <div className="flex items-end">
+              <Card
+                title="Adicionar máquina"
+                eyebrow={
+                  <>
+                    <Truck size={12} aria-hidden="true" />
+                    Equipamento
+                  </>
+                }
+                className="mb-0"
+              >
+                <div className="space-y-3">
+                  <SelectField
+                    id="maquina-equipe"
+                    label="Equipe"
+                    value={maquinaEquipeId}
+                    onChange={setMaquinaEquipeId}
+                    options={equipesOptions}
+                  />
+                  <FormField id="maquina-codigo" label="Código">
+                    <Input
+                      id="maquina-codigo"
+                      value={maquinaCodigo}
+                      onChange={(event) => setMaquinaCodigo(event.target.value)}
+                    />
+                  </FormField>
+                  <FormField id="maquina-nome" label="Nome">
+                    <Input
+                      id="maquina-nome"
+                      value={maquinaNome}
+                      onChange={(event) => setMaquinaNome(event.target.value)}
+                    />
+                  </FormField>
                   <Button
                     className="w-full"
                     disabled={!maquinaEquipeId || !maquinaNome.trim() || criarMaquina.isPending}
@@ -294,8 +505,12 @@ export function ConfiguracaoPage() {
                       criarMaquina.mutate(
                         { equipeId: maquinaEquipeId, codigo: maquinaCodigo, nome: maquinaNome },
                         {
-                          onSuccess: () => { setMaquinaCodigo(''); setMaquinaNome('') },
-                          onError: () => toast({ title: 'Não foi possível adicionar a máquina.', variant: 'destructive' }),
+                          onSuccess: () => {
+                            setMaquinaCodigo('')
+                            setMaquinaNome('')
+                          },
+                          onError: () =>
+                            toast({ title: 'Não foi possível adicionar a máquina.', variant: 'destructive' }),
                         },
                       )
                     }
@@ -303,38 +518,44 @@ export function ConfiguracaoPage() {
                     Adicionar máquina
                   </Button>
                 </div>
-              </div>
+              </Card>
             </div>
-          </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="valores">
-          <Card title="Valores">
-            <div aria-label="Valores de custo">
-              {valoresCusto.length === 0 && <EmptyState>Nenhum valor cadastrado ainda.</EmptyState>}
-              <ul className="mb-4 flex flex-col gap-2">
-                {valoresCusto.map((valor) => (
-                  <li
-                    key={valor.id}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm text-ink"
-                  >
-                    <span className="flex items-center gap-2">
-                      {valor.tipo === 'mao_de_obra' ? (
-                        <Users size={14} className="text-primary" aria-hidden="true" />
-                      ) : (
-                        <Truck size={14} className="text-primary" aria-hidden="true" />
-                      )}
-                      {valor.descricao}
-                      {valor.funcao && ` — ${valor.funcao}`}
-                    </span>
-                    <span className="flex items-center gap-1 font-mono text-xs font-semibold text-ink">
-                      <DollarSign size={12} className="text-emerald-600" aria-hidden="true" />
-                      {valor.valor}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]">
+            <Card
+              title="Valores"
+              eyebrow={
+                <>
+                  <Banknote size={12} aria-hidden="true" />
+                  Base de custo
+                </>
+              }
+              className="mb-0"
+            >
+              <div aria-label="Valores de custo">
+                {valoresCusto.length === 0 && <EmptyState>Nenhum valor cadastrado ainda.</EmptyState>}
+                <ul className="flex flex-col gap-2">
+                  {valoresCusto.map((valor) => (
+                    <ValorItem key={valor.id} valor={valor} />
+                  ))}
+                </ul>
+              </div>
+            </Card>
+
+            <Card
+              title="Adicionar valor"
+              eyebrow={
+                <>
+                  <Settings2 size={12} aria-hidden="true" />
+                  Parâmetro financeiro
+                </>
+              }
+              className="mb-0"
+            >
+              <div className="space-y-3">
                 <SelectField
                   id="valor-tipo"
                   label="Tipo"
@@ -359,12 +580,7 @@ export function ConfiguracaoPage() {
                     label="Máquina"
                     value={valorMaquinaId}
                     onChange={setValorMaquinaId}
-                    options={equipes.flatMap((equipe) =>
-                      equipe.maquinas.map((maquina) => ({
-                        value: maquina.id,
-                        label: `${maquina.nome} (${maquina.codigo})`,
-                      })),
-                    )}
+                    options={maquinasOptions}
                   />
                 )}
                 <FormField id="valor-descricao" label="Descrição">
@@ -380,37 +596,35 @@ export function ConfiguracaoPage() {
                 >
                   <Input id="valor-valor" value={valorValor} onChange={(event) => setValorValor(event.target.value)} />
                 </FormField>
-                <div className="flex items-end">
-                  <Button
-                    className="w-full"
-                    disabled={!valorDescricao.trim() || !valorValor || criarValorCusto.isPending}
-                    onClick={() =>
-                      criarValorCusto.mutate(
-                        {
-                          tipo: valorTipo,
-                          descricao: valorDescricao,
-                          valor: valorValor,
-                          funcao: valorTipo === 'mao_de_obra' ? valorFuncao : undefined,
-                          maquina: valorTipo === 'equipamento' ? valorMaquinaId : undefined,
+                <Button
+                  className="w-full"
+                  disabled={!valorDescricao.trim() || !valorValor || criarValorCusto.isPending}
+                  onClick={() =>
+                    criarValorCusto.mutate(
+                      {
+                        tipo: valorTipo,
+                        descricao: valorDescricao,
+                        valor: valorValor,
+                        funcao: valorTipo === 'mao_de_obra' ? valorFuncao : undefined,
+                        maquina: valorTipo === 'equipamento' ? valorMaquinaId : undefined,
+                      },
+                      {
+                        onSuccess: () => {
+                          setValorDescricao('')
+                          setValorValor('')
+                          setValorFuncao('')
+                          setValorMaquinaId('')
                         },
-                        {
-                          onSuccess: () => {
-                            setValorDescricao('')
-                            setValorValor('')
-                            setValorFuncao('')
-                            setValorMaquinaId('')
-                          },
-                          onError: () => toast({ title: 'Não foi possível criar o valor.', variant: 'destructive' }),
-                        },
-                      )
-                    }
-                  >
-                    Adicionar valor
-                  </Button>
-                </div>
+                        onError: () => toast({ title: 'Não foi possível criar o valor.', variant: 'destructive' }),
+                      },
+                    )
+                  }
+                >
+                  Adicionar valor
+                </Button>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </main>

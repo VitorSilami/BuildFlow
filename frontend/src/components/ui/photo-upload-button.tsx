@@ -1,20 +1,26 @@
 import { Camera, Image as ImageIcon } from 'lucide-react'
 import { useRef, type ChangeEvent } from 'react'
+import { cn } from '../../lib/utils'
 
 interface PhotoUploadButtonProps {
   id: string
   label: string
   onFilesSelected: (files: FileList | null) => void
   multiple?: boolean
-  // Abre a câmera traseira direto em dispositivos móveis, em vez da galeria.
   useCamera?: boolean
+  description?: string
+  className?: string
 }
 
-// Botão custom + input nativo escondido — o `<input type="file">` puro não
-// aceita estilo além do pseudo-elemento `::file-selector-button`, então o
-// texto "Nenhum arquivo escolhido" sempre fica com a fonte/aparência padrão
-// do sistema operacional, destoando do resto do design system.
-export function PhotoUploadButton({ id, label, onFilesSelected, multiple, useCamera }: PhotoUploadButtonProps) {
+export function PhotoUploadButton({
+  id,
+  label,
+  onFilesSelected,
+  multiple,
+  useCamera,
+  description,
+  className,
+}: PhotoUploadButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const Icon = useCamera ? Camera : ImageIcon
 
@@ -28,10 +34,14 @@ export function PhotoUploadButton({ id, label, onFilesSelected, multiple, useCam
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-8 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+        className={cn(
+          'flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-background px-4 py-6 text-center text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          className,
+        )}
       >
         <Icon size={20} aria-hidden="true" />
-        {label}
+        <span className="font-medium text-ink">{label}</span>
+        {description && <span className="text-xs text-muted-foreground">{description}</span>}
       </button>
       <input
         ref={inputRef}

@@ -5,10 +5,12 @@ import {
   Button,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  Label,
+  FormField,
+  Input,
   SelectField,
 } from '../../components/ui'
 import { toast } from '../../hooks/use-toast'
@@ -53,28 +55,35 @@ export function NovaMedicaoModal({ projetoId, open, onOpenChange }: NovaMedicaoM
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Nova medição</DialogTitle>
+          <DialogDescription>
+            Defina o corte e o fiscal responsável. A medição será gerada a partir da produção aprovada até essa data.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="mb-4 flex flex-col gap-1.5">
-          <Label htmlFor="medicao-data-corte">Data de corte</Label>
-          <input
-            id="medicao-data-corte"
-            type="date"
-            value={dataCorte}
-            max={hoje()}
-            onChange={(event) => setDataCorte(event.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-          />
-        </div>
+        <div className="rounded-lg border border-border bg-surface/40 p-4">
+          <FormField id="medicao-data-corte" label="Data de corte">
+            <Input
+              id="medicao-data-corte"
+              type="date"
+              value={dataCorte}
+              max={hoje()}
+              onChange={(event) => setDataCorte(event.target.value)}
+            />
+          </FormField>
 
-        <SelectField
-          id="medicao-fiscal"
-          label="Fiscal"
-          value={fiscal}
-          onChange={setFiscal}
-          options={fiscais.map((item) => ({ value: String(item.id), label: item.nome }))}
-          placeholder="Selecione o fiscal…"
-        />
+          <SelectField
+            id="medicao-fiscal"
+            label="Fiscal"
+            value={fiscal}
+            onChange={setFiscal}
+            options={fiscais.map((item) => ({ value: String(item.id), label: item.nome }))}
+            placeholder={configuracaoRdo.isLoading ? 'Carregando fiscais…' : 'Selecione o fiscal…'}
+          />
+
+          {fiscais.length === 0 && !configuracaoRdo.isLoading && (
+            <p className="text-sm text-muted-foreground">Cadastre um fiscal nas configurações antes de criar a medição.</p>
+          )}
+        </div>
 
         {erro && <Alert>{erro}</Alert>}
 

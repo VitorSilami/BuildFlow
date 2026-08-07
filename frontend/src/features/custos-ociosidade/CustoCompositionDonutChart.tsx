@@ -3,8 +3,8 @@ import { formatMoeda } from '../../lib/format'
 
 const CORES_COMPOSICAO = {
   mao_de_obra: 'var(--color-primary)',
-  maquinas_produtivo: 'var(--color-emerald-500)',
-  maquinas_ocioso: 'var(--color-red-500)',
+  maquinas_produtivo: 'var(--color-success)',
+  maquinas_ocioso: 'var(--color-danger)',
 } as const
 
 interface CustoCompositionDonutChartProps {
@@ -41,7 +41,7 @@ export function CustoCompositionDonutChart({
             ))}
           </Pie>
           <Tooltip
-            formatter={(valor: number) => formatMoeda(String(valor))}
+            formatter={(valor) => formatMoeda(String(Array.isArray(valor) ? valor[0] : (valor ?? 0)))}
             contentStyle={{
               background: 'var(--color-card)',
               border: '1px solid var(--color-border)',

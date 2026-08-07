@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Circle } from 'lucide-react'
 import { Button } from '../../components/ui'
 import { cn } from '../../lib/utils'
 import type { RegistroDiario, StatusRegistro } from '../../types/registroDiario'
@@ -94,7 +94,7 @@ export function CalendarioMensal({
 
   return (
     <div aria-label="Calendário de registros diários">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 md:grid md:grid-cols-[auto_1fr_auto] md:items-center">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" aria-label="Mês anterior" onClick={onMesAnteriorClick}>
             <ChevronLeft size={16} aria-hidden="true" />
@@ -103,7 +103,7 @@ export function CalendarioMensal({
             <ChevronRight size={16} aria-hidden="true" />
           </Button>
         </div>
-        <h2 className="font-display text-lg font-semibold text-ink">
+        <h2 className="font-display text-lg font-semibold text-ink md:text-center">
           {NOMES_MESES[mesAno.mes - 1]} {mesAno.ano}
         </h2>
         <Button variant="outline" onClick={onHojeClick}>
@@ -133,11 +133,11 @@ export function CalendarioMensal({
                 : `Dia ${dia.numeroDia}, sem registro`
             }
             className={cn(
-              'flex h-20 flex-col items-start gap-1 rounded-md border p-2 text-left text-sm transition-colors',
+              'flex h-[78px] min-w-0 flex-col items-start gap-1 rounded-md border p-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               !dia.doMesCorrente && 'cursor-default border-transparent text-muted-foreground/40',
               dia.doMesCorrente &&
                 !dia.statusPrioritario && [
-                  'border-border hover:bg-surface',
+                  'border-border bg-background hover:bg-surface',
                   dia.fimDeSemana && 'bg-muted/40',
                 ],
               dia.doMesCorrente &&
@@ -148,14 +148,18 @@ export function CalendarioMensal({
               dia.hoje && (dia.statusPrioritario ? 'ring-2 ring-primary ring-offset-1' : 'border-primary bg-primary/10'),
             )}
           >
-            <span className={dia.hoje ? 'font-semibold text-primary' : 'text-ink'}>{dia.numeroDia}</span>
+            <span className={cn('flex w-full items-center justify-between', dia.hoje ? 'font-semibold text-primary' : 'text-ink')}>
+              {dia.numeroDia}
+              {dia.hoje && <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">hoje</span>}
+            </span>
             {dia.registros.length > 0 && (
               <span
                 className={cn(
-                  'rounded-full px-2 py-0.5 text-xs font-medium',
+                  'inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
                   dia.statusPrioritario ? 'bg-background/70 text-ink' : 'bg-primary/15 text-primary',
                 )}
               >
+                <Circle size={6} fill="currentColor" aria-hidden="true" />
                 {dia.registros.length > 1 ? `${dia.registros.length} RDOs` : '1 RDO'}
               </span>
             )}

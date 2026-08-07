@@ -94,13 +94,18 @@ export function Topbar() {
       </div>
 
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <SheetContent side="left" className="w-64 p-0">
-          <SheetHeader className="h-16 justify-center border-b border-border px-4">
-            <SheetTitle className="text-left font-display text-lg font-bold tracking-tight text-ink">
-              Build<span className="text-signal">Flow</span>
-            </SheetTitle>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Field OS
+        <SheetContent side="left" className="flex w-[17rem] flex-col bg-surface/55 p-0">
+          <SheetHeader className="flex h-16 flex-row items-center gap-3 border-b border-border bg-background/75 px-4 text-left">
+            <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm">
+              <Menu size={18} aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <SheetTitle className="font-display text-lg font-bold leading-5 tracking-tight text-ink">
+                Build<span className="text-signal">Flow</span>
+              </SheetTitle>
+              <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                Field OS
+              </span>
             </span>
           </SheetHeader>
           <SidebarNav />
